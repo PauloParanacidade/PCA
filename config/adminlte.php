@@ -298,7 +298,7 @@ return [
     |
     */
 
-    'menu'                                    => [
+    'menu' => [
         // Navbar items:
         [
             'type'         => 'navbar-search',
@@ -317,12 +317,23 @@ return [
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
         [
-            'text'    => 'Usuários',
-            'icon'    => 'fas fa-fw fa-users',
-            'can'     => 'admin',
+            'text' => 'Criar novo PPP',
+            'url'  => 'ppp/create',
+            'icon' => 'fas fa-fw fa-plus-circle',
+        ],
+        [
+            'text' => 'Meus PPPs',
+            'url'  => 'ppp',
+            'icon' => 'fas fa-fw fa-list',
+        ],
+        [
+            'text' => 'Usuários',
+            'icon' => 'fas fa-fw fa-users',
+            'can'  => 'admin',
             'url'  => 'admin/users/roles',
         ],
     ],
+
 
     /*
     |--------------------------------------------------------------------------

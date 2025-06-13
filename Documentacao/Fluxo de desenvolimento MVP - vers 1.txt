@@ -1,0 +1,81 @@
+
+
+---
+
+### 📋 **Fluxo inicial de telas para o PPP**
+
+#### 1. **Dashboard (após login)**
+
+* Conteúdo limpo e objetivo.
+* Pode exibir apenas um resumo rápido, como:
+
+  * Quantidade de PPPs em aberto
+  * Últimos PPPs criados
+  * Notificações (se houver)
+
+---
+
+#### 2. **Sidebar (Menu principal)**
+
+```plaintext
+[PPP]
+ ├─ Criar novo
+ ├─ Meus PPPs
+ ├─ Validação pendente (somente para usuários de setores autorizados)
+ ├─ Todos os PPPs (somente para nível DAF/DIREX/Conselho)
+```
+
+---
+
+### 🧩 **Telas necessárias**
+
+#### ✅ Tela: Criar PPP (solicitacao/create.blade.php)
+
+* Formulário com os campos principais
+* Validação com `StoreSolicitacaoRequest`
+* Envio via `POST /solicitacao`
+* Exibe mensagem de sucesso ou erro via `session()->with()`
+
+#### 📄 Tela: Meus PPPs
+
+* Lista apenas os PPPs do usuário logado
+* Colunas básicas: número, data, status, ações (editar, visualizar)
+* Filtro por status ou data
+
+#### 👁 Tela: Visualizar PPP (read-only)
+
+* Mostra todos os campos do PPP
+* Exibe status atual e histórico (ex: “Aprovado pelo Coordenador em xx/xx”)
+* Se o usuário puder editar, exibe botão “Editar” ou “Cancelar”
+
+#### 🧾 Tela: Validação pendente
+
+* Lista de PPPs que aguardam validação pelo setor atual
+* Botões de “Aprovar”, “Rejeitar”, “Devolver com justificativa”
+* Campos bloqueados para edição (só leitura)
+
+#### 🔍 Tela: Todos os PPPs (administração)
+
+* Filtro avançado por setor, status, usuário, período
+* Visualização completa de cada PPP
+* Exportação (Excel, PDF – opcional no MVP)
+
+---
+
+### 🔒 Fluxo de aprovação (resumo)
+
+1. Usuário cria PPP
+2. PPP vai para o **Coordenador**
+3. Depois, para o **Superior Imediato**
+4. Em seguida, para o **DAF**
+5. Depois, **DIREX**
+6. Finaliza no **Conselho**
+7. Cada etapa pode:
+
+   * Aprovar
+   * Devolver com justificativa
+   * Rejeitar
+
+---
+
+Quer que eu te ajude agora a desenhar os campos do formulário do PPP e já conectar com a base de dados e a validação?

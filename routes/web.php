@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRoleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PppController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -26,6 +27,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/users/store', [UserRoleController::class, 'store'])->name('admin.users.store');
     Route::delete('/admin/users/{user}', [UserRoleController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/api/check-email', [UserController::class, 'checkEmail'])->name('api.check-email');
+    Route::post('/ppp', [PppController::class, 'store'])->name('ppp.store');
+
 
     // Rotas de Impersonate
     Route::post('/admin/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('admin.impersonate');

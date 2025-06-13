@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PcaSolicitacao extends Model
+class PcaPPP extends Model
 {
-    protected $table = 'PCA_solicitacao';
+    protected $table = 'PCA_PPP';
 
     protected $fillable = [
         'area_solicitante',
@@ -48,11 +48,11 @@ class PcaSolicitacao extends Model
 
     public function solicitacaoPai()
     {
-        return $this->belongsTo(self::class, 'PCA_solicitacao_id');
+        return $this->belongsTo(self::class, 'PCA_PPP_id');
     }
 
     public function solicitacaoFilha()
     {
-        return $this->hasOne(self::class, 'PCA_solicitacao_id');
+        return $this->hasOne(self::class, 'PCA_PPP_id');
     }
 }
