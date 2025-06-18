@@ -27,9 +27,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/users/store', [UserRoleController::class, 'store'])->name('admin.users.store');
     Route::delete('/admin/users/{user}', [UserRoleController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/api/check-email', [UserController::class, 'checkEmail'])->name('api.check-email');
+
+    Route::get('/ppp/create', [PppController::class, 'create'])->name('ppp.create'); // vai abrir a view quando o cliente clica em "Criar novo PPP"
     Route::post('/ppp', [PppController::class, 'store'])->name('ppp.store');
-
-
+    
     // Rotas de Impersonate
     Route::post('/admin/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('admin.impersonate');
 });

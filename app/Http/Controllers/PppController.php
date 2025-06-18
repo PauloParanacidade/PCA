@@ -3,19 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePppRequest;
-use App\Models\PcaPPP as PPP;
+use App\Models\PcaPpp;
+use Illuminate\Http\Request;
 
 class PppController extends Controller
 {
+    public function create()
+    {
+        return view('ppp.create'); // nome do arquivo blade: resources/views/ppp/create.blade.php
+    }
+    
     public function store(StorePppRequest $request)
     {
-        // Aqui o request já está validado automaticamente
+        dd('entrou no store');
+        
+        $dados = $request->all();
 
-        $data = $request->validated(); // pega só os dados validados
+        // Tratamento dos valores monetários
+        $dados['estimativa_valor'] = intval(str_replace(['R$', '.', ','], ['', '', ''], $dados['estimativa_valor']));
+        $dados['valor_contrato_atualizado'] = $request->input('valor_contrato_atualizado')
+            ? intval(str_replace(['R$', '.', ','], ['', '', ''], $dados['valor_contrato_atualizado']))
+            : null;
 
-        // Crie o PPP usando a model, por exemplo:
-        PPP::create($data);
+        // Adaptação do campo composto
+        $dados['ate_partir_dia'] = $request->input('tempo_aquisicao');
+        unset($dados['tempo_aquisicao']);
 
-        return redirect()->back()->with('success', 'PPP criado com sucesso');
+        // Salva no banco
+        PcaPpp::create($dados);
+
+        //return redirect()->route('ppp.create')->with('success', 'PPP criado com sucesso!');
+        return back()->withInput()->with('success', 'PPP criado com sucesso!');
     }
 }

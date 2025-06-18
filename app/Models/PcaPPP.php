@@ -4,16 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PcaPPP extends Model
+class PcaPpp extends Model
 {
-    protected $table = 'PCA_PPP';
+    protected $table = 'pca_ppps'; // snake_case, padrão Laravel
 
     protected $fillable = [
         'area_solicitante',
         'area_responsavel',
-        'id_item',
-        'PCA_categoria_id',
-        'PCA_nome_item_id',
+        'cod_id_item',
+        'categoria',
+        'nome_item',
         'descricao',
         'quantidade',
         'justificativa_pedido',
@@ -21,38 +21,22 @@ class PcaPPP extends Model
         'justificativa_valor',
         'origem_recurso',
         'grau_prioridade',
-        'data_ideal_aquisicao',
+        'ate_partir_dia',
+        'data_ideal',
         'vinculacao_item',
-        'PCA_solicitacao_id',
         'justificativa_vinculacao',
-        'dt_preenchimento',
-        'PCA_contrato_id',
+        'renov_contrato',
+        'num_contrato',
+        'valor_contrato',
+        'historico',
+        'data_temp',
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
-    public function contrato()
-    {
-        return $this->belongsTo(PcaContrato::class, 'PCA_contrato_id');
-    }
-
-    public function nomeItem()
-    {
-        return $this->belongsTo(PcaNomeItem::class, 'PCA_nome_item_id');
-    }
-
-    public function categoria()
-    {
-        return $this->belongsTo(PcaCategoria::class, 'PCA_categoria_id');
-    }
-
-    public function solicitacaoPai()
-    {
-        return $this->belongsTo(self::class, 'PCA_PPP_id');
-    }
-
-    public function solicitacaoFilha()
-    {
-        return $this->hasOne(self::class, 'PCA_PPP_id');
-    }
+    // Relacionamentos futuros (comente ou adicione conforme implementar)
+    // public function contrato()
+    // {
+    //     return $this->belongsTo(PcaContrato::class, 'PCA_contrato_id');
+    // }
 }
