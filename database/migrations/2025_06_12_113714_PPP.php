@@ -14,7 +14,9 @@ return new class extends Migration
             $table->string('area_solicitante', 45);
             $table->string('area_responsavel', 45);
 
-            $table->unsignedInteger('cod_id_item');
+            $table->date('data_status',);
+
+            $table->unsignedInteger('cod_id_item')->nullable();
             $table->string('categoria', 45);
             $table->string('nome_item', 100);
             $table->string('descricao', 100);
@@ -27,18 +29,16 @@ return new class extends Migration
             $table->string('grau_prioridade', 20);
 
             $table->string('ate_partir_dia', 20); // 'Até', 'A partir de', 'No dia'
-            $table->date('data_ideal');
+            $table->date('data_ideal_aquisicao');
 
             $table->boolean('vinculacao_item');
             $table->string('justificativa_vinculacao', 100)->nullable();
 
             $table->boolean('renov_contrato');
             $table->unsignedInteger('num_contrato')->nullable();
-            $table->unsignedInteger('valor_contrato')->nullable();
+            $table->unsignedInteger('valor_contrato_atualizado')->nullable();
 
             $table->string('historico',256)->nullable();
-
-            $table->date('data_temp');
 
             $table->timestamps();
         });

@@ -43,7 +43,7 @@
                     </div>
                     <div class="form-group col-md-3">
                         <label>Data do Status</label>
-                        <input type="date" name="data_status" class="form-control" value="{{ now()->format('Y-m-d') }}"
+                        <input type="date" name="data_status" class="form-control" value="{{ now()->format('Y-m-d') }}"  {{-- posteriormente tratar o now no controller --}}
                             readonly>
                     </div>
                 </div>
@@ -66,12 +66,12 @@
                             <div class="form-group col-md-5">
                                 <label>Nome do Item</label>
                                 <input type="text" name="nome_item" class="form-control" required
-                                    placeholder="Ex: Aluguel de impressoras ou Consultoria para suporte em TI">
+                                    placeholder="Ex: Aluguel de impressoras ou Consultoria para suporte em TI" autocomplete="off">
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Quantidade</label>
                                 <input type="text" name="quantidade" class="form-control" required
-                                    placeholder="Ex: 2 unidades ou 1 visita por ano">
+                                    placeholder="Ex: 2 unidades ou 1 visita por ano" autocomplete="off">
                             </div>
 
                             {{-- 3ª Linha: Descrição do item --}}
@@ -98,12 +98,13 @@
                                     <option value="" disabled selected>Selecione</option>
                                     <option value="opcao 1">Paranacidade</option>
                                     <option value="opcao 2">BID/FDU</option>
+                                    <option value="opcao 3">FDU</option>
                                 </select>
                             </div>
                             <div class="form-group col-md-6">
                                 <label>Fonte justificativa do valor</label>
                                 <input type="text" name="justificativa_valor" class="form-control"
-                                    placeholder="Cotação realizada dia 01/01/2025 no portal do governo" autocomplete="off" required>
+                                    placeholder="Cotação realizada dia 01/01/2025 no portal do governo" autocomplete="off" required autocomplete="off">
                             </div>
                             <div class="form-group col-md-2">
                                 <label>Prioridade</label>
@@ -117,7 +118,7 @@
 
                             {{-- 5ª Linha: Vinculação de item --}}
                             <div class="form-group col-md-2">
-                                <label>Vinculação de Item</label>
+                                <label>Vinculação/Dependência</label>
                                 <select name="vinculacao_item" class="form-control" required>
                                     <option value="" disabled selected>Selecione</option>
                                     <option value="1">Sim</option>
@@ -125,13 +126,13 @@
                                 </select>
                             </div>
                             <div class="form-group col-md-6">
-                                <label>Justificativa da Vinculação</label>
-                                <input type="text" name="justificativa_vinculacao" class="form-control">
+                                <label>Justificativa da Vinculação/Dependência com outro item</label>
+                                <input type="text" name="justificativa_vinculacao" class="form-control" autocomplete="off">
                             </div>
                             <div class="form-group col-md-4">
                                 <label>Data Ideal para Contratação</label>
                                 <div class="d-flex">
-                                    <select class="form-control text-end" id="tempo_aquisicao" name="tempo_aquisicao"
+                                    <select class="form-control text-end" id="ate_partir_dia" name="ate_partir_dia" required
                                         style="max-width: 50%; margin-right: 10px;">
                                         <option value="" disabled selected>Selecione</option>
                                         <option value="ate">Até:</option>
@@ -144,20 +145,24 @@
                             </div>
 
                             {{-- 6ª Linha: Contrato --}}
-                            <div class="form-group col-md-4">
-                                <label>Haverá renovação de Contrato?</label>
+                            <div class="form-group col-md-3">
+                                <label>Será renovação de Contrato?</label>
                                 <select name="renov_contrato" class="form-control" required>
                                     <option value="" disabled selected>Selecione</option>
                                     <option value="1">Sim</option>
                                     <option value="0">Não</option>
                                 </select>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
+                                <label>Previsão</label>
+                                <input type="date" name="previsao" class="form-control">
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label>Número do Contrato</label>
                                 <input type="text" name="num_contrato" class="form-control"
                                     placeholder="0001/2023" autocomplete="off">
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label>Valor do Contrato (atualizado)</label>
                                 <input type="text" name="valor_contrato_atualizado" class="form-control valor_contrato_atualizado"
                                     placeholder="R$ 0,00" autocomplete="off">
@@ -168,13 +173,11 @@
                     {{-- Lado direito: histórico --}}
                     <div class="form-group col-md-3">
                         <label>Histórico</label>
-                        <textarea name="historico" class="form-control" rows="19" maxlength="256" required></textarea>
+                        <textarea name="historico" class="form-control" rows="19" maxlength="256"></textarea>
                     </div>
                 </div>
                 <div class="card-footer text-center">
                     <button type="submit" class="btn btn-success btn-lg px-5 py-2">Salvar</button>
-                    <button type="reset" class="btn btn-warning btn-lg px-5 py-2"
-                        style="margin-left: 2rem;">Limpar</button>
                 </div>
             </div>
         </form>

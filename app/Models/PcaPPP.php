@@ -11,6 +11,7 @@ class PcaPpp extends Model
     protected $fillable = [
         'area_solicitante',
         'area_responsavel',
+        'data_status',
         'cod_id_item',
         'categoria',
         'nome_item',
@@ -22,14 +23,14 @@ class PcaPpp extends Model
         'origem_recurso',
         'grau_prioridade',
         'ate_partir_dia',
-        'data_ideal',
+        'data_ideal_aquisicao',
         'vinculacao_item',
         'justificativa_vinculacao',
         'renov_contrato',
         'num_contrato',
-        'valor_contrato',
+        'valor_contrato_atualizado',
         'historico',
-        'data_temp',
+        
     ];
 
     public $timestamps = true;
