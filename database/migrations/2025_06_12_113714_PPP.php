@@ -35,7 +35,8 @@ return new class extends Migration
             $table->string('justificativa_vinculacao', 100)->nullable();
 
             $table->boolean('renov_contrato');
-            $table->unsignedInteger('num_contrato')->nullable();
+            $table->date('previsao');
+            $table->string('num_contrato', 10)->nullable();
             $table->unsignedInteger('valor_contrato_atualizado')->nullable();
 
             $table->string('historico',256)->nullable();

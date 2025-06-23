@@ -27,6 +27,7 @@ class PcaPpp extends Model
         'vinculacao_item',
         'justificativa_vinculacao',
         'renov_contrato',
+        'previsao',
         'num_contrato',
         'valor_contrato_atualizado',
         'historico',

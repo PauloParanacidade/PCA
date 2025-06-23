@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Log;
+use phpDocumentor\Reflection\Types\Nullable;
 
 class StorePppRequest extends FormRequest
 {
@@ -35,6 +36,8 @@ class StorePppRequest extends FormRequest
             'vinculacao_item' => 'required|boolean',
             'justificativa_vinculacao' => 'nullable|string|max:100',
             'renov_contrato' => 'required|boolean',
+            'previsao' => 'Nullable|date',
+            'num_contrato' => 'nullable|string|max:10',
             'valor_contrato_atualizado' => 'nullable|string', // será convertido no controller
             'historico' => 'nullable|string|max:256',
             
