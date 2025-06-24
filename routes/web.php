@@ -30,7 +30,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/ppp/create', [PppController::class, 'create'])->name('ppp.create'); // vai abrir a view quando o cliente clica em "Criar novo PPP"
     Route::post('/ppp', [PppController::class, 'store'])->name('ppp.store');
-    
+
+    Route::get('/meus-ppps', [PppController::class, 'meusPpps'])->name('ppp.meus'); // abrirá a view meus.blade.php quando clicado em Meus PPPs
+
+   
     // Rotas de Impersonate
     Route::post('/admin/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('admin.impersonate');
 });

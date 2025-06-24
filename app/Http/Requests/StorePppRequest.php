@@ -18,9 +18,10 @@ class StorePppRequest extends FormRequest
     public function rules(): array
     {
         return [
+            //'user_id' => 'nullable|exists:users,id',
             'area_solicitante' => 'required|string|max:45',
             'area_responsavel' => 'required|string|max:45',
-            'data_status' => 'required|date', // no modo MVP a ideia era manter como temporário
+            // 'data_status' => 'required|date', // no modo MVP a ideia era manter como temporário
             // 'cod_id_item' => 'required|integer', // lembrete: esse campo não virá do front
             'categoria' => 'required|string|max:45',
             'nome_item' => 'required|string|max:100',
@@ -28,18 +29,18 @@ class StorePppRequest extends FormRequest
             'quantidade' => 'required|string|max:45',
             'justificativa_pedido' => 'required|string|max:100',
             'estimativa_valor' => 'required|string', // será convertido no controller
-            'justificativa_valor' => 'required|string|max:45',
+            'justificativa_valor' => 'required|string|max:100',
             'origem_recurso' => 'required|string|max:45',
             'grau_prioridade' => 'required|string|max:45',
             'ate_partir_dia' => 'nullable|string|max:100',
             'data_ideal_aquisicao' => 'required|date',
-            'vinculacao_item' => 'required|boolean',
+            'vinculacao_item' => ['required', 'string', 'in:Sim,Não'],
             'justificativa_vinculacao' => 'nullable|string|max:100',
-            'renov_contrato' => 'required|boolean',
+            'renov_contrato' => ['required', 'string', 'in:Sim,Não'],
             'previsao' => 'Nullable|date',
             'num_contrato' => 'nullable|string|max:10',
             'valor_contrato_atualizado' => 'nullable|string', // será convertido no controller
-            'historico' => 'nullable|string|max:256',
+            // 'historico' => 'nullable|string|max:256',
             
         ];
     }

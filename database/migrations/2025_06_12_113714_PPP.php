@@ -9,37 +9,34 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pca_ppps', function (Blueprint $table) {
-            $table->id(); // equivale ao INT NOT NULL AUTO_INCREMENT com chave primária
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
             $table->string('area_solicitante', 45);
             $table->string('area_responsavel', 45);
 
-            $table->date('data_status',);
-
             $table->unsignedInteger('cod_id_item')->nullable();
             $table->string('categoria', 45);
             $table->string('nome_item', 100);
-            $table->string('descricao', 100);
+            $table->string('descricao', 255); // mais espaço para texto
             $table->string('quantidade', 45);
             $table->string('justificativa_pedido', 100);
 
-            $table->unsignedInteger('estimativa_valor');
-            $table->string('justificativa_valor', 45);
+            $table->decimal('estimativa_valor', 10, 2);
             $table->string('origem_recurso', 20);
+            $table->string('justificativa_valor', 100);
             $table->string('grau_prioridade', 20);
 
-            $table->string('ate_partir_dia', 20); // 'Até', 'A partir de', 'No dia'
+            $table->string('ate_partir_dia', 20);
             $table->date('data_ideal_aquisicao');
 
-            $table->boolean('vinculacao_item');
+            $table->enum('vinculacao_item', ['Sim', 'Não']);
             $table->string('justificativa_vinculacao', 100)->nullable();
 
-            $table->boolean('renov_contrato');
-            $table->date('previsao');
+            $table->enum('renov_contrato', ['Sim', 'Não']);
+            $table->date('previsao')->nullable();
             $table->string('num_contrato', 10)->nullable();
-            $table->unsignedInteger('valor_contrato_atualizado')->nullable();
-
-            $table->string('historico',256)->nullable();
+            $table->decimal('valor_contrato_atualizado', 10, 2)->nullable();
 
             $table->timestamps();
         });

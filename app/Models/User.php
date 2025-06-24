@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -144,6 +145,35 @@ class User extends Authenticatable implements LdapAuthenticatable
         }
         return false;
     }
+    public function getAreaResponsavelFormatadaAttribute(): string
+    {
+        $manager = $this->manager;
+
+        if (!$manager) {
+            return '';
+        }
+
+        if (preg_match('/CN=([^,]+),OU=([^,]+)/', $manager, $matches)) {
+            $nome = $matches[1];
+            $sigla = $matches[2];
+            return "{$sigla} - {$nome}";
+        }
+
+        return '';
+    }
+
+    public function getAreaSolicitanteFormatadaAttribute(): string
+{
+    $sigla = $this->department; // ex: "CTI"
+    $nome = $this->name;        // ex: "Jose da Silva"
+
+    if (!$sigla || !$nome) {
+        return '';
+    }
+
+    return "{$sigla} - {$nome}";
+}
+
 
     public function sendPasswordResetNotification($token)
     {

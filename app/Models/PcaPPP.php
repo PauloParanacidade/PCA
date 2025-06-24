@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class PcaPpp extends Model
 {
-    protected $table = 'pca_ppps'; // snake_case, padrão Laravel
+    protected $table = 'pca_ppps';
 
     protected $fillable = [
+        'user_id',
         'area_solicitante',
         'area_responsavel',
-        'data_status',
         'cod_id_item',
         'categoria',
         'nome_item',
@@ -30,15 +30,18 @@ class PcaPpp extends Model
         'previsao',
         'num_contrato',
         'valor_contrato_atualizado',
-        'historico',
-        
     ];
 
-    public $timestamps = true;
+    protected $casts = [
+        'estimativa_valor' => 'float',
+        'valor_contrato_atualizado' => 'float',
+        'data_ideal_aquisicao' => 'date',
+        'previsao' => 'date',
+    ];
 
-    // Relacionamentos futuros (comente ou adicione conforme implementar)
-    // public function contrato()
-    // {
-    //     return $this->belongsTo(PcaContrato::class, 'PCA_contrato_id');
-    // }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
+
