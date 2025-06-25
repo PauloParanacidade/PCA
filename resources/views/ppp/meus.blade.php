@@ -15,7 +15,7 @@
     @endif
 
     @if($ppps->isEmpty())
-        <div class="alert alert-info">Você ainda não cadastrou nenhum PPP.</div>
+        <div class="alert alert-info">Você não tem nenhuma PPP cadastrada.</div>
     @else
         <table class="table table-bordered table-hover">
             <thead class="thead-dark">

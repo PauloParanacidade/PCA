@@ -1,0 +1,51 @@
+
+
+### **Nome do Projeto:**
+
+**PCA - Planejamento de Contratações Anual**
+
+---
+
+### **Descrição:**
+
+Sistema web desenvolvido em Laravel para controlar o fluxo de pedidos de itens e serviços do Paranacidade. Inicia com a formalização das Propostas para o PCA (PPP) feitas pelos setores da organização. O sistema substitui planilhas manuais, centraliza a criação, validação, acompanhamento e histórico dos pedidos. Inclui controle de permissões por papel, autenticação via LDAP, formulários com validação de dados e estrutura preparada para análises futuras e registro técnico de operações.
+
+---
+
+### **Status:**
+
+Projeto em desenvolvimento avançado.
+**Módulos concluídos:**
+
+* Estrutura base do sistema (Laravel, autenticação, middleware)
+* Módulo de cadastro de PPP com validações e persistência no banco de dados
+* Importação de usuários via LDAP
+
+**Módulo em andamento:**
+
+* Definição dos status
+
+**Módulos previstos:**
+
+* Registro do histórico de ações no fluxo
+* Visualização e edição dos PPPs salvos
+* Aprovações em múltiplos níveis (setores e diretoria)
+* Geração de painel/tabela com os PPPs (para uso da DIREX e Conselho)
+* Deploy
+
+---
+
+### **Previsão de Entrega:**
+
+**Versão MVP funcional até 30 de junho de 2025**
+Entrega parcial para homologação interna prevista até 07 de julho de 2025.
+
+**Módulos a serem incorporados nas versões seguintes:**
+
+* Nova rodada de reuniões com os departamentos de Licitações e Controladoria para definição dos requisitos de:
+
+  * DFD (Documento de Formalização da Demanda)
+  * ETP (Estudo Técnico Preliminar)
+  * TR (Termo de Referência)
+* Painel administrativo com controle de permissões por perfil
+* Dashboards e relatórios para análise gerencial

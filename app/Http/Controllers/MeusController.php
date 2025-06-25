@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StorePppRequest;
 use App\Models\PcaPpp;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class MeusController extends Controller
 {
-    public function verPps()
+    public function verPpps()
     {
-        Log::info('ENTROU no método meusPpps em PppController');
+        Log::info('ENTROU no método verPpps em MeusController');
 
         try {
             $usuarioId = auth()->id();

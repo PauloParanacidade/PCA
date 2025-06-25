@@ -6,6 +6,11 @@ use App\Http\Controllers\UserRoleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PppController;
+use App\Http\Controllers\MeusController;
+
+Route::get('/meus-ppps', [MeusController::class, 'verPpps'])
+    ->name('ppp.meus')
+    ->middleware(['auth', 'role:admin']);
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -28,27 +33,32 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/users/{user}', [UserRoleController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/api/check-email', [UserController::class, 'checkEmail'])->name('api.check-email');
 
-    Route::get('/ppp/create', [PppController::class, 'create'])->name('ppp.create'); // vai abrir a view quando o cliente clica em "Criar novo PPP"
-    Route::post('/ppp', [PppController::class, 'store'])->name('ppp.store');
 
-    Route::get('/meus-ppps', [PppController::class, 'meusPpps'])->name('ppp.meus'); // abrirá a view meus.blade.php quando clicado em Meus PPPs
 
-   
+    
+    // REMOVA estas rotas específicas pois o resource já as gera
+    // Route::get('/ppp/create', [PppController::class, 'create'])->name('ppp.create');
+    // Route::post('/ppp', [PppController::class, 'store'])->name('ppp.store');
+
+    // Use o resource completo, com os middlewares
+    Route::resource('ppp', PppController::class)->middleware(['auth', 'role:admin']);
+
+
+
+
     // Rotas de Impersonate
     Route::post('/admin/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('admin.impersonate');
 });
 
-// Rota para depuração (apenas em ambiente de desenvolvimento)
+// Rota para depuração (ambiente local)
 if (app()->environment('local')) {
     Route::get('/debug/auth', function () {
-        $output = [
+        return response()->json([
             'auth_guards'      => config('auth.guards'),
             'auth_providers'   => config('auth.providers'),
             'ldap_config'      => config('ldap.connections'),
             'ldap_auth_config' => config('ldap_auth'),
-        ];
-
-        return response()->json($output);
+        ]);
     });
 }
 

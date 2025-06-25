@@ -1,0 +1,79 @@
+Hierarquia dos PDAs
+
+Os planos de contratação anual da Assessoria Especial da Superintendência, da Assessoria de Programas Especiais, da Controladoria Interna, da Assessoria de Comunicação Social, da Assessoria de Governança e Gestão Estratégica, do Secretário e do Secretário do Conselho são aprovados pelo Superintendente.
+
+	SUPERINTENDE
+AES
+APE
+COI
+ACS
+AGE (secretário e secretário do Conselho)?
+
+*************************************************
+
+Os planos de contratação anual da Coordenadoria de Tecnologia da Informação, da Assessoria de Sistemas da Informação, da Assessoria Técnica Operacional, da Procuradoria Jurídica, da Coordenadoria de Estudos e Captação de Recursos e da Assessoria de Apoio Integrado I a VI são aprovados pela Superintendente Executiva.
+
+	SUPERINTENDENTE EXECUTIVA
+CTI
+ASI
+ATO
+PJU
+CECR
+AAI
+
+*************************************************
+
+Os planos de contratação anual da Coordenadoria Administrativa, da Coordenadoria Financeira, da Coordenadoria de Recursos Humanos e da Coordenadoria de Licitações e Contratos são aprovados pelo Diretor de Administração e Finanças.
+
+	DAF
+CAD
+CFI
+CRH
+CLC
+
+*************************************************
+
+Os plano de contratação anual da Coordenadoria de Projetos, da Coordenadoria Regional Estadual de Curitiba, da Coordenadoria Regional Estadual de Ponta Grossa, da Coordenadoria Regional Estadual de Guarapuava, da Coordenadoria Regional Estadual de Cascavel, da Coordenadoria Regional Estadual de Maringá e da Coordenadoria Regional Estadual de Londrina são aprovados pelo Diretor de Operações Estaduais.
+
+	DOE
+CPR
+CECTBA
+CEPG (CMPG)
+CEGP (CMGP)
+CECAS (CMCAS)
+CEMGA (CMMGA)
+CELDR (CMLDR)
+
+*************************************************
+
+Os planos de contratação anual da Coordenadoria Operacional Municipal, da Coordenadoria de Desenvolvimento Institucional Municipal, da Coordenadoria Regional Municipal de Maringá, da Coordenadoria Regional Municipal de Londrina, da Coordenadoria Regional Municipal de Cascavel, da Coordenadoria Regional Municipal de  Guarapuava e da Coordenadoria Regional Municipal de Ponta Grossa são aprovados pelo Diretor de Operações Municipais.
+
+	DOM
+COM
+CDIM
+CMMGA
+CMLDR
+CMCAS
+CMGP
+CMPG
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

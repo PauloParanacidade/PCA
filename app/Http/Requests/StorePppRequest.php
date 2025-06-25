@@ -18,17 +18,16 @@ class StorePppRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //'user_id' => 'nullable|exists:users,id',
             'area_solicitante' => 'required|string|max:45',
             'area_responsavel' => 'required|string|max:45',
-            // 'data_status' => 'required|date', // no modo MVP a ideia era manter como temporário
-            // 'cod_id_item' => 'required|integer', // lembrete: esse campo não virá do front
             'categoria' => 'required|string|max:45',
             'nome_item' => 'required|string|max:100',
-            'descricao' => 'required|string|max:100',
+            'descricao' => 'required|string|max:255', // ajustado para 255 (conforme migration)
             'quantidade' => 'required|string|max:45',
             'justificativa_pedido' => 'required|string|max:100',
-            'estimativa_valor' => 'required|string', // será convertido no controller
+
+            // Para valores, validar como string que contenha números e formatação monetária possível
+            'estimativa_valor' => ['required', 'regex:/^\s*R?\$?\s?\d{1,3}(\.\d{3})*(,\d{2})?\s*$/'],
             'justificativa_valor' => 'required|string|max:100',
             'origem_recurso' => 'required|string|max:45',
             'grau_prioridade' => 'required|string|max:45',
@@ -37,13 +36,13 @@ class StorePppRequest extends FormRequest
             'vinculacao_item' => ['required', 'string', 'in:Sim,Não'],
             'justificativa_vinculacao' => 'nullable|string|max:100',
             'renov_contrato' => ['required', 'string', 'in:Sim,Não'],
-            'previsao' => 'Nullable|date',
+            'previsao' => 'nullable|date',
             'num_contrato' => 'nullable|string|max:10',
-            'valor_contrato_atualizado' => 'nullable|string', // será convertido no controller
-            // 'historico' => 'nullable|string|max:256',
-            
+
+            'valor_contrato_atualizado' => ['nullable', 'regex:/^\s*R?\$?\s?\d{1,3}(\.\d{3})*(,\d{2})?\s*$/'],
         ];
     }
+
 
     protected function failedValidation(Validator $validator)
     {
