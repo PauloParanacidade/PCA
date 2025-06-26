@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('pca_ppps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('status_id')->default(1)->constrained('ppp_statuses');
 
             $table->string('area_solicitante', 45);
             $table->string('area_responsavel', 45);

@@ -43,5 +43,9 @@ class PcaPpp extends Model
     {
         return $this->belongsTo(User::class);
     }
-}
 
+    public function historicos()
+    {
+        return $this->hasMany(\App\Models\PppHistorico::class, 'ppp_id');
+    }
+}
