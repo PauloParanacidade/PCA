@@ -29,9 +29,9 @@ class StorePppRequest extends FormRequest
             // Para valores, validar como string que contenha números e formatação monetária possível
             'estimativa_valor' => ['required', 'regex:/^\s*R?\$?\s?\d{1,3}(\.\d{3})*(,\d{2})?\s*$/'],
             'justificativa_valor' => 'required|string|max:100',
-            'origem_recurso' => 'required|string|max:45',
-            'grau_prioridade' => 'required|string|max:45',
-            'ate_partir_dia' => 'nullable|string|max:100',
+            'origem_recurso' => 'required|string|max:20',
+            'grau_prioridade' => 'required|string|max:20',
+            'ate_partir_dia' => 'nullable|string|max:20',
             'data_ideal_aquisicao' => 'required|date',
             'vinculacao_item' => ['required', 'string', 'in:Sim,Não'],
             'justificativa_vinculacao' => 'nullable|string|max:100',

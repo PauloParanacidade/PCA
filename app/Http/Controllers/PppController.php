@@ -66,9 +66,26 @@ class PppController extends Controller
 
     public function index()
     {
-        $ppps = PcaPpp::all();
-        return view('ppp.index', compact('ppps'));
+        Log::info('ENTROU no método index em PppController');
+
+        try {
+            $usuarioId = auth()->id();
+            Log::debug('Buscando PPPs do usuário logado', ['user_id' => $usuarioId]);
+
+            $ppps = PcaPpp::where('user_id', $usuarioId)->get();
+            Log::info('Quantidade de PPPs encontrados:', ['total' => $ppps->count()]);
+
+            return view('ppp.index', compact('ppps'));
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao carregar os PPPs do usuário:', [
+                'exception' => $ex,
+                'user_id' => auth()->id(),
+            ]);
+            Log::debug($ex->getTraceAsString());
+            return back()->withErrors(['msg' => 'Erro ao carregar seus PPPs.']);
+        }
     }
+
 
     public function show($id)
     {
@@ -82,54 +99,37 @@ class PppController extends Controller
         return view('ppp.edit', compact('ppp'));
     }
 
-    public function update(Request $request, $id)
-{
-    try {
-        $ppp = PcaPpp::findOrFail($id);
+    public function update(StorePppRequest $request, $id)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
 
-        $dados = $request->validate([
-            'categoria' => 'required|string|max:45',
-            'nome_item' => 'required|string|max:100',
-            'descricao' => 'required|string|max:255',
-            'quantidade' => 'required|string|max:45',
-            'justificativa_pedido' => 'required|string|max:100',
+            $dados = $request->validated();
 
-            'estimativa_valor' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'], // decimal com até 2 casas
-            'origem_recurso' => 'required|string|max:20',
-            'justificativa_valor' => 'required|string|max:100',
-            'grau_prioridade' => 'required|string|max:20',
+            // Conversão do campo estimativa_valor (R$ 1.234,56 → 1234.56)
+            $dados['estimativa_valor'] = floatval(
+                str_replace(['R$', '.', ','], ['', '', '.'], $request->estimativa_valor)
+            );
 
-            'ate_partir_dia' => 'required|string|max:20',
-            'data_ideal_aquisicao' => 'required|date',
+            // Conversão do campo valor_contrato_atualizado (se preenchido)
+            $dados['valor_contrato_atualizado'] = $request->filled('valor_contrato_atualizado')
+                ? floatval(str_replace(['R$', '.', ','], ['', '', '.'], $request->valor_contrato_atualizado))
+                : null;
 
-            'vinculacao_item' => 'required|in:Sim,Não',
-            'justificativa_vinculacao' => 'nullable|string|max:100',
+            // Garantir campo previsao como null se estiver vazio
+            $dados['previsao'] = $request->filled('previsao') ? $request->previsao : null;
 
-            'renov_contrato' => 'required|in:Sim,Não',
-            'previsao' => 'nullable|date',
-            'num_contrato' => 'nullable|string|max:10',
-            'valor_contrato_atualizado' => ['nullable', 'regex:/^\d+(\.\d{1,2})?$/'],
-        ]);
- 
-        // Converte valores monetários formatados para float
-        $dados['estimativa_valor'] = floatval(str_replace([',', 'R$', '.'], ['', '', ''], $request->estimativa_valor));
+            $ppp->update($dados);
 
-        if ($request->filled('valor_contrato_atualizado')) {
-            $dados['valor_contrato_atualizado'] = floatval(str_replace([',', 'R$', '.'], ['', '', ''], $request->valor_contrato_atualizado));
-        } else {
-            $dados['valor_contrato_atualizado'] = null;
+            return redirect()->route('ppp.index')->with('success', 'PPP atualizado com sucesso.');
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao atualizar PPP: ' . $ex->getMessage(), [
+                'exception' => $ex
+            ]);
+            return back()->withInput()->withErrors(['msg' => 'Erro ao atualizar.']);
         }
-
-        $ppp->update($dados);
-
-        return redirect()->route('ppp.index')->with('success', 'PPP atualizado com sucesso.');
-    } catch (\Throwable $ex) {
-        Log::error('Erro ao atualizar PPP: ' . $ex->getMessage(), [
-            'exception' => $ex
-        ]);
-        return back()->withInput()->withErrors(['msg' => 'Erro ao atualizar.']);
     }
-}
+
 
 
 

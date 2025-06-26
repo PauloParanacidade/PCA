@@ -1,18 +1,19 @@
 @extends('adminlte::page')
 
-@section('title', 'Meus PPPs')
+@section('title', 'PPPs')
 
 @section('content_header')
-    <h1>Meus PPPs</h1>
+    <h1>PPPs</h1>
 @endsection
 
 @section('content')
 <div class="container">
-    <h3 class="mb-4">Meus PPPs</h3>
+    <h3 class="mb-4">Lista de PPPs</h3>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+
 
     @if($ppps->isEmpty())
         <div class="alert alert-info">Você não tem nenhuma PPP cadastrada.</div>

@@ -1,0 +1,28 @@
+A FAZER
+
+colocar filtros na tabela para que o gestor possa filtrar os que estão pendentes para ele validar
+
+Campos descrição do objeto e Justificativa para aquisição
+	placeholder sumiu
+
+
+--------------------
+
+A ESTUDAR
+
+findOrFail($id) — O que é?
+$ppp = PcaPpp::findOrFail($id);
+Esse método do Eloquent faz o seguinte:
+    find($id): retorna o modelo pelo ID ou null se não encontrar.
+    findOrFail($id): retorna o modelo ou lança uma exceção 404 (ModelNotFoundException) se o ID não existir.
+👉 É boa prática usar findOrFail em rotas onde o recurso deve existir, como edição ou exclusão. Se não existir, o Laravel retorna uma página 404 automaticamente.
+
+
+
+
+// REMOVA estas rotas específicas pois o resource já as gera
+    // Route::get('/ppp/create', [PppController::class, 'create'])->name('ppp.create');
+    // Route::post('/ppp', [PppController::class, 'store'])->name('ppp.store');
+
+    // Use o resource completo, com os middlewares
+    Route::resource('ppp', PppController::class)->middleware(['auth', 'role:admin']);

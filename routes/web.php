@@ -8,10 +8,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PppController;
 use App\Http\Controllers\MeusController;
 
-Route::get('/meus-ppps', [MeusController::class, 'verPpps'])
-    ->name('ppp.meus')
-    ->middleware(['auth', 'role:admin']);
-
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
@@ -35,11 +31,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 
 
-    
-    // REMOVA estas rotas específicas pois o resource já as gera
-    // Route::get('/ppp/create', [PppController::class, 'create'])->name('ppp.create');
-    // Route::post('/ppp', [PppController::class, 'store'])->name('ppp.store');
 
+    // O resource já as gera as rotas específicas
     // Use o resource completo, com os middlewares
     Route::resource('ppp', PppController::class)->middleware(['auth', 'role:admin']);
 

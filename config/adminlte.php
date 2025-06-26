@@ -323,7 +323,7 @@ return [
         ],
         [
             'text' => 'Meus PPPs',
-            'url'  => '/meus-ppps',
+            'url'  => 'ppp',
             'icon' => 'fas fa-fw fa-list',
         ],
         [

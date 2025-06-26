@@ -90,7 +90,7 @@
                 {{-- 4ª Linha --}}
                 <div class="form-row">
                     <div class="form-group col-md-2">
-                        <label>Estimativa de Valor</label>
+                        <label>Estimativa de Valor para o período</label>
                         <input type="text" name="estimativa_valor" class="form-control estimativa_valor" required
                             value="{{ old('estimativa_valor', $ppp->estimativa_valor ?? '') }}" placeholder="R$ 0,00"
                             autocomplete="off">
@@ -112,7 +112,7 @@
                         <label>Fonte justificativa do valor</label>
                         <input type="text" name="justificativa_valor" class="form-control" required
                             value="{{ old('justificativa_valor', $ppp->justificativa_valor ?? '') }}"
-                            placeholder="Cotação realizada dia 01/01/2025 no portal do governo" autocomplete="off">
+                            placeholder="Cotação realizada dia 01/01/2025 no portal do governo. Índice de aumento x % conforme indicador y" autocomplete="off">
                     </div>
                     <div class="form-group col-md-2">
                         <label>Prioridade</label>
