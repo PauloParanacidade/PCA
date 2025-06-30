@@ -10,6 +10,7 @@ class PcaPpp extends Model
 
     protected $fillable = [
         'user_id',
+        'status_id',
         'area_solicitante',
         'area_responsavel',
         'cod_id_item',
@@ -47,5 +48,10 @@ class PcaPpp extends Model
     public function historicos()
     {
         return $this->hasMany(\App\Models\PppHistorico::class, 'ppp_id');
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(\App\Models\PppStatus::class, 'status_id');
     }
 }

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePppRequest;
 use App\Models\PcaPpp;
 use App\Models\PppHistorico;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -33,7 +34,8 @@ class PppController extends Controller
                 ? floatval(str_replace(['R$', '.', ','], ['', '', '.'], $dados['valor_contrato_atualizado']))
                 : null;
 
-            $dados['user_id'] = auth()->id();
+            $dados['user_id'] = Auth::id();
+            $dados['status_id'] = 1; // Status inicial padrão
             Log::debug('user_id atribuído:', ['user_id' => $dados['user_id']]);
 
             $dados['previsao'] = $request->filled('previsao') ? $dados['previsao'] : null;
@@ -47,54 +49,69 @@ class PppController extends Controller
                 'status_anterior' => null,
                 'status_atual'   => $ppp->status_id,
                 'justificativa'  => null,
-                'user_id'        => auth()->id(),
+                'user_id'        => Auth::id(),
             ]);
             Log::info('Histórico inicial registrado.', ['ppp_id' => $ppp->id]);
 
-            return redirect()->route('ppp.meus')->with('success', 'PPP criado com sucesso!');
+            return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso!');
+            
         } catch (\Illuminate\Database\QueryException $ex) {
-            Log::error('Erro de banco de dados ao criar PPP: ' . $ex->getMessage(), [
+            dd([
+                'tipo' => 'Erro de banco de dados',
+                'mensagem' => $ex->getMessage(),
                 'exception' => $ex,
-                'dados' => $dados ?? null
+                'dados' => $dados ?? null,
+                'trace' => $ex->getTraceAsString()
             ]);
-            Log::debug($ex->getTraceAsString());
-            return back()->withInput()->withErrors(['msg' => 'Erro no banco de dados. Contate o administrador.']);
         } catch (\ErrorException $ex) {
-            Log::error('Erro PHP (ErrorException): ' . $ex->getMessage(), [
+            dd([
+                'tipo' => 'Erro PHP (ErrorException)',
+                'mensagem' => $ex->getMessage(),
                 'exception' => $ex,
-                'dados' => $dados ?? null
+                'dados' => $dados ?? null,
+                'trace' => $ex->getTraceAsString()
             ]);
-            Log::debug($ex->getTraceAsString());
-            return back()->withInput()->withErrors(['msg' => 'Erro interno no sistema. Contate o administrador.']);
         } catch (\Throwable $ex) {
-            Log::error('Erro inesperado ao criar PPP: ' . $ex->getMessage(), [
+            dd([
+                'tipo' => 'Erro inesperado',
+                'mensagem' => $ex->getMessage(),
                 'exception' => $ex,
-                'dados' => $dados ?? null
+                'dados' => $dados ?? null,
+                'trace' => $ex->getTraceAsString()
             ]);
-            Log::debug($ex->getTraceAsString());
-            return back()->withInput()->withErrors(['msg' => 'Erro inesperado. Contate o administrador.']);
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        Log::info('ENTROU no método index em PppController');
-
         try {
-            $usuarioId = auth()->id();
-            Log::debug('Buscando PPPs do usuário logado', ['user_id' => $usuarioId]);
+            $query = PcaPpp::where('user_id', Auth::id())
+                           ->with(['user', 'historicos.usuario', 'historicos.statusAnterior', 'historicos.statusAtual'])
+                           ->orderBy('created_at', 'desc');
 
-            $ppps = PcaPpp::where('user_id', $usuarioId)->get();
-            Log::info('Quantidade de PPPs encontrados:', ['total' => $ppps->count()]);
+            // Aplicar filtros se fornecidos
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('setor')) {
+                $query->where('area_solicitante', $request->setor);
+            }
+
+            if ($request->filled('busca')) {
+                $busca = $request->busca;
+                $query->where(function($q) use ($busca) {
+                    $q->where('nome_item', 'like', "%{$busca}%")
+                      ->orWhere('descricao', 'like', "%{$busca}%");
+                });
+            }
+
+            $ppps = $query->paginate(10)->withQueryString();
 
             return view('ppp.index', compact('ppps'));
-        } catch (\Throwable $ex) {
-            Log::error('Erro ao carregar os PPPs do usuário:', [
-                'exception' => $ex,
-                'user_id' => auth()->id(),
-            ]);
-            Log::debug($ex->getTraceAsString());
-            return back()->withErrors(['msg' => 'Erro ao carregar seus PPPs.']);
+        } catch (\Exception $e) {
+            Log::error('Erro ao listar PPPs: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs.');
         }
     }
 
@@ -164,7 +181,7 @@ class PppController extends Controller
                     'status_anterior'=> $statusAnterior,
                     'status_atual'   => $statusNovo,
                     'justificativa'  => $request->input('justificativa'),
-                    'user_id'        => auth()->id(),
+                    'user_id'        => Auth::id(),
                 ]);
                 Log::info('Histórico registrado após alteração de status.', [
                     'ppp_id' => $ppp->id,
@@ -195,7 +212,7 @@ class PppController extends Controller
 
             Log::info('PPP excluído com sucesso.', ['ppp_id' => $id]);
 
-            return redirect()->route('ppp.meus')->with('success', 'PPP excluído com sucesso.');
+            return redirect()->route('ppp.index')->with('success', 'PPP excluído com sucesso.');
         } catch (\Throwable $ex) {
             Log::error('Erro ao excluir PPP: ' . $ex->getMessage(), [
                 'exception' => $ex,
@@ -205,4 +222,6 @@ class PppController extends Controller
             return back()->withErrors(['msg' => 'Erro ao excluir.']);
         }
     }
+
+
 }
