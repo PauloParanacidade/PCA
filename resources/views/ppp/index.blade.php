@@ -1,8 +1,9 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte-custom')
 
 @section('title', 'Meus PPPs')
 
 @section('content_header')
+    @parent
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-user-check mr-2"></i>Meus PPPs</h1>
         <a href="{{ route('ppp.create') }}" class="btn btn-primary">
@@ -154,6 +155,17 @@
                                         <span class="badge badge-warning">
                                             <i class="fas fa-clock mr-1"></i>Novo
                                         </span>
+                                    </td>
+                                    <td class="align-middle">
+                                        @if($ppp->statusDinamico)
+                                            <span class="badge badge-info">
+                                                <i class="fas fa-info-circle mr-1"></i>{{ $ppp->statusDinamico->status_formatado }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-clock mr-1"></i>Rascunho
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="align-middle">
                                         <small>{{ $ppp->created_at ? $ppp->created_at->format('d/m/Y H:i') : 'N/A' }}</small>

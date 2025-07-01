@@ -11,6 +11,8 @@ class PcaPpp extends Model
     protected $fillable = [
         'user_id',
         'status_id',
+        'gestor_atual_id',  // ✅ Adicionar
+        'status_fluxo',     // ✅ Adicionar
         'area_solicitante',
         'area_responsavel',
         'cod_id_item',
@@ -53,5 +55,16 @@ class PcaPpp extends Model
     public function status()
     {
         return $this->belongsTo(\App\Models\PppStatus::class, 'status_id');
+    }
+
+    // ✅ Adicionar relacionamento
+    public function statusDinamicos()
+    {
+        return $this->hasMany(\App\Models\PppStatusDinamico::class, 'ppp_id');
+    }
+
+    public function gestorAtual()
+    {
+        return $this->belongsTo(User::class, 'gestor_atual_id');
     }
 }

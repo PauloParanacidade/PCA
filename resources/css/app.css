@@ -1,3 +1,92 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Banner de Impersonação */
+.impersonate-banner {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+    border-left: 4px solid #ff6f00;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.impersonate-banner .alert {
+    margin-bottom: 0;
+    border-radius: 0;
+}
+
+.impersonate-banner .btn {
+    transition: all 0.3s ease;
+}
+
+.impersonate-banner .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Banner de Impersonate */
+.impersonate-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #ff6b6b, #ffa500);
+    color: white;
+    border: none;
+    border-radius: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    font-weight: 500;
+    padding: 12px 20px;
+}
+
+.impersonate-banner .btn-danger {
+    background-color: rgba(220, 53, 69, 0.9);
+    border-color: rgba(220, 53, 69, 0.9);
+    transition: all 0.3s ease;
+}
+
+.impersonate-banner .btn-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.impersonate-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.impersonate-info .text-muted {
+    color: rgba(255,255,255,0.8) !important;
+    margin-left: 10px;
+}
+
+/* Ajuste para o corpo quando o banner estiver ativo */
+body.impersonate-active {
+    padding-top: 60px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .impersonate-banner {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .impersonate-info {
+        margin-bottom: 10px;
+        justify-content: center;
+    }
+    
+    body.impersonate-active {
+        padding-top: 80px;
+    }
+}
+
+.impersonate-banner .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}

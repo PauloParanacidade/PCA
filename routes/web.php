@@ -19,6 +19,11 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Rota de Stop Impersonate - FORA do middleware admin
+Route::post('/admin/stop-impersonate', [ImpersonateController::class, 'stopImpersonate'])
+    ->middleware(['auth'])
+    ->name('admin.stop-impersonate');
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users/roles', [UserRoleController::class, 'index'])->name('admin.users.roles');
     Route::put('/admin/users/{user}/roles', [UserRoleController::class, 'update'])->name('admin.users.roles.update');
@@ -29,7 +34,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/users/{user}', [UserRoleController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/api/check-email', [UserController::class, 'checkEmail'])->name('api.check-email');
 
-    // Rotas de Impersonate
+    // Rota de Impersonate - DENTRO do middleware admin
     Route::post('/admin/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('admin.impersonate');
 });
 

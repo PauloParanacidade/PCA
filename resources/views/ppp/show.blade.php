@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte-custom')
 
 @section('title', 'Visualizar PPP')
 
