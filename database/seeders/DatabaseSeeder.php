@@ -16,8 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             PPPStatusSeeder::class,
+            UserRoleSeeder::class,
         ]);
-
-        $this->call(UserRoleSeeder::class);
     }
 }

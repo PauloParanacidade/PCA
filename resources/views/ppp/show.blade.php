@@ -3,34 +3,28 @@
 @section('title', 'Visualizar PPP')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-eye mr-2"></i>Visualizar PPP</h1>
-        <div>
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#historicoModal" title="Histórico">
-                <i class="fas fa-history mr-1"></i>Histórico
-            </button>
-            <a href="{{ route('ppp.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left mr-1"></i>Retornar
-            </a>
-        </div>
-    </div>
-@endsection
+    <h1>Visualizar PPP</h1>
+@stop
 
 @section('content')
+<!-- Debug Info (remover depois) -->
+@if(config('app.debug'))
+    <div class="alert alert-info">
+        <strong>Debug:</strong><br>
+        Usuário atual: {{ auth()->user()->name }}<br>
+        Roles: {{ auth()->user()->roles->pluck('name')->join(', ') }}<br>
+        Status do PPP: {{ $ppp->status_fluxo }}<br>
+        Gestor atual ID: {{ $ppp->gestor_atual_id }}<br>
+        Usuário atual ID: {{ auth()->id() }}<br>
+        Condição hasAnyRole: {{ auth()->user()->hasAnyRole(['admin', 'daf', 'gestor']) ? 'true' : 'false' }}<br>
+        Condição status: {{ $ppp->status_fluxo === 'aguardando_aprovacao' ? 'true' : 'false' }}
+    </div>
+@endif
+
 <div class="container-fluid">
-    <!-- Alertas -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -47,11 +41,21 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <!-- Coluna Esquerda -->
-                <div class="col-md-6">
+                <!-- Primeira Coluna -->
+                <div class="col-md-2">
                     <div class="form-group">
                         <label class="font-weight-bold">Área Solicitante:</label>
                         <p class="form-control-plaintext">{{ $ppp->area_solicitante ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Aprovador/Avaliador:</label>
+                        <p class="form-control-plaintext">{{ $ppp->area_responsavel ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Categoria:</label>
+                        <p class="form-control-plaintext">{{ $ppp->categoria ?? 'N/A' }}</p>
                     </div>
                     
                     <div class="form-group">
@@ -60,40 +64,128 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="font-weight-bold">Descrição:</label>
-                        <p class="form-control-plaintext">{{ $ppp->descricao ?? 'N/A' }}</p>
+                        <label class="font-weight-bold">Quantidade:</label>
+                        <p class="form-control-plaintext">{{ $ppp->quantidade ?? 'N/A' }}</p>
                     </div>
                     
                     <div class="form-group">
-                        <label class="font-weight-bold">Justificativa:</label>
-                        <p class="form-control-plaintext">{{ $ppp->justificativa ?? 'N/A' }}</p>
+                        <label class="font-weight-bold">Prioridade:</label>
+                        <p class="form-control-plaintext">
+                            @if($ppp->grau_prioridade)
+                                <span class="badge 
+                                    @if($ppp->grau_prioridade === 'Alta') badge-danger
+                                    @elseif($ppp->grau_prioridade === 'Média') badge-warning
+                                    @else badge-secondary
+                                    @endif">
+                                    {{ $ppp->grau_prioridade }}
+                                </span>
+                            @else
+                                N/A
+                            @endif
+                        </p>
                     </div>
                 </div>
                 
-                <!-- Coluna Direita -->
-                <div class="col-md-6">
+                <!-- Segunda Coluna -->
+                <div class="col-md-5">
                     <div class="form-group">
-                        <label class="font-weight-bold">Valor Estimado:</label>
+                        <label class="font-weight-bold">Estimativa de Valor:</label>
                         <p class="form-control-plaintext text-success font-weight-bold">
                             R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
                         </p>
                     </div>
                     
                     <div class="form-group">
-                        <label class="font-weight-bold">Data Ideal de Aquisição:</label>
+                        <label class="font-weight-bold">Origem do Recurso:</label>
+                        <p class="form-control-plaintext">{{ $ppp->origem_recurso ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Fonte justificativa do valor:</label>
+                        <p class="form-control-plaintext">{{ $ppp->justificativa_valor ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Data Ideal para Contratação:</label>
                         <p class="form-control-plaintext">
-                            {{ $ppp->data_ideal_aquisicao ? \Carbon\Carbon::parse($ppp->data_ideal_aquisicao)->format('d/m/Y') : 'N/A' }}
+                            @if($ppp->ate_partir_dia && $ppp->data_ideal_aquisicao)
+                                {{ ucfirst(str_replace(['ate', 'a_partir', 'No_dia:'], ['Até', 'A partir de', 'No dia'], $ppp->ate_partir_dia)) }} 
+                                {{ \Carbon\Carbon::parse($ppp->data_ideal_aquisicao)->format('d/m/Y') }}
+                            @elseif($ppp->data_ideal_aquisicao)
+                                {{ \Carbon\Carbon::parse($ppp->data_ideal_aquisicao)->format('d/m/Y') }}
+                            @else
+                                N/A
+                            @endif
                         </p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Será renovação de Contrato?:</label>
+                        <p class="form-control-plaintext">{{ $ppp->renov_contrato ?? 'N/A' }}</p>
                     </div>
                     
                     <div class="form-group">
                         <label class="font-weight-bold">Status:</label>
                         <p class="form-control-plaintext">
-                            <span class="badge badge-warning">
-                                <i class="fas fa-clock mr-1"></i>Novo
+                            <span class="badge badge-info">
+                                @if($ppp->statusDinamicos->where('ativo', true)->first())
+                                    <i class="fas fa-info-circle mr-1"></i>{{ $ppp->statusDinamicos->where('ativo', true)->first()->status_formatado }}
+                                @else
+                                    <i class="fas fa-clock mr-1"></i>Rascunho
+                                @endif
                             </span>
                         </p>
                     </div>
+                </div>
+                
+                <!-- Terceira Coluna -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Descrição do objeto:</label>
+                        <p class="form-control-plaintext">{{ $ppp->descricao ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Justificativa para aquisição:</label>
+                        <p class="form-control-plaintext">{{ $ppp->justificativa_pedido ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Vinculação/Dependência:</label>
+                        <p class="form-control-plaintext">{{ $ppp->vinculacao_item ?? 'N/A' }}</p>
+                    </div>
+                    
+                    @if($ppp->vinculacao_item === 'Sim')
+                    <div class="form-group">
+                        <label class="font-weight-bold">Justificativa da Vinculação:</label>
+                        <p class="form-control-plaintext">{{ $ppp->justificativa_vinculacao ?? 'N/A' }}</p>
+                    </div>
+                    @endif
+                    
+                    @if($ppp->renov_contrato === 'Sim')
+                    <div class="form-group">
+                        <label class="font-weight-bold">Previsão:</label>
+                        <p class="form-control-plaintext">
+                            {{ $ppp->previsao ? \Carbon\Carbon::parse($ppp->previsao)->format('d/m/Y') : 'N/A' }}
+                        </p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Número do Contrato:</label>
+                        <p class="form-control-plaintext">{{ $ppp->num_contrato ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Valor do Contrato (atualizado):</label>
+                        <p class="form-control-plaintext text-info font-weight-bold">
+                            @if($ppp->valor_contrato_atualizado)
+                                R$ {{ number_format($ppp->valor_contrato_atualizado, 2, ',', '.') }}
+                            @else
+                                N/A
+                            @endif
+                        </p>
+                    </div>
+                    @endif
                     
                     <div class="form-group">
                         <label class="font-weight-bold">Criado em:</label>
@@ -102,10 +194,44 @@
                         </p>
                     </div>
                 </div>
+                
+                <!-- Quarta coluna: Botões de Ação -->
+                <div class="col-md-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Ações</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group-vertical d-grid gap-2">
+                                <!-- Botão Histórico -->
+                                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#historicoModal">
+                                    <i class="fas fa-history"></i> Histórico
+                                </button>
+                                
+                                <!-- Botão Editar -->
+                                <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                
+                                <!-- Botão Aprovar - Visível apenas para gestores -->
+                                @if(auth()->user()->hasAnyRole(['admin', 'daf', 'gestor']) && $ppp->status_fluxo === 'aguardando_aprovacao' && $ppp->gestor_atual_id === auth()->id())
+                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#aprovarModal">
+                                        <i class="fas fa-check"></i> Aprovar
+                                    </button>
+                                @endif
+                                
+                                <!-- Botão Retornar -->
+                                <a href="{{ route('ppp.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Retornar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             @if($ppp->observacoes)
-            <div class="row">
+            <div class="row mt-3">
                 <div class="col-12">
                     <div class="form-group">
                         <label class="font-weight-bold">Observações:</label>
@@ -179,6 +305,41 @@
         </div>
     </div>
 </div>
+<!-- Modal Aprovar -->
+<div class="modal fade" id="aprovarModal" tabindex="-1" role="dialog" aria-labelledby="aprovarModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="aprovarModalLabel">
+                    <i class="fas fa-check mr-2"></i>Aprovar PPP
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('ppp.aprovar', $ppp->id) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <p>Tem certeza que deseja aprovar este PPP?</p>
+                    <p><strong>PPP:</strong> {{ $ppp->nome_item }}</p>
+                    
+                    <div class="form-group">
+                        <label for="comentario_aprovacao">Comentário (opcional):</label>
+                        <textarea name="comentario" id="comentario_aprovacao" class="form-control" rows="3" placeholder="Adicione um comentário sobre a aprovação..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check mr-1"></i>Confirmar Aprovação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('css')
@@ -222,6 +383,16 @@
     .timeline-text {
         margin-bottom: 5px;
         color: #6c757d;
+    }
+    
+    .btn-actions-container {
+        min-height: 200px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
     }
 </style>
 @endsection

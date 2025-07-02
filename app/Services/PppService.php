@@ -36,10 +36,10 @@ class PppService
         ]);
 
         // Criar status inicial
-        $this->statusService->criarStatusCustomizado($ppp, 'Rascunho');
+        $statusDinamico = $this->statusService->criarStatusCustomizado($ppp, 'Rascunho');
 
         // Registrar no histórico
-        $this->historicoService->registrarCriacao($ppp);
+        $this->historicoService->registrarCriacao($ppp, $statusDinamico);
 
         return $ppp;
     }
@@ -51,11 +51,14 @@ class PppService
     {
         try {
             // Obter próximo gestor
-            $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
+            $proximoGestor = $this->hierarquiaService->obterProximoGestor($ppp->user_id);
             
             if (!$proximoGestor) {
                 throw new \Exception('Não foi possível identificar o próximo gestor.');
             }
+
+            // ✅ NOVA REGRA: Garantir que o próximo gestor tenha o papel de gestor
+            $proximoGestor->garantirPapelGestor();
 
             // Atualizar PPP
             $ppp->update([
@@ -64,7 +67,7 @@ class PppService
             ]);
 
             // Criar status dinâmico
-            $this->statusService->criarStatusComTemplate(
+            $statusDinamico = $this->statusService->criarStatusComTemplate(
                 $ppp, 
                 'enviou_para_avaliacao', 
                 Auth::id(), 
@@ -74,6 +77,7 @@ class PppService
             // Registrar no histórico
             $this->historicoService->registrarEnvioAprovacao(
                 $ppp, 
+                $statusDinamico,
                 $justificativa ?? 'PPP enviado para aprovação'
             );
 
@@ -96,6 +100,9 @@ class PppService
             );
 
             if ($proximoGestor) {
+                // ✅ NOVA REGRA: Garantir que o próximo gestor tenha o papel de gestor
+                $proximoGestor->garantirPapelGestor();
+                
                 // Ainda há níveis na hierarquia
                 $ppp->update([
                     'status_fluxo' => 'aguardando_aprovacao',
@@ -114,7 +121,7 @@ class PppService
             }
 
             // Criar status dinâmico
-            $this->statusService->criarStatusComTemplate(
+            $statusDinamico = $this->statusService->criarStatusComTemplate(
                 $ppp, 
                 $statusTipo, 
                 Auth::id(), 
@@ -124,6 +131,7 @@ class PppService
             // Registrar no histórico
             $this->historicoService->registrarAprovacao(
                 $ppp, 
+                $statusDinamico,
                 $comentario ?? 'PPP aprovado'
             );
 
@@ -147,7 +155,7 @@ class PppService
             ]);
 
             // Criar status dinâmico
-            $this->statusService->criarStatusComTemplate(
+            $statusDinamico = $this->statusService->criarStatusComTemplate(
                 $ppp, 
                 'solicitou_correcao', 
                 Auth::id(), 
@@ -155,7 +163,7 @@ class PppService
             );
 
             // Registrar no histórico
-            $this->historicoService->registrarSolicitacaoCorrecao($ppp, $motivo);
+            $this->historicoService->registrarSolicitacaoCorrecao($ppp, $statusDinamico, $motivo);
 
             return true;
 
@@ -177,7 +185,7 @@ class PppService
             ]);
 
             // Criar status dinâmico
-            $this->statusService->criarStatusComTemplate(
+            $statusDinamico = $this->statusService->criarStatusComTemplate(
                 $ppp, 
                 'reprovado', 
                 Auth::id(), 
@@ -185,7 +193,7 @@ class PppService
             );
 
             // Registrar no histórico
-            $this->historicoService->registrarReprovacao($ppp, $motivo);
+            $this->historicoService->registrarReprovacao($ppp, $statusDinamico, $motivo);
 
             return true;
 

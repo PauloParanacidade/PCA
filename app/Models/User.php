@@ -210,4 +210,24 @@ public function getSiglaAreaGestorAttribute()
     
     return null;
 }
+
+/**
+ * Garante que o usuário tenha o papel de gestor
+ * Se não tiver, atribui automaticamente
+ */
+public function garantirPapelGestor(): void
+{
+    if (!$this->hasRole('gestor')) {
+        $gestorRole = \App\Models\Role::where('name', 'gestor')->first();
+        
+        if ($gestorRole) {
+            $this->roles()->attach($gestorRole->id);
+            \Illuminate\Support\Facades\Log::info('Papel de gestor atribuído automaticamente', [
+                'user_id' => $this->id,
+                'user_name' => $this->name,
+                'role_id' => $gestorRole->id
+            ]);
+        }
+    }
+}
 }

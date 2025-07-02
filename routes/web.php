@@ -41,6 +41,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // Rotas do PPP para usuários autenticados
 Route::middleware(['auth'])->group(function () {
     Route::resource('ppp', PppController::class);
+    Route::post('ppp/{ppp}/aprovar', [PppController::class, 'aprovar'])->name('ppp.aprovar');
 });
 
 // Rota para depuração (ambiente local)
