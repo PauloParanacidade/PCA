@@ -100,7 +100,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-2">
                         <label>Estimativa de Valor para o período</label>
-                        <input type="text" name="estimativa_valor" class="form-control estimativa_valor" required
+                        <input type="number" name="estimativa_valor" class="form-control estimativa_valor" required
                             value="{{ old('estimativa_valor', $ppp->estimativa_valor ?? '') }}" placeholder="R$ 0,00"
                             autocomplete="off">
                     </div>

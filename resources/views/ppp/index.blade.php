@@ -151,21 +151,15 @@
                                             R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
                                         </span>
                                     </td>
+                                    
                                     <td class="align-middle">
-                                        <span class="badge badge-warning">
-                                            <i class="fas fa-clock mr-1"></i>Novo
-                                        </span>
-                                    </td>
-                                    <td class="align-middle">
-                                        @if($ppp->statusDinamico)
-                                            <span class="badge badge-info">
-                                                <i class="fas fa-info-circle mr-1"></i>{{ $ppp->statusDinamico->status_formatado }}
-                                            </span>
-                                        @else
-                                            <span class="badge badge-warning">
+                                        <span class="badge badge-info">
+                                            @if($ppp->statusDinamicos->where('ativo', true)->first())
+                                                <i class="fas fa-info-circle mr-1"></i>{{ $ppp->statusDinamicos->where('ativo', true)->first()->status_formatado }}
+                                            @else
                                                 <i class="fas fa-clock mr-1"></i>Rascunho
-                                            </span>
-                                        @endif
+                                            @endif
+                                        </span>
                                     </td>
                                     <td class="align-middle">
                                         <small>{{ $ppp->created_at ? $ppp->created_at->format('d/m/Y H:i') : 'N/A' }}</small>

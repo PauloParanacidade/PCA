@@ -27,7 +27,7 @@ class StorePppRequest extends FormRequest
             'justificativa_pedido' => 'required|string|max:100',
 
             // Para valores, validar como string que contenha números e formatação monetária possível
-            'estimativa_valor' => ['required', 'regex:/^\s*R?\$?\s?\d{1,3}(\.\d{3})*(,\d{2})?\s*$/'],
+            'estimativa_valor' => ['required'], //'regex:/^\s*R?\$?\s?\d{1,3}(\.\d{3})*(,\d{2})?\s*$/'
             'justificativa_valor' => 'required|string|max:100',
             'origem_recurso' => 'required|string|max:20',
             'grau_prioridade' => 'required|string|max:20',
