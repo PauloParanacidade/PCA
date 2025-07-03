@@ -6,11 +6,25 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePppRequest;
 use App\Models\PcaPpp;
 use App\Models\PppHistorico;
+use App\Models\PppStatusDinamico;
+use App\Models\User;
+use App\Services\PppStatusService;
+use App\Services\PppHistoricoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class PppController extends Controller
 {
+    protected $statusService;
+    protected $historicoService;
+    
+    public function __construct(PppStatusService $statusService, PppHistoricoService $historicoService)
+    {
+        $this->statusService = $statusService;
+        $this->historicoService = $historicoService;
+    }
+    
     public function create()
     {
         return view('ppp.create');
@@ -18,87 +32,125 @@ class PppController extends Controller
 
     public function store(StorePppRequest $request)
     {
-        Log::info('ENTROU no método store');
-
+        //dd($request);
         try {
-            Log::info('Início do método store em PppController');
-
-            $dados = $request->validated();
-
-            $dados['estimativa_valor'] = floatval(
-                str_replace(['R$', '.', ','], ['', '', '.'], $dados['estimativa_valor'])
+            $partes = $this->separarPorTraco($request->input('area_responsavel'));
+            $areaResponsavel = $partes[0];
+            $gestorResponsavel = $partes[1];
+            $manager = User::where('name', $gestorResponsavel)
+            ->where('department', $areaResponsavel)
+            ->first();
+            //dd($manager);
+    
+            // ✅ NOVA REGRA: Verificar e atribuir papel de gestor automaticamente
+            if ($manager) {
+                $manager->garantirPapelGestor();
+            }
+    
+            $ppp = PcaPpp::create([
+                'user_id' => Auth::id(),
+                'status_fluxo' => 'rascunho',
+                'gestor_atual_id' => $manager->id,
+                'previsao' => $request->filled('previsao') ? $request->previsao : null,
+                'area_solicitante'=>$request->area_solicitante,
+                'area_responsavel'=>$request->area_responsavel,
+                'categoria'=>$request->categoria,
+                'nome_item'=>$request->nome_item,
+                'descricao'=>$request->descricao,
+                'quantidade'=>$request->quantidade,
+                'justificativa_pedido'=>$request->justificativa_pedido,
+                'estimativa_valor'=>$request->estimativa_valor,
+                'justificativa_valor'=>$request->justificativa_valor,
+                'origem_recurso'=>$request->origem_recurso,
+                'grau_prioridade'=>$request->grau_prioridade,
+                'ate_partir_dia'=>$request->ate_partir_dia,
+                'data_ideal_aquisicao'=>$request->data_ideal_aquisicao,
+                'vinculacao_item'=>$request->vinculacao_item,
+                'justificativa_vinculacao'=>$request->justificativa_vinculacao,
+                'renov_contrato'=>$request->renov_contrato,
+                'previsao'=>$request->previsao,
+                'valor_contrato_atualizado'=>$request->valor_contrato_atualizado,
+            ]);
+            
+            
+            // Criar status dinâmico inicial
+            $statusDinamico = $this->statusService->criarStatusDinamico(
+                $ppp, 
+                'enviou_para_avaliacao', 
+                auth()->user()->id, 
+                $manager->id, 
+                'Rascunho'
             );
 
-            $dados['valor_contrato_atualizado'] = $request->filled('valor_contrato_atualizado')
-                ? floatval(str_replace(['R$', '.', ','], ['', '', '.'], $dados['valor_contrato_atualizado']))
-                : null;
-
-            $dados['user_id'] = auth()->id();
-            Log::debug('user_id atribuído:', ['user_id' => $dados['user_id']]);
-
-            $dados['previsao'] = $request->filled('previsao') ? $dados['previsao'] : null;
-
-            $ppp = PcaPpp::create($dados);
-            Log::info('PcaPpp criado com sucesso.', ['id' => $ppp->id]);
-
-            // Histórico inicial
-            // PppHistorico::create([
-            //     'ppp_id'         => $ppp->id,
-            //     'status_anterior' => null,
-            //     'status_atual'   => $ppp->status_id,
-            //     'justificativa'  => null,
-            //     'user_id'        => auth()->id(),
-            // ]);
-            Log::info('Histórico inicial registrado.', ['ppp_id' => $ppp->id]);
-
-            //redireciona para ppp
-            return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');
-        } catch (\Illuminate\Database\QueryException $ex) {
-            Log::error('Erro de banco de dados ao criar PPP: ' . $ex->getMessage(), [
-                'exception' => $ex,
-                'dados' => $dados ?? null
-            ]);
-            Log::debug($ex->getTraceAsString());
-            dd($ex);
-            return back()->withInput()->withErrors(['msg' => 'Erro no banco de dados. Contate o administrador.']);
-        } catch (\ErrorException $ex) {
-            Log::error('Erro PHP (ErrorException): ' . $ex->getMessage(), [
-                'exception' => $ex,
-                'dados' => $dados ?? null
-            ]);
-            Log::debug($ex->getTraceAsString());
-            dd($ex);
-            return back()->withInput()->withErrors(['msg' => 'Erro interno no sistema. Contate o administrador.']);
+            // Registrar no histórico
+            $this->historicoService->registrarCriacao($ppp, $statusDinamico);
+            //dd($statusDinamico);
+            return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso!');
+            
         } catch (\Throwable $ex) {
-            Log::error('Erro inesperado ao criar PPP: ' . $ex->getMessage(), [
-                'exception' => $ex,
-                'dados' => $dados ?? null
-            ]);
-            Log::debug($ex->getTraceAsString());
-            dd($ex);
-            return back()->withInput()->withErrors(['msg' => 'Erro inesperado. Contate o administrador.']);
+            Log::error('Erro ao criar PPP: ' . $ex->getMessage());
+            return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP.']);
         }
     }
 
-    public function index()
+        private function separarPorTraco($texto)
+        {
+            if (empty($texto)) {
+                return ['', ''];
+            }
+            
+            // Separa pelo traço e remove espaços em branco das extremidades
+            $partes = array_map('trim', explode('-', $texto, 2));
+            
+            // Garante que sempre retorne pelo menos 2 elementos
+            if (count($partes) === 1) {
+                return [$partes[0], ''];
+            }
+            
+            return $partes;
+        }
+        
+    public function index(Request $request)
     {
-        Log::info('ENTROU no método index em PppController');
-
+        //dd($request);  
         try {
-            $usuarioId = auth()->id();
-            Log::debug('Buscando PPPs do usuário logado', ['user_id' => $usuarioId]);
-
-            $ppps = PcaPpp::where('user_id', $usuarioId)->get();
-            Log::info('Quantidade de PPPs encontrados:', ['total' => $ppps->count()]);
-
+            // Modificar para incluir PPPs próprios E PPPs para aprovação
+            $query = PcaPpp::where(function($q) {
+                    $q->where('user_id', Auth::id()) // PPPs criados pelo usuário
+                      ->orWhere('gestor_atual_id', Auth::id()); // PPPs enviados para aprovação
+                })
+                ->with([
+                    'user', 
+                    'statusDinamicos',
+                    'gestorAtual',
+                    'historicos.usuario'
+                ])
+                ->orderBy('created_at', 'desc');
+        
+            // Aplicar filtros
+            if ($request->filled('status_fluxo')) {
+                $query->where('status_fluxo', $request->status_fluxo);
+            }
+            
+            if ($request->filled('setor')) {
+                $query->where('area_solicitante', $request->setor);
+            }
+            
+            if ($request->filled('busca')) {
+                $busca = $request->busca;
+                $query->where(function($q) use ($busca) {
+                    $q->where('nome_item', 'like', "%{$busca}%")
+                      ->orWhere('descricao', 'like', "%{$busca}%");
+                });
+            }
+            
+            $ppps = $query->paginate(10)->withQueryString();
+        
             return view('ppp.index', compact('ppps'));
-        } catch (\Throwable $ex) {
-            Log::error('Erro ao carregar os PPPs do usuário:', [
-                'exception' => $ex,
-                'user_id' => auth()->id(),
-            ]);
-            Log::debug($ex->getTraceAsString());
-            return back()->withErrors(['msg' => 'Erro ao carregar seus PPPs.']);
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error('Erro ao listar PPPs: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs.');
         }
     }
 
@@ -141,24 +193,27 @@ class PppController extends Controller
 
     public function update(StorePppRequest $request, $id)
     {
+        //dd($request);
         try {
             $ppp = PcaPpp::findOrFail($id);
-
             $dados = $request->validated();
-
-            $dados['estimativa_valor'] = floatval(
-                str_replace(['R$', '.', ','], ['', '', '.'], $request->estimativa_valor)
-            );
-
-            $dados['valor_contrato_atualizado'] = $request->filled('valor_contrato_atualizado')
-                ? floatval(str_replace(['R$', '.', ','], ['', '', '.'], $request->valor_contrato_atualizado))
-                : null;
-
-            $dados['previsao'] = $request->filled('previsao') ? $request->previsao : null;
-
+            
+            // ✅ CORREÇÃO: Processar valores monetários dos dados validados
+            if (isset($dados['estimativa_valor'])) {
+                $dados['estimativa_valor'] = floatval(
+                    str_replace(['R$', '.', ','], ['', '', '.'], $dados['estimativa_valor'])
+                );
+            }
+            
+            if (isset($dados['valor_contrato_atualizado'])) {
+                $dados['valor_contrato_atualizado'] = floatval(
+                    str_replace(['R$', '.', ','], ['', '', '.'], $dados['valor_contrato_atualizado'])
+                );
+            }
+            
             $statusAnterior = $ppp->status_id;
             $statusNovo = $dados['status_id'] ?? $statusAnterior;
-
+            
             $ppp->update($dados);
 
             // Registrar histórico se status mudou
@@ -168,7 +223,7 @@ class PppController extends Controller
                     'status_anterior'=> $statusAnterior,
                     'status_atual'   => $statusNovo,
                     'justificativa'  => $request->input('justificativa'),
-                    'user_id'        => auth()->id(),
+                    'user_id'        => Auth::id(),
                 ]);
                 Log::info('Histórico registrado após alteração de status.', [
                     'ppp_id' => $ppp->id,
@@ -192,14 +247,14 @@ class PppController extends Controller
     {
         try {
             $ppp = PcaPpp::findOrFail($id);
-
+    
             // Opcional: verificar se o usuário tem permissão para deletar este PPP
-
+    
             $ppp->delete();
-
+    
             Log::info('PPP excluído com sucesso.', ['ppp_id' => $id]);
-
-            return redirect()->route('ppp.meus')->with('success', 'PPP excluído com sucesso.');
+    
+            return redirect()->route('ppp.index')->with('success', 'PPP excluído com sucesso.');
         } catch (\Throwable $ex) {
             Log::error('Erro ao excluir PPP: ' . $ex->getMessage(), [
                 'exception' => $ex,
@@ -207,6 +262,213 @@ class PppController extends Controller
             ]);
             Log::debug($ex->getTraceAsString());
             return back()->withErrors(['msg' => 'Erro ao excluir.']);
+        }
+    }
+
+    private function criarStatusDinamico($ppp, $tipoStatus, $remetenteId = null, $destinatarioId = null, $statusCustom = null)
+    {
+        // Desativar status dinâmico anterior
+        $ppp->statusDinamicos()->update(['ativo' => false]);
+        
+        if ($statusCustom) {
+            // Status customizado (ex: rascunho)
+            $statusFormatado = $statusCustom;
+            $remetenteSigla = null;
+            $destinatarioSigla = null;
+        } else {
+            // Buscar template do status
+            $statusTemplate = \App\Models\PppStatus::where('tipo', $tipoStatus)->first();
+            
+            if (!$statusTemplate) {
+                throw new \Exception("Template de status não encontrado: {$tipoStatus}");
+            }
+            
+            // Obter dados dos usuários
+            $remetente = $remetenteId ? User::find($remetenteId) : null;
+            $destinatario = $destinatarioId ? User::find($destinatarioId) : null;
+            
+            // Extrair siglas das áreas
+            $remetenteSigla = $remetente ? $this->extrairSiglaArea($remetente) : null;
+            $destinatarioSigla = $destinatario ? $this->extrairSiglaAreaGestor($destinatario) : null;
+            
+            // Substituir placeholders
+            $statusFormatado = $statusTemplate->template;
+            
+            if ($remetente) {
+                $remetenteTexto = $remetente->name . ' [' . ($remetenteSigla ?? 'N/A') . ']';
+                $statusFormatado = str_replace('[remetente]', $remetenteTexto, $statusFormatado);
+            }
+            
+            if ($destinatario) {
+                $destinatarioTexto = $destinatario->name . ' [' . ($destinatarioSigla ?? 'N/A') . ']';
+                $statusFormatado = str_replace('[destinatario]', $destinatarioTexto, $statusFormatado);
+            }
+        }
+        // dd($statusFormatado);
+        // // Criar novo status dinâmico
+        // return \App\Models\PppStatusDinamico::create([
+        //     'ppp_id' => $ppp->id,
+        //     'status_tipo_id' => $tipoStatus === 'rascunho' ? null : \App\Models\PppStatus::where('tipo', $tipoStatus)->first()->id,
+        //     'remetente_nome' => $remetente->name ?? null,
+        //     'remetente_sigla' => $remetenteSigla,
+        //     'destinatario_nome' => $destinatario->name ?? null,
+        //     'destinatario_sigla' => $destinatarioSigla,
+        //     'status_formatado' => $statusFormatado,
+        //     'ativo' => true,
+        // ]);
+    }
+
+    /**
+     * Extrai a sigla da área do próprio usuário (campo department)
+     */
+    private function extrairSiglaArea($usuario)
+    {
+        return $usuario->department ?? 'N/A';
+    }
+
+    /**
+     * Extrai a sigla da área do gestor a partir do campo manager
+     */
+    private function extrairSiglaAreaGestor($usuario)
+    {
+        $managerDN = $usuario->manager;
+        
+        if (!$managerDN) {
+            return 'N/A';
+        }
+        
+        // Extrair OU (Organizational Unit) do DN
+        // Formato: CN=Nome do Gestor,OU=Sigla da Área,DC=domain,DC=com
+        if (preg_match('/OU=([^,]+)/', $managerDN, $matches)) {
+            return trim($matches[1]);
+        }
+        
+        return 'N/A';
+    }
+
+    public function enviarParaAprovacao($id, Request $request)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
+            
+            if ($ppp->user_id !== Auth::id()) {
+                return back()->withErrors(['msg' => 'Você não tem permissão para esta ação.']);
+            }
+            
+            $proximoGestor = $this->obterProximoGestor(Auth::user());
+            
+            if (!$proximoGestor) {
+                return back()->withErrors(['msg' => 'Não foi possível identificar o próximo gestor.']);
+            }
+            
+            $ppp->update([
+                'status_fluxo' => 'aguardando_aprovacao',
+                'gestor_atual_id' => $proximoGestor->id,
+            ]);
+            
+            // Criar status dinâmico
+            $statusDinamico = $this->statusService->criarStatusDinamico(
+                $ppp, 
+                'enviou_para_avaliacao', 
+                Auth::id(), 
+                $proximoGestor->id
+            );
+
+            // Registrar no histórico
+            $this->historicoService->registrarEnvioAprovacao(
+                $ppp, 
+                $statusDinamico, 
+                $request->input('justificativa', 'PPP enviado para aprovação')
+            );
+            
+            return redirect()->route('ppp.index')->with('success', 'PPP enviado para aprovação com sucesso!');
+            
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao enviar PPP para aprovação: ' . $ex->getMessage());
+            return back()->withErrors(['msg' => 'Erro ao enviar PPP para aprovação.']);
+        }
+    }
+
+    private function obterProximoGestor($usuario)
+    {
+        // Extrair o gestor do campo manager (formato LDAP)
+        $managerDN = $usuario->manager;
+        
+        if (!$managerDN) {
+            Log::warning('Usuário não possui gestor definido', ['user_id' => $usuario->id]);
+            return null;
+        }
+        
+        // Extrair o nome do gestor do Distinguished Name (DN)
+        // Formato: CN=Nome do Gestor,OU=Sigla da Área,DC=domain,DC=com
+        if (preg_match('/CN=([^,]+),OU=([^,]+)/', $managerDN, $matches)) {
+            $nomeGestor = trim($matches[1]);
+            $siglaAreaGestor = trim($matches[2]);
+            
+            // Buscar o gestor pelo nome
+            $gestor = User::where('name', 'like', "%{$nomeGestor}%")
+                         ->where('active', true)
+                         ->first();
+            
+            if ($gestor) {
+                Log::info('Gestor encontrado na hierarquia', [
+                    'usuario_id' => $usuario->id,
+                    'gestor_id' => $gestor->id,
+                    'gestor_nome' => $gestor->name,
+                    'area_gestor' => $siglaAreaGestor
+                ]);
+                return $gestor;
+            }
+            
+            Log::warning('Gestor não encontrado na base de dados', [
+                'user_id' => $usuario->id,
+                'nome_gestor_extraido' => $nomeGestor,
+                'area_gestor_extraida' => $siglaAreaGestor
+            ]);
+        } else {
+            Log::warning('Formato do manager DN não reconhecido', [
+                'user_id' => $usuario->id,
+                'manager_dn' => $managerDN
+            ]);
+        }
+        
+        return null;
+    }
+
+    public function aprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
+    {
+        // Verificar se o usuário tem permissão
+        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
+            return redirect()->back()->with('error', 'Você não tem permissão para aprovar PPPs.');
+        }
+    
+        // Verificar se o PPP está aguardando aprovação
+        if ($ppp->status_fluxo !== 'aguardando_aprovacao') {
+            return redirect()->back()->with('error', 'Este PPP não está aguardando aprovação.');
+        }
+    
+        // Verificar se o usuário é o gestor responsável
+        if ($ppp->gestor_atual_id !== auth()->id()) {
+            return redirect()->back()->with('error', 'Você não é o gestor responsável por este PPP.');
+        }
+    
+        // Validar comentário se fornecido
+        $request->validate([
+            'comentario' => 'nullable|string|max:1000'
+        ]);
+    
+        try {
+            // Usar o PppService para aprovar
+            $resultado = $pppService->aprovarPpp($ppp, $request->input('comentario'));
+            
+            if ($resultado) {
+                return redirect()->route('ppp.index')->with('success', 'PPP aprovado com sucesso!');
+            } else {
+                return redirect()->back()->with('error', 'Erro ao aprovar o PPP.');
+            }
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao aprovar PPP: ' . $e->getMessage());
         }
     }
 }

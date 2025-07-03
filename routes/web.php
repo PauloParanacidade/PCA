@@ -6,7 +6,7 @@ use App\Http\Controllers\UserRoleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PppController;
-use App\Http\Controllers\MeusController;
+
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -19,6 +19,11 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Rota de Stop Impersonate - FORA do middleware admin
+Route::post('/admin/stop-impersonate', [ImpersonateController::class, 'stopImpersonate'])
+    ->middleware(['auth'])
+    ->name('admin.stop-impersonate');
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users/roles', [UserRoleController::class, 'index'])->name('admin.users.roles');
     Route::put('/admin/users/{user}/roles', [UserRoleController::class, 'update'])->name('admin.users.roles.update');
@@ -29,18 +34,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/users/{user}', [UserRoleController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/api/check-email', [UserController::class, 'checkEmail'])->name('api.check-email');
 
-
-
-
-    // O resource já as gera as rotas específicas
-    // Use o resource completo, com os middlewares
-    Route::resource('ppp', PppController::class)->middleware(['auth', 'role:admin']);
-
-
-
-
-    // Rotas de Impersonate
+    // Rota de Impersonate - DENTRO do middleware admin
     Route::post('/admin/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('admin.impersonate');
+});
+
+// Rotas do PPP para usuários autenticados
+Route::middleware(['auth'])->group(function () {
+    Route::resource('ppp', PppController::class);
+    Route::post('ppp/{ppp}/aprovar', [PppController::class, 'aprovar'])->name('ppp.aprovar');
 });
 
 // Rota para depuração (ambiente local)

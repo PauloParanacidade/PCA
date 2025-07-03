@@ -162,21 +162,72 @@ class User extends Authenticatable implements LdapAuthenticatable
         return '';
     }
 
-    public function getAreaSolicitanteFormatadaAttribute(): string
-{
-    $sigla = $this->department; // ex: "CTI"
-    $nome = $this->name;        // ex: "Jose da Silva"
+        public function getAreaSolicitanteFormatadaAttribute(): string
+    {
+        $sigla = $this->department; // ex: "CTI"
+        $nome = $this->name;        // ex: "Jose da Silva"
 
-    if (!$sigla || !$nome) {
-        return '';
+        if (!$sigla || !$nome) {
+            return '';
+        }
+
+        return "{$sigla} - {$nome}";
     }
-
-    return "{$sigla} - {$nome}";
-}
-
 
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new \App\Notifications\ResetPassword($token));
     }
+
+/**
+ * Extrai o nome do gestor do campo manager
+ */
+public function getNomeGestorAttribute()
+{
+    if (!$this->manager) {
+        return null;
+    }
+    
+    if (preg_match('/CN=([^,]+)/', $this->manager, $matches)) {
+        return trim($matches[1]);
+    }
+    
+    return null;
+}
+
+/**
+ * Extrai a sigla da área do gestor do campo manager
+ */
+public function getSiglaAreaGestorAttribute()
+{
+    if (!$this->manager) {
+        return null;
+    }
+    
+    if (preg_match('/OU=([^,]+)/', $this->manager, $matches)) {
+        return trim($matches[1]);
+    }
+    
+    return null;
+}
+
+/**
+ * Garante que o usuário tenha o papel de gestor
+ * Se não tiver, atribui automaticamente
+ */
+public function garantirPapelGestor(): void
+{
+    if (!$this->hasRole('gestor')) {
+        $gestorRole = \App\Models\Role::where('name', 'gestor')->first();
+        
+        if ($gestorRole) {
+            $this->roles()->attach($gestorRole->id);
+            \Illuminate\Support\Facades\Log::info('Papel de gestor atribuído automaticamente', [
+                'user_id' => $this->id,
+                'user_name' => $this->name,
+                'role_id' => $gestorRole->id
+            ]);
+        }
+    }
+}
 }

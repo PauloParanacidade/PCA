@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte-custom')
 
 @php
     use Carbon\Carbon;
@@ -11,6 +11,15 @@
 @section('title', $edicao ? 'Editar PPP' : 'Criar novo PPP')
 
 @section('content_header')
+    {{-- Teste direto do componente --}}
+    <div style="background: purple; color: white; padding: 10px; margin: 10px 0;">
+        <strong>TESTE DIRETO:</strong> Esta div deveria aparecer sempre!
+    </div>
+    
+    {{-- Incluir o banner diretamente --}}
+    <x-impersonate-banner />
+    
+    {{-- Conteúdo original da página --}}
     <div class="text-center mb-0">
         <h1 class="fw-bold" style="font-size: 3rem;">{{ $edicao ? 'Editar PPP' : 'PPP' }}</h1>
         <small class="text-muted" style="font-size: 1rem;">Proposta para PCA</small>
@@ -40,7 +49,7 @@
                             readonly>
                     </div>
                     <div class="form-group col-md-6">
-                        <label>Área Responsável</label>
+                        <label>Aprovador/Avaliador</label>
                         <input type="text" class="form-control" name="area_responsavel"
                             value="{{ old('area_responsavel', $ppp->area_responsavel ?? auth()->user()->area_responsavel_formatada) }}"
                             readonly>
@@ -91,7 +100,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-2">
                         <label>Estimativa de Valor para o período</label>
-                        <input type="text" name="estimativa_valor" class="form-control estimativa_valor" required
+                        <input type="number" name="estimativa_valor" class="form-control estimativa_valor" required
                             value="{{ old('estimativa_valor', $ppp->estimativa_valor ?? '') }}" placeholder="R$ 0,00"
                             autocomplete="off">
                     </div>
