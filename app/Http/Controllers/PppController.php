@@ -42,22 +42,24 @@ class PppController extends Controller
             Log::info('PcaPpp criado com sucesso.', ['id' => $ppp->id]);
 
             // Histórico inicial
-            PppHistorico::create([
-                'ppp_id'         => $ppp->id,
-                'status_anterior' => null,
-                'status_atual'   => $ppp->status_id,
-                'justificativa'  => null,
-                'user_id'        => auth()->id(),
-            ]);
+            // PppHistorico::create([
+            //     'ppp_id'         => $ppp->id,
+            //     'status_anterior' => null,
+            //     'status_atual'   => $ppp->status_id,
+            //     'justificativa'  => null,
+            //     'user_id'        => auth()->id(),
+            // ]);
             Log::info('Histórico inicial registrado.', ['ppp_id' => $ppp->id]);
 
-            return redirect()->route('ppp.meus')->with('success', 'PPP criado com sucesso!');
+            //redireciona para ppp
+            return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');
         } catch (\Illuminate\Database\QueryException $ex) {
             Log::error('Erro de banco de dados ao criar PPP: ' . $ex->getMessage(), [
                 'exception' => $ex,
                 'dados' => $dados ?? null
             ]);
             Log::debug($ex->getTraceAsString());
+            dd($ex);
             return back()->withInput()->withErrors(['msg' => 'Erro no banco de dados. Contate o administrador.']);
         } catch (\ErrorException $ex) {
             Log::error('Erro PHP (ErrorException): ' . $ex->getMessage(), [
@@ -65,6 +67,7 @@ class PppController extends Controller
                 'dados' => $dados ?? null
             ]);
             Log::debug($ex->getTraceAsString());
+            dd($ex);
             return back()->withInput()->withErrors(['msg' => 'Erro interno no sistema. Contate o administrador.']);
         } catch (\Throwable $ex) {
             Log::error('Erro inesperado ao criar PPP: ' . $ex->getMessage(), [
@@ -72,6 +75,7 @@ class PppController extends Controller
                 'dados' => $dados ?? null
             ]);
             Log::debug($ex->getTraceAsString());
+            dd($ex);
             return back()->withInput()->withErrors(['msg' => 'Erro inesperado. Contate o administrador.']);
         }
     }
