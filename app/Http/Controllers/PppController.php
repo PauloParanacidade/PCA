@@ -304,18 +304,18 @@ class PppController extends Controller
                 $statusFormatado = str_replace('[destinatario]', $destinatarioTexto, $statusFormatado);
             }
         }
-        dd($statusFormatado);
-        // Criar novo status dinâmico
-        return \App\Models\PppStatusDinamico::create([
-            'ppp_id' => $ppp->id,
-            'status_tipo_id' => $tipoStatus === 'rascunho' ? null : \App\Models\PppStatus::where('tipo', $tipoStatus)->first()->id,
-            'remetente_nome' => $remetente->name ?? null,
-            'remetente_sigla' => $remetenteSigla,
-            'destinatario_nome' => $destinatario->name ?? null,
-            'destinatario_sigla' => $destinatarioSigla,
-            'status_formatado' => $statusFormatado,
-            'ativo' => true,
-        ]);
+        // dd($statusFormatado);
+        // // Criar novo status dinâmico
+        // return \App\Models\PppStatusDinamico::create([
+        //     'ppp_id' => $ppp->id,
+        //     'status_tipo_id' => $tipoStatus === 'rascunho' ? null : \App\Models\PppStatus::where('tipo', $tipoStatus)->first()->id,
+        //     'remetente_nome' => $remetente->name ?? null,
+        //     'remetente_sigla' => $remetenteSigla,
+        //     'destinatario_nome' => $destinatario->name ?? null,
+        //     'destinatario_sigla' => $destinatarioSigla,
+        //     'status_formatado' => $statusFormatado,
+        //     'ativo' => true,
+        // ]);
     }
 
     /**
