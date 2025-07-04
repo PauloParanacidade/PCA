@@ -8,10 +8,36 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::create(['name' => 'admin', 'description' => 'Administrador do Sistema']);
-        Role::create(['name' => 'daf', 'description' => 'DAF']); // DAF terá acesso CRUD a todos os PPPs da empresa
-        Role::create(['name' => 'gestor', 'description' => 'Gestor']); // Qualquer usuário recebedor de PPPs para serem avaliadosRole::create(['name' => 'external', 'description' => 'Usuário Externo']);
-        Role::create(['name' => 'user', 'description' => 'Usuário Padrão']); // solicitante terá acesso CRUD apenas aos seus próprios PPPs
-        Role::create(['name' => 'external', 'description' => 'Usuário Externo']);
+        $roles = [
+            [
+                'name' => 'admin',
+                'description' => 'Administrador do Sistema'
+            ],
+            [
+                'name' => 'daf',
+                'description' => 'DAF - Diretoria Administrativa e Financeira'
+            ],
+            [
+                'name' => 'gestor',
+                'description' => 'Gestor - Avaliador de PPPs'
+            ],
+            [
+                'name' => 'user',
+                'description' => 'Usuário Padrão - Solicitante de PPPs'
+            ],
+            [
+                'name' => 'external',
+                'description' => 'Usuário Externo'
+            ]
+        ];
+
+        foreach ($roles as $role) {
+            Role::firstOrCreate(
+                ['name' => $role['name']],
+                ['description' => $role['description']]
+            );
+        }
+
+        $this->command->info('Roles criadas com sucesso!');
     }
 }

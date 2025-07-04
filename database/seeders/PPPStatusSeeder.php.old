@@ -2,82 +2,77 @@
 
 namespace Database\Seeders;
 
-use App\Models\PppStatus;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PPPStatusSeeder extends Seeder
 {
     public function run(): void
     {
-        $statuses = [
+        DB::table('ppp_statuses')->insert([
             [
+                'id' => 1,
                 'tipo' => 'enviou_para_avaliacao',
-                'template' => '[remetente] enviou PPP para [destinatario] avaliar',
+                'template' => '[remetente] Enviou para [destinatario] para avaliação',
                 'slug' => 'enviou_para_avaliacao',
                 'ordem' => 1,
-                'ativo' => true,
-                'cor' => '#17a2b8', // info - azul
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
+                'id' => 2,
                 'tipo' => 'esta_avaliando',
                 'template' => '[destinatario] está avaliando a PPP',
                 'slug' => 'esta_avaliando',
                 'ordem' => 2,
-                'ativo' => true,
-                'cor' => '#ffc107', // warning - amarelo
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
+                'id' => 3,
                 'tipo' => 'solicitou_correcao',
                 'template' => '[remetente] solicitou correção para [destinatario]',
                 'slug' => 'solicitou_correcao',
                 'ordem' => 3,
-                'ativo' => true,
-                'cor' => '#fd7e14', // laranja
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
+                'id' => 4,
                 'tipo' => 'esta_corrigindo',
                 'template' => '[destinatario] está corrigindo a PPP',
                 'slug' => 'esta_corrigindo',
                 'ordem' => 4,
-                'ativo' => true,
-                'cor' => '#6f42c1', // roxo
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
+                'id' => 5,
                 'tipo' => 'enviou_correcao',
-                'template' => '[remetente] enviou correção para [destinatario]',
+                'template' => '[remetente] Enviou correção para [destinatario]',
                 'slug' => 'enviou_correcao',
                 'ordem' => 5,
-                'ativo' => true,
-                'cor' => '#20c997', // teal
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
+                'id' => 6,
                 'tipo' => 'aprovado_enviado',
-                'template' => 'Aprovado por [remetente] e enviado para [destinatario]',
+                'template' => 'Aprovado pelo [remetente] e enviado para [destinatario] para avaliação',
                 'slug' => 'aprovado_enviado',
                 'ordem' => 6,
-                'ativo' => true,
-                'cor' => '#28a745', // success - verde
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
+                'id' => 7,
                 'tipo' => 'cancelado',
-                'template' => 'PPP cancelada por [remetente]',
+                'template' => 'Cancelado pelo [remetente]',
                 'slug' => 'cancelado',
                 'ordem' => 7,
-                'ativo' => true,
-                'cor' => '#dc3545', // danger - vermelho
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
-        ];
-
-        foreach ($statuses as $status) {
-            PppStatus::firstOrCreate(
-                ['slug' => $status['slug']], // critério de busca
-                $status // dados para criação
-            );
-            
-            Log::info("Status '{$status['tipo']}' processado com sucesso.");
-        }
-        
-        $this->command->info('✅ PPP Status seeders executados com sucesso!');
+        ]);
     }
 }
