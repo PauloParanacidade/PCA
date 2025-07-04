@@ -27,7 +27,7 @@ class PppController extends Controller
     
     public function create()
     {
-        return view('ppp.create');
+        return view('ppp.form');
     }
 
     public function store(StorePppRequest $request)
@@ -180,7 +180,7 @@ class PppController extends Controller
     {
         try {
             $ppp = PcaPpp::findOrFail($id);
-            return view('ppp.edit', compact('ppp'));
+            return view('ppp.form', compact('ppp'));
         } catch (\Throwable $ex) {
             Log::error('Erro ao carregar PPP para edição:', [
                 'exception' => $ex,

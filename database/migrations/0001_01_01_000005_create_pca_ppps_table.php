@@ -19,7 +19,7 @@ return new class extends Migration
             // Campos de Fluxo de Aprovação
             $table->foreignId('gestor_atual_id')->nullable()->constrained('users')->onDelete('set null')->comment('Gestor responsável pela aprovação atual');
             $table->enum('status_fluxo', [
-                'rascunho',
+                'novo',
                 'aguardando_aprovacao', 
                 'em_avaliacao',
                 'em_correcao',

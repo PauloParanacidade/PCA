@@ -4,6 +4,7 @@
     <!-- Banner de Impersonate -->
     <x-impersonate-banner />
     
+    @yield('content_header_content')
     @yield('page_header')
 @stop
 

@@ -1,5 +1,6 @@
 <?php
-
+//alterar yes para y e no para n
+//automatizar as respostas y e n para não precisar digitar
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
