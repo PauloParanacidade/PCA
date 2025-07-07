@@ -34,42 +34,46 @@ class PppController extends Controller
     {
         //dd($request);
         try {
-            $partes = $this->separarPorTraco($request->input('area_responsavel'));
-            $areaResponsavel = $partes[0];
-            $gestorResponsavel = $partes[1];
-            $manager = User::where('name', $gestorResponsavel)
-            ->where('department', $areaResponsavel)
-            ->first();
-            //dd($manager);
+            // Como removemos os campos de área, vamos usar o usuário atual como gestor temporário
+            $manager = Auth::user();
     
             // ✅ NOVA REGRA: Verificar e atribuir papel de gestor automaticamente
             if ($manager) {
-                $manager->garantirPapelGestor();
+                try {
+                    $manager->garantirPapelGestor();
+                } catch (\Exception $e) {
+                    Log::error('Erro ao garantir papel de gestor: ' . $e->getMessage(), [
+                        'user_id' => $manager->id,
+                        'user_name' => $manager->name
+                    ]);
+                }
             }
     
             $ppp = PcaPpp::create([
                 'user_id' => Auth::id(),
-                'status_fluxo' => 'rascunho',
+                'status_fluxo' => 'novo',
                 'gestor_atual_id' => $manager->id,
+                'categoria' => $request->categoria,
+                'nome_item' => $request->nome_item,
+                'descricao' => $request->descricao,
+                'quantidade' => $request->quantidade,
+                'justificativa_pedido' => $request->justificativa_pedido,
+                'estimativa_valor' => $request->estimativa_valor,
+                'justificativa_valor' => $request->justificativa_valor,
+                'origem_recurso' => $request->origem_recurso,
+                'grau_prioridade' => $request->grau_prioridade,
+                'ate_partir_dia' => $request->ate_partir_dia,
+                'data_ideal_aquisicao' => $request->data_ideal_aquisicao,
+                'vinculacao_item' => $request->vinculacao_item,
+                'justificativa_vinculacao' => $request->justificativa_vinculacao,
+                'renov_contrato' => $request->renov_contrato ?? 'Não',
                 'previsao' => $request->filled('previsao') ? $request->previsao : null,
-                'area_solicitante'=>$request->area_solicitante,
-                'area_responsavel'=>$request->area_responsavel,
-                'categoria'=>$request->categoria,
-                'nome_item'=>$request->nome_item,
-                'descricao'=>$request->descricao,
-                'quantidade'=>$request->quantidade,
-                'justificativa_pedido'=>$request->justificativa_pedido,
-                'estimativa_valor'=>$request->estimativa_valor,
-                'justificativa_valor'=>$request->justificativa_valor,
-                'origem_recurso'=>$request->origem_recurso,
-                'grau_prioridade'=>$request->grau_prioridade,
-                'ate_partir_dia'=>$request->ate_partir_dia,
-                'data_ideal_aquisicao'=>$request->data_ideal_aquisicao,
-                'vinculacao_item'=>$request->vinculacao_item,
-                'justificativa_vinculacao'=>$request->justificativa_vinculacao,
-                'renov_contrato'=>$request->renov_contrato,
-                'previsao'=>$request->previsao,
-                'valor_contrato_atualizado'=>$request->valor_contrato_atualizado,
+                'valor_contrato_atualizado' => $request->valor_contrato_atualizado,
+                'num_contrato' => $request->num_contrato,
+                'mes_vigencia_final' => $request->mes_vigencia_final,
+                'contrato_prorrogavel' => $request->contrato_prorrogavel,
+                'tem_contrato_vigente' => $request->tem_contrato_vigente,
+                'natureza_objeto' => $request->natureza_objeto,
             ]);
             
             
@@ -89,26 +93,12 @@ class PppController extends Controller
             
         } catch (\Throwable $ex) {
             Log::error('Erro ao criar PPP: ' . $ex->getMessage());
+            dd($ex);
             return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP.']);
         }
     }
 
-        private function separarPorTraco($texto)
-        {
-            if (empty($texto)) {
-                return ['', ''];
-            }
-            
-            // Separa pelo traço e remove espaços em branco das extremidades
-            $partes = array_map('trim', explode('-', $texto, 2));
-            
-            // Garante que sempre retorne pelo menos 2 elementos
-            if (count($partes) === 1) {
-                return [$partes[0], ''];
-            }
-            
-            return $partes;
-        }
+        
         
     public function index(Request $request)
     {
@@ -132,9 +122,7 @@ class PppController extends Controller
                 $query->where('status_fluxo', $request->status_fluxo);
             }
             
-            if ($request->filled('setor')) {
-                $query->where('area_solicitante', $request->setor);
-            }
+            // Campo area_solicitante foi removido
             
             if ($request->filled('busca')) {
                 $busca = $request->busca;

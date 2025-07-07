@@ -144,7 +144,7 @@
                                         </div>
                                     </td>
                                     <td class="align-middle">
-                                        <span class="badge badge-secondary">{{ $ppp->area_solicitante ?? 'N/A' }}</span>
+                                        <span class="badge badge-secondary">{{ $ppp->user->name ?? 'N/A' }}</span>
                                     </td>
                                     <td class="align-middle">
                                         <span class="text-success font-weight-bold">

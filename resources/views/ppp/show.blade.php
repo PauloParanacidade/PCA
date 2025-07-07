@@ -43,15 +43,7 @@
             <div class="row">
                 <!-- Primeira Coluna -->
                 <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Área Solicitante:</label>
-                        <p class="form-control-plaintext">{{ $ppp->area_solicitante ?? 'N/A' }}</p>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="font-weight-bold">Aprovador/Avaliador:</label>
-                        <p class="form-control-plaintext">{{ $ppp->area_responsavel ?? 'N/A' }}</p>
-                    </div>
+
                     
                     <div class="form-group">
                         <label class="font-weight-bold">Categoria:</label>

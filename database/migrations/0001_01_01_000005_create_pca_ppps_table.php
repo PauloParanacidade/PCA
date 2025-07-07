@@ -25,15 +25,10 @@ return new class extends Migration
                 'em_correcao',
                 'aprovado_final',
                 'cancelado'
-            ])->default('rascunho')->comment('Status do fluxo de aprovação');
+            ])->default('novo')->comment('Status do fluxo de aprovação');
             $table->timestamp('data_ultima_aprovacao')->nullable()->comment('Data da última ação de aprovação');
 
-            // Informações da Solicitação
-            $table->string('area_solicitante', 100)->comment('Área que está solicitando');
-            $table->string('area_responsavel', 100)->comment('Área responsável pela aquisição');
-
             // Detalhes do Item
-            $table->unsignedInteger('cod_id_item')->nullable()->comment('Código identificador do item');
             $table->string('categoria', 100)->comment('Categoria do item/serviço');
             $table->string('nome_item', 200)->comment('Nome/título do item');
             $table->text('descricao')->comment('Descrição detalhada do item');
@@ -67,7 +62,6 @@ return new class extends Migration
             // Índices para performance
             $table->index(['user_id', 'status_id']);
             $table->index(['gestor_atual_id', 'status_fluxo']); // Novo índice
-            $table->index(['area_solicitante', 'area_responsavel']);
             $table->index(['categoria', 'grau_prioridade']);
             $table->index('data_ideal_aquisicao');
             $table->index('deleted_at');

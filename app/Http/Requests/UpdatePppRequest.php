@@ -22,8 +22,7 @@ class UpdatePppRequest extends FormRequest
         $pppId = $this->route('ppp')->id;
         
         return [
-            'area_solicitante' => 'sometimes|string|max:45',
-            'area_responsavel' => 'sometimes|string|max:45',
+
             'categoria' => 'sometimes|string|max:45',
             'nome_item' => 'sometimes|string|max:100',
             'descricao' => 'sometimes|string|max:255',

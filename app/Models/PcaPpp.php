@@ -11,11 +11,8 @@ class PcaPpp extends Model
     protected $fillable = [
         'user_id',
         'status_id',
-        'gestor_atual_id',  // ✅ Adicionar
-        'status_fluxo',     // ✅ Adicionar
-        'area_solicitante',
-        'area_responsavel',
-        'cod_id_item',
+        'gestor_atual_id',
+        'status_fluxo',
         'categoria',
         'nome_item',
         'descricao',
@@ -33,6 +30,10 @@ class PcaPpp extends Model
         'previsao',
         'num_contrato',
         'valor_contrato_atualizado',
+        'mes_vigencia_final',
+        'contrato_prorrogavel',
+        'tem_contrato_vigente',
+        'natureza_objeto',
     ];
 
     protected $casts = [
