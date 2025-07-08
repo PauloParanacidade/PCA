@@ -86,7 +86,34 @@ body.impersonate-active {
     }
 }
 
-.impersonate-banner .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+/* Correção para altura do sidebar */
+.main-sidebar {
+    min-height: 100vh !important;
+    height: auto !important;
+}
+
+.layout-fixed .main-sidebar {
+    position: fixed !important;
+    height: 100vh !important;
+}
+
+.layout-fixed .main-sidebar .sidebar {
+    height: calc(100vh - (3.5rem + 1px)) !important;
+    overflow-y: auto !important;
+}
+
+/* Para layouts não-fixed, garantir que o sidebar acompanhe o conteúdo */
+body:not(.layout-fixed) .main-sidebar {
+    min-height: 100vh !important;
+    height: auto !important;
+}
+
+body:not(.layout-fixed) .main-sidebar .sidebar {
+    min-height: calc(100vh - (3.5rem + 1px)) !important;
+    height: auto !important;
+}
+
+/* Garantir que o wrapper tenha altura mínima adequada */
+.wrapper {
+    min-height: 100vh !important;
 }

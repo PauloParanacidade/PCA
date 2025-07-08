@@ -1,0 +1,144 @@
+/* ===================================
+   PPP Form Styles
+   Estilos específicos para formulário PPP
+   =================================== */
+
+/* Cards com outline */
+.card-outline {
+    border: 2px solid;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.15s ease-in-out;
+}
+
+.card-outline:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Labels e formulários */
+.form-label.fw-bold {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.form-control-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    border: 2px solid #e9ecef;
+    transition: all 0.15s ease-in-out;
+}
+
+.form-control-lg:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Botões */
+.btn-lg {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 0.5rem;
+}
+
+/* Headers de cards */
+.card-header {
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+/* Textos e alertas */
+.text-danger {
+    font-weight: bold;
+}
+
+.alert-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+}
+
+.char-counter {
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+/* Campos com máscaras */
+.money-field {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-align: right;
+    background: linear-gradient(45deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.contract-number {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* Validação visual */
+.is-valid {
+    border-color: #28a745 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73l.4-.4 1.4-1.4.7-.4.4.7-2.1 2.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(.375em + .1875rem) center;
+    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke='%23dc3545' d='m5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(.375em + .1875rem) center;
+    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+}
+
+/* Animações suaves */
+.form-control, .form-select {
+    transition: all 0.3s ease;
+}
+
+.form-control:hover:not(:focus) {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.1);
+}
+
+/* Placeholder personalizado */
+.form-control::placeholder {
+    color: #6c757d;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+/* Tooltip para campos obrigatórios */
+.form-label[data-required="true"]::after {
+    content: "";
+    margin-left: 0.25rem;
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .money-field {
+        font-size: 0.9rem;
+    }
+    
+    .char-counter {
+        font-size: 0.7rem;
+    }
+}

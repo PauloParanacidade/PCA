@@ -32,13 +32,6 @@ return new class extends Migration
                   ->constrained('ppp_statuses')
                   ->comment('Status atual do PPP');
             
-            // Relacionamento com status dinâmico (NOVO CAMPO)
-            $table->foreignId('status_dinamico_id')
-                  ->nullable()
-                  ->constrained('ppp_status_dinamicos')
-                  ->onDelete('set null')
-                  ->comment('ID do status dinâmico relacionado (se aplicável)');
-            
             // Justificativa/comentário da mudança
             $table->text('justificativa')
                   ->nullable()
@@ -49,7 +42,7 @@ return new class extends Migration
                   ->constrained('users')
                   ->comment('Usuário que realizou a ação');
             
-            // Tipo de ação realizada (ENUM EXPANDIDO)
+            // Tipo de ação realizada (ENUM simplificado)
             $table->enum('acao', [
                 'criacao',
                 'edicao', 
@@ -57,10 +50,6 @@ return new class extends Migration
                 'solicitacao_correcao',
                 'reprovacao',
                 'exclusao',
-                'envio_aprovacao',
-                'inicio_avaliacao',
-                'inicio_correcao',
-                'envio_correcao',
                 'cancelamento'
             ])->comment('Tipo de ação realizada no PPP');
             
@@ -76,7 +65,6 @@ return new class extends Migration
             $table->index(['user_id', 'created_at'], 'idx_ppp_historicos_user_data');
             $table->index(['status_atual', 'created_at'], 'idx_ppp_historicos_status_data');
             $table->index('acao', 'idx_ppp_historicos_acao');
-            $table->index('status_dinamico_id', 'idx_ppp_historicos_status_dinamico');
             $table->index(['ppp_id', 'acao'], 'idx_ppp_historicos_ppp_acao');
         });
     }

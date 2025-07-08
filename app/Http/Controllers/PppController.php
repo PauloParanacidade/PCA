@@ -34,6 +34,7 @@ class PppController extends Controller
     {
         //dd($request);
         try {
+            
             // Como removemos os campos de área, vamos usar o usuário atual como gestor temporário
             $manager = Auth::user();
     
@@ -48,7 +49,12 @@ class PppController extends Controller
                     ]);
                 }
             }
-    
+            
+            $editfinanceiro = $request->filled('valor_contrato_atualizado');
+            $valorLimpo = preg_replace('/[^\d,\.]/', '', $request->valor_contrato_atualizado);
+            $valorFloat = floatval(str_replace(',', '.', $valorLimpo));
+            //dd($valorFloat);
+
             $ppp = PcaPpp::create([
                 'user_id' => Auth::id(),
                 'status_fluxo' => 'novo',
@@ -68,7 +74,7 @@ class PppController extends Controller
                 'justificativa_vinculacao' => $request->justificativa_vinculacao,
                 'renov_contrato' => $request->renov_contrato ?? 'Não',
                 'previsao' => $request->filled('previsao') ? $request->previsao : null,
-                'valor_contrato_atualizado' => $request->valor_contrato_atualizado,
+                'valor_contrato_atualizado' => $valorLimpo,
                 'num_contrato' => $request->num_contrato,
                 'mes_vigencia_final' => $request->mes_vigencia_final,
                 'contrato_prorrogavel' => $request->contrato_prorrogavel,
