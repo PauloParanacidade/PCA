@@ -154,10 +154,11 @@
                                     
                                     <td class="align-middle">
                                         <span class="badge badge-info">
-                                            @if($ppp->statusDinamicos->where('ativo', true)->first())
-                                                <i class="fas fa-info-circle mr-1"></i>{{ $ppp->statusDinamicos->where('ativo', true)->first()->status_formatado }}
+                                            <!-- ✅ CORRIGIR: Usar o relacionamento status correto -->
+                                            @if($ppp->status)
+                                            <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
                                             @else
-                                                <i class="fas fa-clock mr-1"></i>Rascunho
+                                            <i class="fas fa-info-circle mr-1"></i>Status não definido
                                             @endif
                                         </span>
                                     </td>

@@ -73,44 +73,49 @@ const PPPForm = {
     },
 
     // Módulo de validação
-    validation: {
-        init: function() {
-            // Validação em tempo real
-            $('input[required], select[required], textarea[required]').on('blur', function() {
-                PPPForm.validation.validateField($(this));
-            });
+    // No módulo validation.init, adicionar especificamente os campos monetários
+validation: {
+    init: function() {
+        // Validação em tempo real para todos os campos obrigatórios
+        $('input[required], select[required], textarea[required]').on('blur', function() {
+            PPPForm.validation.validateField($(this));
+        });
+        
+        // Validação específica para campos monetários (mesmo não sendo required)
+        $('.estimativa_valor, .valor_contrato_atualizado').on('blur', function() {
+            PPPForm.validation.validateField($(this));
+        });
 
-            // Limpar validação ao focar
-            $('input, select, textarea').on('focus', function() {
-                $(this).removeClass('is-invalid is-valid').next('.invalid-feedback').remove();
-            });
-        },
-
-        validateField: function(field) {
-            const value = field.val().trim();
-            
-            if (value === '' || value === null) {
-                field.addClass('is-invalid');
-                if (!field.next('.invalid-feedback').length) {
-                    field.after('<div class="invalid-feedback">Este campo é obrigatório.</div>');
-                }
-            } else {
-                field.removeClass('is-invalid').next('.invalid-feedback').remove();
-                field.addClass('is-valid');
+        // Limpar validação ao focar
+        $('input, select, textarea').on('focus', function() {
+            $(this).removeClass('is-invalid is-valid').next('.invalid-feedback').remove();
+        });
+    },
+    validateField: function(field) {
+        const value = field.val().trim();
+        
+        if (value === '' || value === null) {
+            field.addClass('is-invalid');
+            if (!field.next('.invalid-feedback').length) {
+                field.after('<div class="invalid-feedback">Este campo é obrigatório.</div>');
             }
-        },
-
-        validateForm: function() {
-            let camposVazios = [];
-            $('input[required], select[required], textarea[required]').each(function() {
-                if (!$(this).prop('disabled') && !$(this).val().trim()) {
-                    camposVazios.push($(this).attr('name') || 'campo sem nome');
-                    $(this).addClass('is-invalid');
-                }
-            });
-            return camposVazios;
+        } else {
+            field.removeClass('is-invalid').next('.invalid-feedback').remove();
+            field.addClass('is-valid');
         }
     },
+
+    validateForm: function() {
+        let camposVazios = [];
+        $('input[required], select[required], textarea[required]').each(function() {
+            if (!$(this).prop('disabled') && !$(this).val().trim()) {
+                camposVazios.push($(this).attr('name') || 'campo sem nome');
+                $(this).addClass('is-invalid');
+            }
+        });
+        return camposVazios;
+    }
+},
 
     // Módulo de campos condicionais
     conditionalFields: {

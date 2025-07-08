@@ -8,7 +8,7 @@ use App\Models\PcaPpp;
 use App\Models\PppHistorico;
 use App\Models\PppStatusDinamico;
 use App\Models\User;
-use App\Services\PppStatusService;
+// ❌ REMOVER: use App\Services\PppStatusService;
 use App\Services\PppHistoricoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,12 +16,11 @@ use Illuminate\Support\Facades\Log;
 
 class PppController extends Controller
 {
-    protected $statusService;
+    // ❌ REMOVER: protected $statusService;
     protected $historicoService;
     
-    public function __construct(PppStatusService $statusService, PppHistoricoService $historicoService)
+    public function __construct(PppHistoricoService $historicoService)
     {
-        $this->statusService = $statusService;
         $this->historicoService = $historicoService;
     }
     
@@ -32,12 +31,10 @@ class PppController extends Controller
 
     public function store(StorePppRequest $request)
     {
-        //dd($request);
         try {
-            
-            // Como removemos os campos de área, vamos usar o usuário atual como gestor temporário
+            //dd($request);
             $manager = Auth::user();
-    
+            
             // ✅ NOVA REGRA: Verificar e atribuir papel de gestor automaticamente
             if ($manager) {
                 try {
@@ -50,31 +47,38 @@ class PppController extends Controller
                 }
             }
             
-            $editfinanceiro = $request->filled('valor_contrato_atualizado');
-            $valorLimpo = preg_replace('/[^\d,\.]/', '', $request->valor_contrato_atualizado);
-            $valorFloat = floatval(str_replace(',', '.', $valorLimpo));
-            //dd($valorFloat);
-
+            // ✅ CORREÇÃO: Processar valores monetários corretamente
+            // Remove R$, espaços e converte formato brasileiro para decimal
+            $estimativaLimpa = str_replace(['R$', ' '], '', $request->estimativa_valor);
+            // Remove pontos (separadores de milhares) e converte vírgula para ponto decimal
+            $estimativaLimpa = str_replace(['.'], '', $estimativaLimpa); // Remove pontos
+            $estimativaFloat = floatval(str_replace(',', '.', $estimativaLimpa)); // Converte vírgula para ponto
+            
+            $valorLimpo = null;
+            $valorFloat = null;
+            if ($request->filled('valor_contrato_atualizado')) {
+                $valorLimpo = str_replace(['R$', ' '], '', $request->valor_contrato_atualizado);
+                $valorLimpo = str_replace(['.'], '', $valorLimpo); // Remove pontos
+                $valorFloat = floatval(str_replace(',', '.', $valorLimpo)); // Converte vírgula para ponto
+            }
+            
             $ppp = PcaPpp::create([
                 'user_id' => Auth::id(),
-                'status_fluxo' => 'novo',
+                'status_id' => 1, // Status inicial
                 'gestor_atual_id' => $manager->id,
                 'categoria' => $request->categoria,
                 'nome_item' => $request->nome_item,
                 'descricao' => $request->descricao,
                 'quantidade' => $request->quantidade,
                 'justificativa_pedido' => $request->justificativa_pedido,
-                'estimativa_valor' => $request->estimativa_valor,
+                'estimativa_valor' => $estimativaFloat,
                 'justificativa_valor' => $request->justificativa_valor,
                 'origem_recurso' => $request->origem_recurso,
                 'grau_prioridade' => $request->grau_prioridade,
-                'ate_partir_dia' => $request->ate_partir_dia,
-                'data_ideal_aquisicao' => $request->data_ideal_aquisicao,
                 'vinculacao_item' => $request->vinculacao_item,
                 'justificativa_vinculacao' => $request->justificativa_vinculacao,
                 'renov_contrato' => $request->renov_contrato ?? 'Não',
-                'previsao' => $request->filled('previsao') ? $request->previsao : null,
-                'valor_contrato_atualizado' => $valorLimpo,
+                'valor_contrato_atualizado' => $valorFloat,
                 'num_contrato' => $request->num_contrato,
                 'mes_vigencia_final' => $request->mes_vigencia_final,
                 'contrato_prorrogavel' => $request->contrato_prorrogavel,
@@ -82,25 +86,17 @@ class PppController extends Controller
                 'natureza_objeto' => $request->natureza_objeto,
             ]);
             
-            
-            // Criar status dinâmico inicial
-            $statusDinamico = $this->statusService->criarStatusDinamico(
-                $ppp, 
-                'enviou_para_avaliacao', 
-                auth()->user()->id, 
-                $manager->id, 
-                'Rascunho'
-            );
-
             // Registrar no histórico
-            $this->historicoService->registrarCriacao($ppp, $statusDinamico);
-            //dd($statusDinamico);
-            return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso!');
+            $this->historicoService->registrarCriacao($ppp);
+            
+            Log::info('PPP criado com sucesso.', ['ppp_id' => $ppp->id]);
+            
+            return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');
             
         } catch (\Throwable $ex) {
             Log::error('Erro ao criar PPP: ' . $ex->getMessage());
-            dd($ex);
-            return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP.']);
+            Log::error('Stack trace: ' . $ex->getTraceAsString()); // Para debug
+            return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP: ' . $ex->getMessage()]);
         }
     }
 
@@ -110,19 +106,23 @@ class PppController extends Controller
     {
         //dd($request);  
         try {
-            // Modificar para incluir PPPs próprios E PPPs para aprovação
             $query = PcaPpp::where(function($q) {
-                    $q->where('user_id', Auth::id()) // PPPs criados pelo usuário
-                      ->orWhere('gestor_atual_id', Auth::id()); // PPPs enviados para aprovação
+                    $q->where('user_id', Auth::id())
+                      ->orWhere('gestor_atual_id', Auth::id());
                 })
                 ->with([
                     'user', 
-                    'statusDinamicos',
+                    'status', // ✅ ADICIONAR: Carregar o relacionamento status
                     'gestorAtual',
                     'historicos.usuario'
                 ])
                 ->orderBy('created_at', 'desc');
         
+            // ✅ CORRIGIR: Filtro deve usar status_id ao invés de status_fluxo
+            if ($request->filled('status_id')) {
+                $query->where('status_id', $request->status_id);
+            }
+            
             // Aplicar filtros
             if ($request->filled('status_fluxo')) {
                 $query->where('status_fluxo', $request->status_fluxo);
@@ -360,18 +360,9 @@ class PppController extends Controller
                 'gestor_atual_id' => $proximoGestor->id,
             ]);
             
-            // Criar status dinâmico
-            $statusDinamico = $this->statusService->criarStatusDinamico(
-                $ppp, 
-                'enviou_para_avaliacao', 
-                Auth::id(), 
-                $proximoGestor->id
-            );
-
             // Registrar no histórico
             $this->historicoService->registrarEnvioAprovacao(
                 $ppp, 
-                $statusDinamico, 
                 $request->input('justificativa', 'PPP enviado para aprovação')
             );
             

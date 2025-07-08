@@ -120,8 +120,12 @@
                         <label class="font-weight-bold">Status:</label>
                         <p class="form-control-plaintext">
                             <span class="badge badge-info">
-                                @if($ppp->statusDinamicos->where('ativo', true)->first())
-                                    <i class="fas fa-info-circle mr-1"></i>{{ $ppp->statusDinamicos->where('ativo', true)->first()->status_formatado }}
+                                <!-- ❌ REMOVER estas linhas (123-124): -->
+                                <!-- @if($ppp->statusDinamicos->where('ativo', true)->first())
+                                <i class="fas fa-info-circle mr-1"></i>{{ $ppp->statusDinamicos->where('ativo', true)->first()->status_formatado }}
+                                @endif -->
+                                
+                                <!-- ✅ USAR a mesma lógica do index.blade.php -->
                                 @else
                                     <i class="fas fa-clock mr-1"></i>Rascunho
                                 @endif

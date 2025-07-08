@@ -73,17 +73,6 @@ return new class extends Migration
                   ->nullable()
                   ->comment('Valor atualizado do contrato (se aplicável)');
             
-            // === CRONOGRAMA ===
-            $table->string('ate_partir_dia', 200)
-                  ->comment('A partir de quando pode ser adquirido');
-                  
-            $table->date('data_ideal_aquisicao')
-                  ->comment('Data ideal para aquisição');
-                  
-            $table->date('previsao')
-                  ->nullable()
-                  ->comment('Previsão adicional (se aplicável)');
-            
             // === VINCULAÇÃO/DEPENDÊNCIA ===
             $table->enum('vinculacao_item', ['Sim', 'Não'])
                   ->default('Não')
@@ -122,7 +111,6 @@ return new class extends Migration
             $table->index(['user_id', 'status_id'], 'idx_pca_ppps_user_status');
             $table->index(['gestor_atual_id', 'status_id'], 'idx_pca_ppps_gestor_status');
             $table->index(['categoria', 'grau_prioridade'], 'idx_pca_ppps_categoria_prioridade');
-            $table->index('data_ideal_aquisicao', 'idx_pca_ppps_data_ideal');
             $table->index('deleted_at', 'idx_pca_ppps_deleted');
         });
     }

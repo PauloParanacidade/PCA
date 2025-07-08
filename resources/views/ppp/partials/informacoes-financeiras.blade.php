@@ -14,7 +14,7 @@
                         <i class="fas fa-money-bill-wave text-success me-1"></i>
                         Valor total estimado (exercício) <span class="text-danger">*</span>
                     </label>
-                    <input type="text" name="estimativa_valor" class="form-control form-control-lg estimativa_valor money-field" required
+                    <input type="text" name="estimativa_valor" class="form-control form-control-lg estimativa_valor money-field protocolDisplayMask" required
                         value="{{ old('estimativa_valor', $ppp->estimativa_valor ?? '') }}" 
                         placeholder="R$ 0,00" autocomplete="off">
                 </div>

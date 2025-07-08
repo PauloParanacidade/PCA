@@ -54,14 +54,12 @@
         @include('ppp.partials.vinculacao-dependencia')
     </div>
 
-
-
-@include('ppp.partials.botoes-acao')
+    @include('ppp.partials.botoes-acao')
 </form>
 
 @endsection
 
 {{-- Incluir CSS e JS específicos do PPP --}}
 @vite(['resources/css/ppp-form.css', 'resources/js/ppp-form.js'])
+<script src="{{ asset('js/maskMoney.js') }}?v=20250708"></script>
 
-<script src="{{ asset('/js/maskMoney.js') }}"></script>

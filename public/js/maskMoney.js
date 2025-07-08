@@ -1,17 +1,24 @@
 function formatarValorEmReais(valor) {
     if (!valor) return '';
-    valor = valor.toString().replace(/\D/g, ''); // Remove tudo que não for número
+    
+    // Remove tudo que não for número
+    valor = valor.toString().replace(/\D/g, '');
+    
+    // Se não há valor, retorna vazio
+    if (valor === '') return '';
+    
+    // Converte para número e divide por 100 para ter os centavos
+    let numero = parseInt(valor) / 100;
+    
+    // Formata usando toLocaleString para padrão brasileiro
+    return numero.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).replace('\u00A0', ' '); // <- NBSP substituído por espaço normal
 
-    // Adiciona o ponto a cada 3 dígitos a partir da direita
-    valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-
-    // Adiciona a vírgula antes dos dois últimos dígitos
-    valor = valor.replace(/(\d{2})$/, ',$1');
-
-    // Adiciona o prefixo "R$"
-    return 'R$ ' + valor;
 }
-
 
 document.addEventListener('DOMContentLoaded', function() {
 

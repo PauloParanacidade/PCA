@@ -12,7 +12,6 @@ class PcaPpp extends Model
         'user_id',
         'status_id',
         'gestor_atual_id',
-        'status_fluxo',
         'categoria',
         'nome_item',
         'descricao',
@@ -22,12 +21,9 @@ class PcaPpp extends Model
         'justificativa_valor',
         'origem_recurso',
         'grau_prioridade',
-        'ate_partir_dia',
-        'data_ideal_aquisicao',
         'vinculacao_item',
         'justificativa_vinculacao',
         'renov_contrato',
-        'previsao',
         'num_contrato',
         'valor_contrato_atualizado',
         'mes_vigencia_final',
@@ -37,10 +33,8 @@ class PcaPpp extends Model
     ];
 
     protected $casts = [
-        'estimativa_valor' => 'float',
-        'valor_contrato_atualizado' => 'float',
-        'data_ideal_aquisicao' => 'date',
-        'previsao' => 'date',
+        'estimativa_valor' => 'decimal:2',
+        'valor_contrato_atualizado' => 'decimal:2',
     ];
 
     public function user()
@@ -48,9 +42,9 @@ class PcaPpp extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function historicos()
+    public function gestorAtual()
     {
-        return $this->hasMany(\App\Models\PppHistorico::class, 'ppp_id');
+        return $this->belongsTo(User::class, 'gestor_atual_id');
     }
 
     public function status()
@@ -58,14 +52,8 @@ class PcaPpp extends Model
         return $this->belongsTo(\App\Models\PppStatus::class, 'status_id');
     }
 
-    // ✅ Adicionar relacionamento
-    public function statusDinamicos()
+    public function historicos()
     {
-        return $this->hasMany(\App\Models\PppStatusDinamico::class, 'ppp_id');
-    }
-
-    public function gestorAtual()
-    {
-        return $this->belongsTo(User::class, 'gestor_atual_id');
+        return $this->hasMany(\App\Models\PppHistorico::class, 'ppp_id');
     }
 }
