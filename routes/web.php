@@ -42,6 +42,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::resource('ppp', PppController::class);
     Route::post('ppp/{ppp}/aprovar', [PppController::class, 'aprovar'])->name('ppp.aprovar');
+    Route::post('ppp/{ppp}/enviar-aprovacao', [PppController::class, 'enviarParaAprovacao'])->name('ppp.enviar-aprovacao');
 });
 
 // Rota para depuração (ambiente local)

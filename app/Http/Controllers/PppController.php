@@ -91,6 +91,15 @@ class PppController extends Controller
             
             Log::info('PPP criado com sucesso.', ['ppp_id' => $ppp->id]);
             
+            // Verificar se é uma requisição AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PPP criado com sucesso.',
+                    'ppp_id' => $ppp->id
+                ]);
+            }
+            
             return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');
             
         } catch (\Throwable $ex) {
@@ -106,6 +115,20 @@ class PppController extends Controller
     {
         //dd($request);  
         try {
+            // LOG 1: Verificar usuário atual
+            Log::info('DEBUG PPP Index - Usuário atual', [
+                'user_id' => Auth::id(),
+                'user_name' => Auth::user()->name ?? 'N/A'
+            ]);
+            
+            // LOG 2: Total de PPPs no banco (incluindo soft deleted)
+            $totalPppsComDeleted = PcaPpp::withTrashed()->count();
+            $totalPppsAtivos = PcaPpp::count();
+            Log::info('DEBUG PPP Index - Total PPPs no banco', [
+                'total_com_deleted' => $totalPppsComDeleted,
+                'total_ativos' => $totalPppsAtivos
+            ]);
+            
             $query = PcaPpp::where(function($q) {
                     $q->where('user_id', Auth::id())
                       ->orWhere('gestor_atual_id', Auth::id());
@@ -118,14 +141,23 @@ class PppController extends Controller
                 ])
                 ->orderBy('created_at', 'desc');
         
+            // LOG 3: Quantos PPPs passam pelo filtro inicial (user_id ou gestor_atual_id)
+            $totalFiltroInicial = clone $query;
+            $countFiltroInicial = $totalFiltroInicial->count();
+            Log::info('DEBUG PPP Index - PPPs após filtro inicial', [
+                'count_filtro_inicial' => $countFiltroInicial,
+                'filtros_aplicados' => [
+                    'user_id' => Auth::id(),
+                    'gestor_atual_id' => Auth::id()
+                ]
+            ]);
+            
             // ✅ CORRIGIR: Filtro deve usar status_id ao invés de status_fluxo
             if ($request->filled('status_id')) {
                 $query->where('status_id', $request->status_id);
-            }
-            
-            // Aplicar filtros
-            if ($request->filled('status_fluxo')) {
-                $query->where('status_fluxo', $request->status_fluxo);
+                Log::info('DEBUG PPP Index - Filtro status_id aplicado', [
+                    'status_id' => $request->status_id
+                ]);
             }
             
             // Campo area_solicitante foi removido
@@ -136,13 +168,39 @@ class PppController extends Controller
                     $q->where('nome_item', 'like', "%{$busca}%")
                       ->orWhere('descricao', 'like', "%{$busca}%");
                 });
+                Log::info('DEBUG PPP Index - Filtro busca aplicado', [
+                    'busca' => $busca
+                ]);
             }
             
+            // LOG 4: Quantos PPPs após todos os filtros (antes da paginação)
+            $totalAposFiltros = clone $query;
+            $countAposFiltros = $totalAposFiltros->count();
+            Log::info('DEBUG PPP Index - PPPs após todos os filtros', [
+                'count_apos_filtros' => $countAposFiltros
+            ]);
+            
+            // LOG 5: SQL da query para debug
+            $sqlQuery = $query->toSql();
+            $bindings = $query->getBindings();
+            Log::info('DEBUG PPP Index - SQL Query', [
+                'sql' => $sqlQuery,
+                'bindings' => $bindings
+            ]);
+            
             $ppps = $query->paginate(10)->withQueryString();
+            
+            // LOG 6: Resultado final da paginação
+            Log::info('DEBUG PPP Index - Resultado final', [
+                'total_paginated' => $ppps->total(),
+                'current_page' => $ppps->currentPage(),
+                'per_page' => $ppps->perPage(),
+                'items_na_pagina_atual' => $ppps->count()
+            ]);
         
             return view('ppp.index', compact('ppps'));
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e); // ❌ COMENTAR ESTA LINHA
             Log::error('Erro ao listar PPPs: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs.');
         }
@@ -187,22 +245,21 @@ class PppController extends Controller
 
     public function update(StorePppRequest $request, $id)
     {
-        //dd($request);
         try {
             $ppp = PcaPpp::findOrFail($id);
             $dados = $request->validated();
             
             // ✅ CORREÇÃO: Processar valores monetários dos dados validados
             if (isset($dados['estimativa_valor'])) {
-                $dados['estimativa_valor'] = floatval(
-                    str_replace(['R$', '.', ','], ['', '', '.'], $dados['estimativa_valor'])
-                );
+                $estimativaLimpa = str_replace(['R$', ' '], '', $dados['estimativa_valor']);
+                $estimativaLimpa = str_replace(['.'], '', $estimativaLimpa);
+                $dados['estimativa_valor'] = floatval(str_replace(',', '.', $estimativaLimpa));
             }
             
             if (isset($dados['valor_contrato_atualizado'])) {
-                $dados['valor_contrato_atualizado'] = floatval(
-                    str_replace(['R$', '.', ','], ['', '', '.'], $dados['valor_contrato_atualizado'])
-                );
+                $valorLimpo = str_replace(['R$', ' '], '', $dados['valor_contrato_atualizado']);
+                $valorLimpo = str_replace(['.'], '', $valorLimpo);
+                $dados['valor_contrato_atualizado'] = floatval(str_replace(',', '.', $valorLimpo));
             }
             
             $statusAnterior = $ppp->status_id;
@@ -226,13 +283,30 @@ class PppController extends Controller
                 ]);
             }
 
+            // Verificar se é uma requisição AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PPP atualizado com sucesso.',
+                    'ppp_id' => $ppp->id
+                ]);
+            }
+
             return redirect()->route('ppp.index')->with('success', 'PPP atualizado com sucesso.');
         } catch (\Throwable $ex) {
             Log::error('Erro ao atualizar PPP: ' . $ex->getMessage(), [
                 'exception' => $ex,
                 'ppp_id' => $id,
             ]);
-            Log::debug($ex->getTraceAsString());
+            
+            // Verificar se é uma requisição AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar PPP: ' . $ex->getMessage()
+                ], 500);
+            }
+            
             return back()->withInput()->withErrors(['msg' => 'Erro ao atualizar.']);
         }
     }
@@ -346,17 +420,23 @@ class PppController extends Controller
             $ppp = PcaPpp::findOrFail($id);
             
             if ($ppp->user_id !== Auth::id()) {
+                if ($request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Você não tem permissão para esta ação.'], 403);
+                }
                 return back()->withErrors(['msg' => 'Você não tem permissão para esta ação.']);
             }
             
             $proximoGestor = $this->obterProximoGestor(Auth::user());
             
             if (!$proximoGestor) {
+                if ($request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Não foi possível identificar o próximo gestor.'], 400);
+                }
                 return back()->withErrors(['msg' => 'Não foi possível identificar o próximo gestor.']);
             }
             
             $ppp->update([
-                'status_fluxo' => 'aguardando_aprovacao',
+                'status_id' => 2, // aguardando_aprovacao
                 'gestor_atual_id' => $proximoGestor->id,
             ]);
             
@@ -366,10 +446,23 @@ class PppController extends Controller
                 $request->input('justificativa', 'PPP enviado para aprovação')
             );
             
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'PPP enviado para aprovação com sucesso!',
+                    'ppp_id' => $ppp->id
+                ]);
+            }
+            
             return redirect()->route('ppp.index')->with('success', 'PPP enviado para aprovação com sucesso!');
             
         } catch (\Throwable $ex) {
             Log::error('Erro ao enviar PPP para aprovação: ' . $ex->getMessage());
+            
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Erro ao enviar PPP para aprovação.'], 500);
+            }
+            
             return back()->withErrors(['msg' => 'Erro ao enviar PPP para aprovação.']);
         }
     }
@@ -428,7 +521,7 @@ class PppController extends Controller
         }
     
         // Verificar se o PPP está aguardando aprovação
-        if ($ppp->status_fluxo !== 'aguardando_aprovacao') {
+        if ($ppp->status_id !== 2) { // 2 = aguardando_aprovacao
             return redirect()->back()->with('error', 'Este PPP não está aguardando aprovação.');
         }
     

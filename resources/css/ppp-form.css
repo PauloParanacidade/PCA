@@ -142,3 +142,72 @@
         font-size: 0.7rem;
     }
 }
+
+/* Estilos para interface progressiva */
+.card-navigation {
+    border-top: 1px solid #dee2e6;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.step-indicator {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.step-indicator:hover {
+    color: #007bff !important;
+}
+
+.step-icon {
+    transition: all 0.3s ease;
+}
+
+/* Layout responsivo para cards lado a lado */
+@media (max-width: 768px) {
+    .col-md-8, .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Animações suaves */
+.card {
+    transition: all 0.3s ease;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Notificação de sucesso */
+.position-fixed {
+    position: fixed !important;
+}
+
+#success-notification {
+    animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Melhorar aparência dos cards na interface progressiva */
+.card-navigation {
+    background-color: #f8f9fa;
+    margin: 0 -1.25rem -1.25rem -1.25rem;
+    padding: 1rem 1.25rem;
+}

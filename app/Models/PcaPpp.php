@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // ✅ ADICIONAR
 
 class PcaPpp extends Model
 {
+    use SoftDeletes; // ✅ ADICIONAR
+    
     protected $table = 'pca_ppps';
 
     protected $fillable = [

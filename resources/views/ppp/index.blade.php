@@ -192,7 +192,7 @@
                 <!-- Paginação -->
                 @if($ppps->hasPages())
                     <div class="card-footer">
-                        {{ $ppps->links() }}
+                        {{ $ppps->links('custom.pagination') }}
                     </div>
                 @endif
             @else

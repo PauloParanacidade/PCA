@@ -9,7 +9,7 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-lg-6 mb-3">
+                <div class="col-12 mb-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-question-circle text-info me-1"></i>
                         Possui vinculação/dependência? <span class="text-danger">*</span>
@@ -20,15 +20,14 @@
                         <option value="Não" {{ old('vinculacao_item', $ppp->vinculacao_item ?? '') == 'Não' ? 'selected' : '' }}>❌ Não</option>
                     </select>
                 </div>
-                <div class="col-lg-6">
-                    <div id="campo_justificativa_vinculacao" style="display: none;">
-                        <label class="form-label fw-bold">
-                            <i class="fas fa-edit text-info me-1"></i>
-                            Justificativa da vinculação
-                        </label>
-                        <textarea name="justificativa_vinculacao" id="justificativa_vinculacao" class="form-control" rows="4" maxlength="600"
-                            placeholder="Identifique a qual item o pedido está vinculado e justifique a dependência">{{ old('justificativa_vinculacao', $ppp->justificativa_vinculacao ?? '') }}</textarea>
-                    </div>
+                
+                <div class="col-12" id="campo_justificativa_vinculacao" style="display: none;">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-edit text-info me-1"></i>
+                        Justificativa da vinculação
+                    </label>
+                    <textarea name="justificativa_vinculacao" id="justificativa_vinculacao" class="form-control" rows="4" maxlength="600"
+                        placeholder="Identifique a qual item o pedido está vinculado e justifique a dependência">{{ old('justificativa_vinculacao', $ppp->justificativa_vinculacao ?? '') }}</textarea>
                 </div>
             </div>
 
