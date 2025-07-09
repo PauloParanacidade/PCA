@@ -2,68 +2,192 @@ import $ from 'jquery';
 
 /**
  * Módulo de Validação de Formulário
- * Centraliza todas as validações do formulário PPP
+ * Gerencia validação em tempo real e tooltips
  */
 export const FormValidation = {
     init: function() {
         this.bindValidationEvents();
+        this.setupCustomValidation();
     },
 
     bindValidationEvents: function() {
-        // Validação em tempo real
-        $('input[required], select[required], textarea[required]').on('blur', (e) => {
-            this.validateField($(e.target));
+        // Validação em tempo real para campos obrigatórios (apenas no blur, não no show)
+        $(document).on('blur', 'input[required], select[required], textarea[required]', function() {
+            // Só validar se o campo já foi tocado pelo usuário
+            if ($(this).data('user-interacted')) {
+                FormValidation.validateField($(this));
+            }
         });
-        
-        // Validação específica para campos monetários
-        $('.estimativa_valor, .valor_contrato_atualizado').on('blur', (e) => {
-            this.validateField($(e.target));
+
+        // Marcar campo como interagido pelo usuário
+        $(document).on('focus input change', 'input[required], select[required], textarea[required]', function() {
+            $(this).data('user-interacted', true);
         });
 
         // Limpar validação ao focar
-        $('input, select, textarea').on('focus', (e) => {
-            this.clearFieldValidation($(e.target));
+        $(document).on('focus', 'input[required], select[required], textarea[required]', function() {
+            FormValidation.clearValidation($(this));
+        });
+
+        // Validação para campos monetários
+        $(document).on('blur', '.estimativa_valor, .valor_contrato_atualizado', function() {
+            FormValidation.validateMonetaryField($(this));
+        });
+
+        // Interceptar tentativas de submissão para mostrar tooltips
+        $(document).on('click', 'button[type="submit"], .btn-next', function(e) {
+            const form = $(this).closest('form');
+            if (!FormValidation.validateVisibleRequiredFields()) {
+                e.preventDefault();
+                e.stopPropagation();
+                FormValidation.showFirstInvalidFieldTooltip();
+                return false;
+            }
+        });
+    },
+
+    setupCustomValidation: function() {
+        // Configurar mensagens customizadas
+        $('input[required], select[required], textarea[required]').each(function() {
+            this.setCustomValidity('');
+            $(this).attr('title', 'Preencha este campo');
         });
     },
 
     validateField: function(field) {
-        const value = field.val().trim();
+        const value = field.val();
+        const fieldName = field.attr('name');
         
-        if (this.isEmpty(value)) {
-            this.markFieldAsInvalid(field);
+        // Validação específica para select de origem_recurso
+        if (fieldName === 'origem_recurso') {
+            const isEmpty = !value || value.trim() === '' || value === 'A definir';
+            
+            if (isEmpty && field.is(':visible') && !field.prop('disabled')) {
+                this.markFieldAsInvalid(field, 'Selecione uma origem do recurso');
+                return false;
+            } else {
+                this.markFieldAsValid(field);
+                return true;
+            }
+        }
+        
+        // Validação específica para valor_contrato_atualizado
+        if (fieldName === 'valor_contrato_atualizado') {
+            const isEmpty = !value || value.trim() === '';
+            
+            if (isEmpty && field.is(':visible') && !field.prop('disabled')) {
+                this.markFieldAsInvalid(field, 'Informe o valor para +1 exercício');
+                return false;
+            } else {
+                this.markFieldAsValid(field);
+                return true;
+            }
+        }
+        
+        // Validação padrão para outros campos
+        const isEmpty = !value || value.trim() === '';
+        
+        if (isEmpty && field.is(':visible') && !field.prop('disabled')) {
+            this.markFieldAsInvalid(field, 'Este campo é obrigatório');
+            return false;
         } else {
             this.markFieldAsValid(field);
+            return true;
         }
     },
 
-    isEmpty: function(value) {
-        return value === '' || value === null || value === undefined;
+    validateMonetaryField: function(field) {
+        const value = field.val();
+        const monetaryPattern = /^R\$\s?\d{1,3}(\.\d{3})*(,\d{2})?$/;
+        
+        if (value && !monetaryPattern.test(value)) {
+            this.markFieldAsInvalid(field, 'Formato inválido. Use: R$ 0,00');
+            return false;
+        } else if (value) {
+            this.markFieldAsValid(field);
+            return true;
+        }
+        return true;
     },
 
-    markFieldAsInvalid: function(field) {
-        field.addClass('is-invalid');
-        if (!field.next('.invalid-feedback').length) {
-            field.after('<div class="invalid-feedback">Este campo é obrigatório.</div>');
+    validateVisibleRequiredFields: function() {
+        let isValid = true;
+        const visibleRequiredFields = $('input[required]:visible, select[required]:visible, textarea[required]:visible')
+            .not(':disabled');
+        
+        visibleRequiredFields.each(function() {
+            if (!FormValidation.validateField($(this))) {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    },
+
+    showFirstInvalidFieldTooltip: function() {
+        const firstInvalidField = $('.is-invalid:visible').first();
+        if (firstInvalidField.length) {
+            // Focar no primeiro campo inválido
+            firstInvalidField.focus();
+            
+            // Mostrar tooltip nativo do HTML5
+            if (firstInvalidField[0].reportValidity) {
+                const fieldName = firstInvalidField.attr('name');
+                let message = 'Preencha este campo';
+                
+                if (fieldName === 'origem_recurso') {
+                    message = 'Selecione uma origem do recurso';
+                }
+                
+                firstInvalidField[0].setCustomValidity(message);
+                firstInvalidField[0].reportValidity();
+                firstInvalidField[0].setCustomValidity(''); // Limpar após mostrar
+            }
+            
+            // Scroll suave até o campo
+            $('html, body').animate({
+                scrollTop: firstInvalidField.offset().top - 100
+            }, 300);
         }
+    },
+
+    markFieldAsInvalid: function(field, message) {
+        field.removeClass('is-valid').addClass('is-invalid');
+        
+        // Remover mensagem anterior
+        field.siblings('.invalid-feedback').remove();
+        
+        // Adicionar nova mensagem
+        field.after(`<div class="invalid-feedback">${message}</div>`);
+        
+        // Configurar tooltip nativo
+        field[0].setCustomValidity(message);
     },
 
     markFieldAsValid: function(field) {
-        field.removeClass('is-invalid').next('.invalid-feedback').remove();
-        field.addClass('is-valid');
+        field.removeClass('is-invalid').addClass('is-valid');
+        field.siblings('.invalid-feedback').remove();
+        field[0].setCustomValidity('');
     },
 
-    clearFieldValidation: function(field) {
-        field.removeClass('is-invalid is-valid').next('.invalid-feedback').remove();
+    clearValidation: function(field) {
+        field.removeClass('is-invalid is-valid');
+        field.siblings('.invalid-feedback').remove();
+        field[0].setCustomValidity('');
     },
 
     validateForm: function() {
-        let camposVazios = [];
-        $('input[required], select[required], textarea[required]').each(function() {
-            if (!$(this).prop('disabled') && !$(this).val().trim()) {
-                camposVazios.push($(this).attr('name') || 'campo sem nome');
-                $(this).addClass('is-invalid');
+        const requiredFields = $('input[required]:visible, select[required]:visible, textarea[required]:visible')
+            .not(':disabled');
+        const emptyFields = [];
+        
+        requiredFields.each(function() {
+            const field = $(this);
+            if (!FormValidation.validateField(field)) {
+                emptyFields.push(field.attr('name') || field.attr('id'));
             }
         });
-        return camposVazios;
+        
+        return emptyFields;
     }
 };

@@ -62,28 +62,47 @@ class PppController extends Controller
                 $valorFloat = floatval(str_replace(',', '.', $valorLimpo)); // Converte vírgula para ponto
             }
             
+            // ✅ NOVO: Verificar se é um rascunho (apenas card azul preenchido)
+            $isRascunho = $this->isRascunho($request);
+            
             $ppp = PcaPpp::create([
                 'user_id' => Auth::id(),
-                'status_id' => 1, // Status inicial
+                'status_id' => 1,
                 'gestor_atual_id' => $manager->id,
                 'categoria' => $request->categoria,
                 'nome_item' => $request->nome_item,
                 'descricao' => $request->descricao,
                 'quantidade' => $request->quantidade,
                 'justificativa_pedido' => $request->justificativa_pedido,
-                'estimativa_valor' => $estimativaFloat,
+                'estimativa_valor' => $estimativaFloat ?: 0.01,
                 'justificativa_valor' => $request->justificativa_valor,
-                'origem_recurso' => $request->origem_recurso,
                 'grau_prioridade' => $request->grau_prioridade,
-                'vinculacao_item' => $request->vinculacao_item,
-                'justificativa_vinculacao' => $request->justificativa_vinculacao,
-                'renov_contrato' => $request->renov_contrato ?? 'Não',
-                'valor_contrato_atualizado' => $valorFloat,
-                'num_contrato' => $request->num_contrato,
-                'mes_vigencia_final' => $request->mes_vigencia_final,
-                'contrato_prorrogavel' => $request->contrato_prorrogavel,
-                'tem_contrato_vigente' => $request->tem_contrato_vigente,
-                'natureza_objeto' => $request->natureza_objeto,
+                // Aplicar valores padrão diretamente
+                'origem_recurso' => $request->origem_recurso ?: 'PRC',
+                'vinculacao_item' => $request->vinculacao_item ?: 'Não',
+                'justificativa_vinculacao' => $request->justificativa_vinculacao ?: '.',
+                'renov_contrato' => $request->renov_contrato ?: 'Não',
+                'valor_contrato_atualizado' => $valorFloat ?: 0.01,
+                'num_contrato' => $request->num_contrato ?: '.',
+                'mes_vigencia_final' => $request->mes_vigencia_final ?: '.',
+                'contrato_prorrogavel' => $request->contrato_prorrogavel ?: 'Não',
+                'tem_contrato_vigente' => $request->tem_contrato_vigente ?: 'Não',
+                'natureza_objeto' => $request->natureza_objeto ?: '.',
+                // Adicionar campos que podem estar faltando
+                'dependencia_item' => $request->dependencia_item ?: 'Não',
+                'justificativa_dependencia' => $request->justificativa_dependencia ?: '.',
+                'cronograma_jan' => $request->cronograma_jan ?: 'Não',
+                'cronograma_fev' => $request->cronograma_fev ?: 'Não',
+                'cronograma_mar' => $request->cronograma_mar ?: 'Não',
+                'cronograma_abr' => $request->cronograma_abr ?: 'Não',
+                'cronograma_mai' => $request->cronograma_mai ?: 'Não',
+                'cronograma_jun' => $request->cronograma_jun ?: 'Não',
+                'cronograma_jul' => $request->cronograma_jul ?: 'Não',
+                'cronograma_ago' => $request->cronograma_ago ?: 'Não',
+                'cronograma_set' => $request->cronograma_set ?: 'Não',
+                'cronograma_out' => $request->cronograma_out ?: 'Não',
+                'cronograma_nov' => $request->cronograma_nov ?: 'Não',
+                'cronograma_dez' => $request->cronograma_dez ?: 'Não',
             ]);
             
             // Registrar no histórico
@@ -549,4 +568,52 @@ class PppController extends Controller
             return redirect()->back()->with('error', 'Erro ao aprovar PPP: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Verifica se o PPP deve ser salvo como rascunho
+     * baseado nos campos preenchidos (apenas card azul)
+     */
+    public function isRascunho($request)
+    {
+        // Campos obrigatórios do card azul (primeira etapa)
+        $camposCardAzul = [
+            'categoria',
+            'nome_item', 
+            'descricao',
+            'quantidade',
+            'justificativa_pedido'
+        ];
+        
+        // Campos das etapas seguintes
+        $camposEtapasSeguintes = [
+            'natureza_objeto',
+            'grau_prioridade', 
+            'estimativa_valor',
+            'justificativa_valor',
+            'origem_recurso',
+            'vinculacao_item',
+            'tem_contrato_vigente'
+        ];
+        
+        // Verifica se todos os campos do card azul estão preenchidos
+        foreach ($camposCardAzul as $campo) {
+            if (empty($request->input($campo))) {
+                return false; // Se algum campo obrigatório não estiver preenchido, não é rascunho válido
+            }
+        }
+        
+        // Verifica se pelo menos um campo das etapas seguintes está vazio ou com valor padrão
+        foreach ($camposEtapasSeguintes as $campo) {
+            $valor = $request->input($campo);
+            if (empty($valor) || in_array($valor, ['A definir', 'Valor a ser definido nas próximas etapas', '.'])) {
+                return true; // É um rascunho se algum campo das próximas etapas não foi preenchido
+            }
+        }
+        
+        return false; // Todos os campos estão preenchidos, não é rascunho
+    }
 }
+
+
+    
+    

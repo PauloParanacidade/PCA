@@ -33,9 +33,9 @@
                 <div class="col-12 mb-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-calendar-plus text-success me-1"></i>
-                        Valor se +1 exercício
+                        Valor se +1 exercício <span class="text-danger">*</span>
                     </label>
-                    <input type="text" name="valor_contrato_atualizado" class="form-control form-control-lg valor_contrato_atualizado money-field protocolDisplayMask"
+                    <input type="text" name="valor_contrato_atualizado" class="form-control form-control-lg valor_contrato_atualizado money-field protocolDisplayMask" required
                         value="{{ old('valor_contrato_atualizado', $ppp->valor_contrato_atualizado ?? '') }}"
                         placeholder="R$ 0,00" autocomplete="off">
                 </div>
