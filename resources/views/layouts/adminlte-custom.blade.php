@@ -9,6 +9,9 @@
 @stop
 
 @section('css')
+    <!-- Adicionar meta tag CSRF -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <style>
         /* Ajustes específicos para AdminLTE */
         .impersonate-banner {

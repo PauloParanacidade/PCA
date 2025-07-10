@@ -435,66 +435,163 @@ class PppController extends Controller
 
     public function enviarParaAprovacao($id, Request $request)
     {
+        Log::info('🚀 PppController.enviarParaAprovacao() - INICIANDO', [
+            'ppp_id' => $id,
+            'user_id' => Auth::id(),
+            'user_name' => Auth::user()->name ?? 'N/A',
+            'request_method' => $request->method(),
+            'is_ajax' => $request->ajax(),
+            'request_data' => $request->all()
+        ]);
+
         try {
             $ppp = PcaPpp::findOrFail($id);
+
+            Log::info('✅ PPP encontrado', [
+                'ppp_id' => $ppp->id,
+                'ppp_nome' => $ppp->nome_item,
+                'status_atual' => $ppp->status_id,
+                'user_criador' => $ppp->user_id,
+                'gestor_atual' => $ppp->gestor_atual_id
+            ]);
             
             if ($ppp->user_id !== Auth::id()) {
+                Log::warning('❌ Usuário não tem permissão para enviar este PPP', [
+                    'ppp_user_id' => $ppp->user_id,
+                    'current_user_id' => Auth::id()
+                ]);
+
                 if ($request->ajax()) {
                     return response()->json(['success' => false, 'message' => 'Você não tem permissão para esta ação.'], 403);
                 }
                 return back()->withErrors(['msg' => 'Você não tem permissão para esta ação.']);
             }
+
+            Log::info('✅ Permissão validada - Buscando próximo gestor');
             
             $proximoGestor = $this->obterProximoGestor(Auth::user());
             
             if (!$proximoGestor) {
+                Log::error('❌ Próximo gestor não encontrado', [
+                'user_manager' => Auth::user()->manager ?? 'N/A'
+                ]);
                 if ($request->ajax()) {
                     return response()->json(['success' => false, 'message' => 'Não foi possível identificar o próximo gestor.'], 400);
                 }
                 return back()->withErrors(['msg' => 'Não foi possível identificar o próximo gestor.']);
             }
+
+            Log::info('✅ Próximo gestor encontrado', [
+                'gestor_id' => $proximoGestor->id,
+                'gestor_nome' => $proximoGestor->name
+            ]);
+        
+            Log::info('🔄 Atualizando status do PPP', [
+                'status_anterior' => $ppp->status_id,
+                'status_novo' => 2, // aguardando_aprovacao
+                'gestor_anterior' => $ppp->gestor_atual_id,
+                'gestor_novo' => $proximoGestor->id
+            ]);
             
             $ppp->update([
                 'status_id' => 2, // aguardando_aprovacao
                 'gestor_atual_id' => $proximoGestor->id,
             ]);
+
+            Log::info('✅ PPP atualizado com sucesso', [
+                'ppp_id' => $ppp->id,
+                'novo_status' => $ppp->fresh()->status_id,
+                'novo_gestor' => $ppp->fresh()->gestor_atual_id
+            ]);
             
             // Registrar no histórico
-            $this->historicoService->registrarEnvioAprovacao(
-                $ppp, 
-                $request->input('justificativa', 'PPP enviado para aprovação')
-            );
+            $justificativa = $request->input('justificativa', 'PPP enviado para aprovação');
+            Log::info('📝 Registrando no histórico', ['justificativa' => $justificativa]);
+
+
+            //trecho comentado em função da resposta dada pela IA.
+            // $this->historicoService->registrarEnvioAprovacao(
+            //     $ppp, 
+            //     $request->input('justificativa', 'PPP enviado para aprovação')
+            // );
+
+            //trecho proposto pela IA. Se não funcionar apropriadamente deverá ser excluído e descomentar o trecho acima
+            $this->historicoService->registrarEnvioAprovacao($ppp, $justificativa);
+
+            Log::info('✅ Histórico registrado com sucesso');
             
+            //trecho comentado em função da resposta dada pela IA.
+            // if ($request->ajax()) {
+            //     return response()->json([
+            //         'success' => true, 
+            //         'message' => 'PPP enviado para aprovação com sucesso!',
+            //         'ppp_id' => $ppp->id
+            //     ]);
+            // }
+
+            //trecho proposto pela IA. Se não funcionar apropriadamente deverá ser excluído e descomentar o trecho acima
             if ($request->ajax()) {
-                return response()->json([
-                    'success' => true, 
-                    'message' => 'PPP enviado para aprovação com sucesso!',
-                    'ppp_id' => $ppp->id
-                ]);
+            $response = [
+                'success' => true, 
+                'message' => 'PPP enviado para aprovação com sucesso!',
+                'ppp_id' => $ppp->id,
+                'novo_status' => $ppp->fresh()->status_id
+            ];
+
+            Log::info('📤 Retornando resposta AJAX', $response);
+                return response()->json($response);
             }
+
+            Log::info('🔄 Redirecionando para index');
             
             return redirect()->route('ppp.index')->with('success', 'PPP enviado para aprovação com sucesso!');
             
         } catch (\Throwable $ex) {
-            Log::error('Erro ao enviar PPP para aprovação: ' . $ex->getMessage());
+
+            //trecho comentado em função da resposta dada pela IA.
+            // Log::error('Erro ao enviar PPP para aprovação: ' . $ex->getMessage());
             
-            if ($request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Erro ao enviar PPP para aprovação.'], 500);
-            }
+            // if ($request->ajax()) {
+            //     return response()->json(['success' => false, 'message' => 'Erro ao enviar PPP para aprovação.'], 500);
+            // }
             
-            return back()->withErrors(['msg' => 'Erro ao enviar PPP para aprovação.']);
+            // return back()->withErrors(['msg' => 'Erro ao enviar PPP para aprovação.']);
+
+            //trecho proposto pela IA. Se não funcionar apropriadamente deverá ser excluído e descomentar o trecho acima
+            Log::error('💥 ERRO em enviarParaAprovacao', [
+            'exception_message' => $ex->getMessage(),
+            'exception_file' => $ex->getFile(),
+            'exception_line' => $ex->getLine(),
+            'stack_trace' => $ex->getTraceAsString(),
+            'ppp_id' => $id,
+            'user_id' => Auth::id()
+        ]);
+        
+        if ($request->ajax()) {
+            return response()->json(['success' => false, 'message' => 'Erro ao enviar PPP para aprovação: ' . $ex->getMessage()], 500);
+        }
+        
+        return back()->withErrors(['msg' => 'Erro ao enviar PPP para aprovação: ' . $ex->getMessage()]);
         }
     }
 
     private function obterProximoGestor($usuario)
     {
+        Log::info('🔍 obterProximoGestor() - INICIANDO', [
+            'user_id' => $usuario->id,
+            'user_name' => $usuario->name,
+            'user_manager' => $usuario->manager ?? 'N/A'
+        ]);
+        
         // Extrair o gestor do campo manager (formato LDAP)
         $managerDN = $usuario->manager;
         
         if (!$managerDN) {
-            Log::warning('Usuário não possui gestor definido', ['user_id' => $usuario->id]);
+            Log::warning('❌ Usuário não possui gestor definido', ['user_id' => $usuario->id]);
             return null;
         }
+        
+        Log::info('🔍 Manager DN encontrado', ['manager_dn' => $managerDN]);
         
         // Extrair o nome do gestor do Distinguished Name (DN)
         // Formato: CN=Nome do Gestor,OU=Sigla da Área,DC=domain,DC=com
@@ -502,13 +599,18 @@ class PppController extends Controller
             $nomeGestor = trim($matches[1]);
             $siglaAreaGestor = trim($matches[2]);
             
+            Log::info('✅ Dados extraídos do DN', [
+                'nome_gestor' => $nomeGestor,
+                'sigla_area' => $siglaAreaGestor
+            ]);
+            
             // Buscar o gestor pelo nome
             $gestor = User::where('name', 'like', "%{$nomeGestor}%")
                          ->where('active', true)
                          ->first();
             
             if ($gestor) {
-                Log::info('Gestor encontrado na hierarquia', [
+                Log::info('✅ Gestor encontrado na hierarquia', [
                     'usuario_id' => $usuario->id,
                     'gestor_id' => $gestor->id,
                     'gestor_nome' => $gestor->name,
@@ -517,13 +619,13 @@ class PppController extends Controller
                 return $gestor;
             }
             
-            Log::warning('Gestor não encontrado na base de dados', [
+            Log::warning('❌ Gestor não encontrado na base de dados', [
                 'user_id' => $usuario->id,
                 'nome_gestor_extraido' => $nomeGestor,
                 'area_gestor_extraida' => $siglaAreaGestor
             ]);
         } else {
-            Log::warning('Formato do manager DN não reconhecido', [
+            Log::warning('❌ Formato do manager DN não reconhecido', [
                 'user_id' => $usuario->id,
                 'manager_dn' => $managerDN
             ]);

@@ -256,7 +256,7 @@ export const ProgressiveInterface = {
         });
 
         // Campos com valores padrão
-        formData.append('estimativa_valor', 'R$ 1.000,00');
+        formData.append('estimativa_valor', 'R$ 0,01');
         formData.append('justificativa_valor', 'Valor a ser definido nas próximas etapas');
         formData.append('origem_recurso', 'PRC'); // Mudança: usar 'PRC' em vez de 'A definir'
         formData.append('vinculacao_item', 'Não');
