@@ -118,27 +118,39 @@ export const ProgressiveInterface = {
     bindEvents: function() {
         $(document).on('click', '.btn-next', async (e) => {
             const currentStep = parseInt($(e.target).data('step'));
+            console.log('🔄 Clique em Próximo - Step:', currentStep);
             
             if (currentStep === 1) {
                 if (this.validateCurrentStep(currentStep)) {
+                    console.log('✅ Validação do Step 1 passou');
                     // Se já existe rascunho, apenas prosseguir
                     if (this.isDraftCreated) {
+                        console.log('📝 Rascunho já existe, indo para step 2');
                         this.goToStep(currentStep + 1);
                     } else {
+                        console.log('💾 Criando novo rascunho...');
                         // Criar novo rascunho apenas se não existir
                         const saved = await this.savePartialPpp();
                         if (saved) {
+                            console.log('✅ Rascunho salvo, indo para step 2');
                             this.goToStep(currentStep + 1);
+                        } else {
+                            console.error('❌ Falha ao salvar rascunho');
                         }
                     }
                 } else {
-                    this.showValidationAlert(currentStep);
+                    console.warn('⚠️ Validação do Step 1 falhou');
+                    // Remover chamada para método inexistente
+                    // this.showValidationAlert(currentStep);
                 }
             } else {
                 if (this.validateCurrentStep(currentStep)) {
+                    console.log(`✅ Validação do Step ${currentStep} passou`);
                     this.goToStep(currentStep + 1);
                 } else {
-                    this.showValidationAlert(currentStep);
+                    console.warn(`⚠️ Validação do Step ${currentStep} falhou`);
+                    // Remover chamada para método inexistente
+                    // this.showValidationAlert(currentStep);
                 }
             }
         });

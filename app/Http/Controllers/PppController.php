@@ -32,7 +32,15 @@ class PppController extends Controller
     public function store(StorePppRequest $request)
     {
         try {
-            //dd($request);
+            // ✅ NOVO LOG: Verificar todos os parâmetros recebidos
+            Log::info('🔍 PppController.store() - Parâmetros recebidos', [
+                'all_params' => $request->all(),
+                'enviar_aprovacao_exists' => $request->has('enviar_aprovacao'),
+                'enviar_aprovacao_value' => $request->input('enviar_aprovacao', 'NÃO INFORMADO'),
+                'method' => $request->method(),
+                'url' => $request->url()
+            ]);
+            
             $manager = Auth::user();
             
             // ✅ NOVA REGRA: Verificar e atribuir papel de gestor automaticamente
@@ -64,6 +72,13 @@ class PppController extends Controller
             
             // ✅ NOVO: Verificar se é um rascunho (apenas card azul preenchido)
             $isRascunho = $this->isRascunho($request);
+            
+            // ✅ NOVO LOG: Status antes da criação
+            Log::info('📊 Status antes da criação do PPP', [
+                'is_rascunho' => $isRascunho,
+                'status_id_sera_criado' => 1,
+                'gestor_atual_id' => $manager->id
+            ]);
             
             $ppp = PcaPpp::create([
                 'user_id' => Auth::id(),
@@ -108,9 +123,13 @@ class PppController extends Controller
             // Registrar no histórico
             $this->historicoService->registrarCriacao($ppp);
             
-            Log::info('PPP criado com sucesso.', ['ppp_id' => $ppp->id]);
-            
-            // Verificar se é uma requisição AJAX
+            Log::info('✅ PPP criado com sucesso', [
+                'ppp_id' => $ppp->id,
+                'status_atual' => $ppp->status_id,
+                'gestor_atual_id' => $ppp->gestor_atual_id
+            ]);
+
+            // Fluxo normal (sem envio para aprovação)
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
@@ -122,8 +141,13 @@ class PppController extends Controller
             return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');
             
         } catch (\Throwable $ex) {
-            Log::error('Erro ao criar PPP: ' . $ex->getMessage());
-            Log::error('Stack trace: ' . $ex->getTraceAsString()); // Para debug
+            Log::error('💥 ERRO CRÍTICO ao criar PPP', [
+                'exception_message' => $ex->getMessage(),
+                'exception_file' => $ex->getFile(),
+                'exception_line' => $ex->getLine(),
+                'stack_trace' => $ex->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
             return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP: ' . $ex->getMessage()]);
         }
     }
@@ -668,6 +692,94 @@ class PppController extends Controller
             
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erro ao aprovar PPP: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Processa o envio para aprovação internamente
+     */
+    private function processarEnvioAprovacao(PcaPpp $ppp, Request $request): array
+    {
+        try {
+            Log::info('🔄 processarEnvioAprovacao() - Iniciando processamento interno', [
+                'ppp_id' => $ppp->id,
+                'status_atual' => $ppp->status_id,
+                'gestor_atual' => $ppp->gestor_atual_id,
+                'user_solicitante' => Auth::id()
+            ]);
+            
+            $proximoGestor = $this->obterProximoGestor(Auth::user());
+            
+            Log::info('🔍 Resultado da busca por próximo gestor', [
+                'proximo_gestor_encontrado' => $proximoGestor ? true : false,
+                'proximo_gestor_id' => $proximoGestor ? $proximoGestor->id : null,
+                'proximo_gestor_nome' => $proximoGestor ? $proximoGestor->name : null
+            ]);
+            
+            if (!$proximoGestor) {
+                Log::error('❌ Próximo gestor não encontrado', [
+                    'ppp_id' => $ppp->id,
+                    'user_id' => Auth::id()
+                ]);
+                return [
+                    'success' => false,
+                    'message' => 'Não foi possível identificar o próximo gestor.'
+                ];
+            }
+            
+            Log::info('📝 Atualizando status do PPP', [
+                'ppp_id' => $ppp->id,
+                'status_de' => $ppp->status_id,
+                'status_para' => 2,
+                'gestor_de' => $ppp->gestor_atual_id,
+                'gestor_para' => $proximoGestor->id
+            ]);
+            
+            $ppp->update([
+                'status_id' => 2, // aguardando_aprovacao
+                'gestor_atual_id' => $proximoGestor->id,
+            ]);
+            
+            Log::info('✅ Status do PPP atualizado', [
+                'ppp_id' => $ppp->id,
+                'novo_status' => $ppp->fresh()->status_id,
+                'novo_gestor' => $ppp->fresh()->gestor_atual_id
+            ]);
+            
+            // Registrar no histórico
+            $this->historicoService->registrarEnvioAprovacao(
+                $ppp, 
+                'PPP enviado para aprovação automaticamente após criação'
+            );
+            
+            Log::info('📋 Histórico registrado com sucesso', [
+                'ppp_id' => $ppp->id
+            ]);
+            
+            Log::info('✅ processarEnvioAprovacao() - Concluído com sucesso', [
+                'ppp_id' => $ppp->id,
+                'status_final' => $ppp->fresh()->status_id,
+                'gestor_final' => $ppp->fresh()->gestor_atual_id
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'PPP enviado para aprovação com sucesso!'
+            ];
+            
+        } catch (\Throwable $ex) {
+            Log::error('💥 ERRO CRÍTICO em processarEnvioAprovacao()', [
+                'ppp_id' => $ppp->id,
+                'exception_message' => $ex->getMessage(),
+                'exception_file' => $ex->getFile(),
+                'exception_line' => $ex->getLine(),
+                'stack_trace' => $ex->getTraceAsString()
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => $ex->getMessage()
+            ];
         }
     }
 

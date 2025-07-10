@@ -130,10 +130,11 @@ export const FormButtons = {
                     throw new Error(errorData.message || 'Erro ao enviar para aprovação');
                 }
             } else {
-                console.log('🆕 Modo CRIAÇÃO detectado - Salvando e depois enviando');
+                console.log('🆕 Modo CRIAÇÃO detectado - Salvando e enviando para aprovação');
                 
-                formData.append('enviar_aprovacao', '1');
-                console.log('📝 Parâmetro enviar_aprovacao adicionado ao FormData');
+                // ✅ CORREÇÃO: Enviar 'SIM' em vez de '1'
+                formData.append('enviar_aprovacao', 'SIM');
+                console.log('📝 Parâmetro enviar_aprovacao=SIM adicionado ao FormData');
                 
                 const createUrl = '/ppp';
                 console.log('🌐 URL de criação:', createUrl);
@@ -155,53 +156,15 @@ export const FormButtons = {
                 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('✅ PPP criado com sucesso:', result);
+                    console.log('✅ PPP criado e processado:', result);
                     
-                    if (result.success && result.ppp_id) {
-                        console.log('🚀 Iniciando envio para aprovação do PPP criado:', result.ppp_id);
-                        
-                        // Enviar para aprovação após criação
-                        const enviarFormData = new FormData();
-                        enviarFormData.append('_token', csrfToken);
-                        
-                        const enviarUrl = `/ppp/${result.ppp_id}/enviar-aprovacao`;
-                        console.log('🌐 URL de envio para aprovação:', enviarUrl);
-                        
-                        const enviarResponse = await fetch(enviarUrl, {
-                            method: 'POST',
-                            body: enviarFormData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': csrfToken
-                            }
-                        });
-                        
-                        console.log('📡 Resposta do envio para aprovação:', {
-                            'status': enviarResponse.status,
-                            'ok': enviarResponse.ok,
-                            'status_text': enviarResponse.statusText
-                        });
-                        
-                        if (enviarResponse.ok) {
-                            const enviarResult = await enviarResponse.json();
-                            console.log('✅ Resultado do envio para aprovação:', enviarResult);
-                            
-                            if (enviarResult.success) {
-                                console.log('🎉 Processo completo bem-sucedido - Redirecionando');
-                                window.location.href = '/ppp';
-                            } else {
-                                console.error('❌ Erro no envio para aprovação:', enviarResult.message);
-                                throw new Error(enviarResult.message || 'Erro ao enviar para aprovação');
-                            }
-                        } else {
-                            console.error('❌ Erro HTTP no envio para aprovação:', enviarResponse.status);
-                            const errorData = await enviarResponse.json().catch(() => ({ message: 'Erro desconhecido' }));
-                            console.error('❌ Dados do erro no envio:', errorData);
-                            throw new Error(errorData.message || 'Erro ao enviar para aprovação');
-                        }
+                    if (result.success) {
+                        console.log('🎉 Processo completo bem-sucedido - Redirecionando');
+                        console.log('📊 Status final do PPP:', result.status_id);
+                        window.location.href = '/ppp';
                     } else {
-                        console.error('❌ Erro na criação do PPP:', result.message);
-                        throw new Error(result.message || 'Erro ao salvar PPP');
+                        console.error('❌ Erro no resultado:', result.message);
+                        throw new Error(result.message || 'Erro ao processar PPP');
                     }
                 } else {
                     console.error('❌ Erro HTTP na criação do PPP:', response.status);
