@@ -188,14 +188,49 @@ class PppController extends Controller
                 'condicao_resultado' => $request->input('acao') === 'enviar'
             ]);
 
-
-            // // Verificar se é "Salvar e Enviar para Aprovação"
-            // if ($request->has('enviar_aprovacao')) {
-            //     // Forçar status para aguardando_aprovacao
-            //     $dados['status_id'] = 2;
+dd($request->input('acao'));
                 
-                // Processar envio para aprovação
-                $this->processarEnvioAprovacao($ppp, $request);
+            
+            // Verificar se a ação é para enviar para aprovação
+if ($request->input('acao') === 'enviar_aprovacao') {
+    Log::info('Enviando PPP para aprovação AÇÃO = ENVIAR_APROVAÇÃO - ESTÁ OK ATÉ AQUI', ['ppp_id' => $ppp->id, 'user_id' => auth()->id()]);
+    
+    try {
+        $resultado = $this->processarEnvioAprovacao($ppp, $request);
+        
+        if (!$resultado['success']) {
+            Log::error('Erro ao processar envio para aprovação', [
+                'ppp_id' => $ppp->id,
+                'erro' => $resultado['message']
+            ]);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $resultado['message']
+                ]);
+            }
+            
+            return redirect()->back()->withErrors(['erro' => $resultado['message']]);
+        }
+        
+        Log::info('PPP enviado para aprovação com sucesso', ['ppp_id' => $ppp->id]);
+    } catch (\Exception $e) {
+        Log::error('Exceção ao enviar PPP para aprovação', [
+            'ppp_id' => $ppp->id,
+            'erro' => $e->getMessage()
+        ]);
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno ao enviar para aprovação'
+            ]);
+        }
+        
+        return redirect()->back()->withErrors(['erro' => 'Erro interno ao enviar para aprovação']);
+    }
+}
             
             
             // ✅ CORREÇÃO: Processar valores monetários dos dados validados
@@ -861,28 +896,6 @@ class PppController extends Controller
         }
         
         return false; // Todos os campos estão preenchidos, não é rascunho
-    }
-}
-
-// Verificar se a ação é "enviar_aprovacao"
-if ($request->input('acao') === 'enviar_aprovacao') {
-    // Forçar status para aguardando_aprovacao
-    $dados['status_id'] = 2;
-    
-    // Processar envio para aprovação
-    $resultado = $this->processarEnvioAprovacao($ppp, $request);
-    
-    if (!$resultado['success']) {
-        Log::error('Erro ao processar envio: ' . $resultado['message']);
-        
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => $resultado['message']
-            ], 400);
-        }
-        
-        return back()->withInput()->withErrors(['msg' => $resultado['message']]);
     }
 }
 
