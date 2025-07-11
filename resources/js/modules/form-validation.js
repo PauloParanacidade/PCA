@@ -33,17 +33,6 @@ export const FormValidation = {
         $(document).on('blur', '.estimativa_valor, .valor_contrato_atualizado', function() {
             FormValidation.validateMonetaryField($(this));
         });
-
-        // Interceptar tentativas de submissão para mostrar tooltips
-        $(document).on('click', 'button[type="submit"], .btn-next', function(e) {
-            const form = $(this).closest('form');
-            if (!FormValidation.validateVisibleRequiredFields()) {
-                e.preventDefault();
-                e.stopPropagation();
-                FormValidation.showFirstInvalidFieldTooltip();
-                return false;
-            }
-        });
     },
 
     setupCustomValidation: function() {

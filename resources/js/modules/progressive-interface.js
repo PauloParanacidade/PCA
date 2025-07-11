@@ -226,7 +226,10 @@ export const ProgressiveInterface = {
         try {
             const formData = this.collectFormData();
             const result = await ApiService.savePartialPpp(formData);
-            
+            const inputAcao = document.getElementById('inputAcao');
+            if (inputAcao) {
+                inputAcao.value = result.actionValue;
+            }
             this.pppId = result.ppp_id;
             this.isDraftCreated = true;
             this.updateFormForEdit();
@@ -383,62 +386,124 @@ export const ProgressiveInterface = {
     },
 
     showStep: function(step) {
+        // Remover botões dinâmicos e ocultar botões estáticos do Blade
+        $('.final-buttons').remove();
+        $('div.card:has(button[type="submit"]:contains("Salvar e Enviar para Aprovação"))').hide();
+        
         if (step === 1) {
-            $('#card-informacoes-item').show();
-        } else if (step === 2) {
-            // Solução mais robusta para o card amarelo
-            const cardAmarelo = $('#card-contrato-vigente');
-            if (cardAmarelo.length === 0) {
-                console.error('Card amarelo não encontrado!');
-                // Tentar recarregar a página se o card não for encontrado
-                location.reload();
-                return;
+            // Padronizar: usar findCardByContent com fallback
+            const cardAzul = this.findCardWithFallback('Informações do Item', 'card-informacoes-item');
+            if (cardAzul.length) {
+                cardAzul.show();
+            } else {
+                console.error('Card azul não encontrado!');
+                this.handleCardNotFound('azul');
             }
             
-            // Garantir que o card está completamente visível
-            cardAmarelo.css({
-                'display': 'block',
-                'visibility': 'visible',
-                'opacity': '1'
-            });
-            
-            // Reajustar layout
-            const cardAmareloContainer = cardAmarelo.closest('.col-lg-6, .col-md-6, .col-12');
-            cardAmareloContainer.removeClass('col-lg-6 col-md-6').addClass('col-12');
-            
-            // Reinicializar campos condicionais
-            ConditionalFields.initializeStates();
-            
-            // Aplicar fadeIn com callback
-            cardAmarelo.hide().fadeIn(300, function() {
-                // Garantir que todos os elementos estão visíveis
-                $(this).find('input, select, textarea').each(function() {
-                    $(this).trigger('change');
+        } else if (step === 2) {
+            // Padronizar: usar findCardByContent com fallback
+            const cardAmarelo = this.findCardWithFallback('Contrato Vigente', 'card-contrato-vigente');
+            if (cardAmarelo.length) {
+                // Garantir que o card está completamente visível
+                cardAmarelo.css({
+                    'display': 'block',
+                    'visibility': 'visible',
+                    'opacity': '1'
                 });
-            });
+                
+                // Reajustar layout
+                const cardAmareloContainer = cardAmarelo.closest('.col-lg-6, .col-md-6, .col-12');
+                cardAmareloContainer.removeClass('col-lg-6 col-md-6').addClass('col-12');
+                
+                // Reinicializar campos condicionais
+                ConditionalFields.initializeStates();
+                
+                // Aplicar fadeIn com callback
+                cardAmarelo.hide().fadeIn(300, function() {
+                    $(this).find('input, select, textarea').each(function() {
+                        $(this).trigger('change');
+                    });
+                });
+            } else {
+                console.error('Card amarelo não encontrado!');
+                this.handleCardNotFound('amarelo');
+            }
+            
         } else if (step === 3) {
-            const cardVerde = this.findCardByContent('Informações Financeiras');
-            const cardCiano = this.findCardByContent('Vinculação/Dependência');
+            // Manter abordagem atual, mas com fallbacks
+            const cardVerde = this.findCardWithFallback('Informações Financeiras', 'card-informacoes-financeiras');
+            const cardCiano = this.findCardWithFallback('Vinculação/Dependência', 'card-vinculacao-dependencia');
             
-            const cardVerdeContainer = cardVerde.closest('.col-lg-6, .col-12');
-            cardVerdeContainer.removeClass('col-lg-6 col-12').addClass('col-md-6');
+            if (cardVerde.length && cardCiano.length) {
+                const cardVerdeContainer = cardVerde.closest('.col-lg-6, .col-12');
+                cardVerdeContainer.removeClass('col-lg-6 col-12').addClass('col-md-6');
+                
+                const cardCianoContainer = cardCiano.closest('.col-12');
+                cardCianoContainer.removeClass('col-12').addClass('col-md-6');
+                
+                // Limpar validações anteriores
+                [cardVerde, cardCiano].forEach(card => {
+                    card.find('input, select, textarea').each(function() {
+                        FormValidation.clearValidation($(this));
+                    });
+                });
+                
+                cardVerde.fadeIn(300);
+                cardCiano.fadeIn(300);
+                
+                this.showFinalButtons();
+            } else {
+                console.error('Cards do step 3 não encontrados!');
+                this.handleCardNotFound('step3');
+            }
+        }
+    },
+
+    // Novo método robusto com fallback
+    findCardWithFallback: function(title, fallbackId) {
+        // Primeira tentativa: buscar por conteúdo
+        let card = this.findCardByContent(title);
+        
+        // Se não encontrou, tentar por ID
+        if (card.length === 0 && fallbackId) {
+            card = $(`#${fallbackId}`);
+        }
+        
+        // Se ainda não encontrou, tentar por classe CSS específica
+        if (card.length === 0) {
+            const classMap = {
+                'Informações do Item': '.card-primary',
+                'Contrato Vigente': '.card-warning', 
+                'Informações Financeiras': '.card-success',
+                'Vinculação/Dependência': '.card-info'
+            };
             
-            const cardCianoContainer = cardCiano.closest('.col-12');
-            cardCianoContainer.removeClass('col-12').addClass('col-md-6');
-            
-            // Limpar validações anteriores antes de exibir os cards
-            cardVerde.find('input, select, textarea').each(function() {
-                FormValidation.clearValidation($(this));
-            });
-            
-            cardCiano.find('input, select, textarea').each(function() {
-                FormValidation.clearValidation($(this));
-            });
-            
-            cardVerde.fadeIn(300);
-            cardCiano.fadeIn(300);
-            
-            this.showFinalButtons();
+            if (classMap[title]) {
+                card = $(classMap[title]);
+            }
+        }
+        
+        // Se encontrou, garantir que tem o ID correto
+        if (card.length > 0 && fallbackId && !card.attr('id')) {
+            card.attr('id', fallbackId);
+        }
+        
+        return card;
+    },
+
+    // Método para lidar com cards não encontrados
+    handleCardNotFound: function(cardType) {
+        console.error(`Card ${cardType} não encontrado! Tentando recarregar...`);
+        
+        // Tentar recarregar apenas uma vez
+        if (!this.reloadAttempted) {
+            this.reloadAttempted = true;
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            // Se já tentou recarregar, mostrar erro ao usuário
+            alert(`Erro: Card ${cardType} não pôde ser carregado. Por favor, recarregue a página manualmente.`);
         }
     },
 

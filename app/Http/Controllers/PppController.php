@@ -32,6 +32,15 @@ class PppController extends Controller
     public function store(StorePppRequest $request)
     {
         try {
+
+            // 🔎 Novo log detalhado sobre a ação
+            Log::info('🛠️ Ação detectada no store()', [
+                'request_input_acao' => $request->input('acao'),
+                'request_get_acao' => request('acao'),
+                'request_method' => $request->method(),
+                'request_full_data' => $request->all()
+            ]);
+
             // ✅ NOVO LOG: Verificar todos os parâmetros recebidos
             Log::info('🔍 PppController.store() - Parâmetros recebidos', [
                 'all_params' => $request->all(),
@@ -72,6 +81,12 @@ class PppController extends Controller
             
             // ✅ NOVO: Verificar se é um rascunho (apenas card azul preenchido)
             $isRascunho = $this->isRascunho($request);
+
+            // 💡 Decisão baseada no input "acao"
+            Log::info('📌 isRascunho calculado', [
+                'acao_bruta' => $request->input('acao'),
+                'resultado_is_rascunho' => $isRascunho
+            ]);
             
             // ✅ NOVO LOG: Status antes da criação
             Log::info('📊 Status antes da criação do PPP', [
@@ -134,7 +149,8 @@ class PppController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'PPP criado com sucesso.',
-                    'ppp_id' => $ppp->id
+                    'ppp_id' => $ppp->id,
+                    'actionValue' => 'aguardando_aprovacao'
                 ]);
             }
             
@@ -152,7 +168,105 @@ class PppController extends Controller
         }
     }
 
-        
+    public function update(StorePppRequest $request, $id)
+    {
+        //dd($request);
+        try {
+            // 🔎 Novo log detalhado sobre a ação
+            Log::info('🛠️ Ação detectada no update()', [
+                'request_input_acao' => $request->input('acao'),
+                'request_get_acao' => request('acao'),
+                'request_method' => $request->method(),
+                'request_full_data' => $request->all()
+            ]);
+
+            $ppp = PcaPpp::findOrFail($id);
+            $dados = $request->validated();
+            //dd($dados);
+            Log::info('🔍 Verificando se ação é "enviar"', [
+                'acao_recebida' => $request->input('acao'),
+                'condicao_resultado' => $request->input('acao') === 'enviar'
+            ]);
+
+
+            // // Verificar se é "Salvar e Enviar para Aprovação"
+            // if ($request->has('enviar_aprovacao')) {
+            //     // Forçar status para aguardando_aprovacao
+            //     $dados['status_id'] = 2;
+                
+                // Processar envio para aprovação
+                $this->processarEnvioAprovacao($ppp, $request);
+            
+            
+            // ✅ CORREÇÃO: Processar valores monetários dos dados validados
+            if (isset($dados['estimativa_valor'])) {
+                $estimativaLimpa = str_replace(['R$', ' '], '', $dados['estimativa_valor']);
+                $estimativaLimpa = str_replace(['.'], '', $estimativaLimpa);
+                $dados['estimativa_valor'] = floatval(str_replace(',', '.', $estimativaLimpa));
+            }
+            
+            if (isset($dados['valor_contrato_atualizado'])) {
+                $valorLimpo = str_replace(['R$', ' '], '', $dados['valor_contrato_atualizado']);
+                $valorLimpo = str_replace(['.'], '', $valorLimpo);
+                $dados['valor_contrato_atualizado'] = floatval(str_replace(',', '.', $valorLimpo));
+            }
+            
+
+            $statusAnterior = $ppp->status_id;
+            $statusNovo = $dados['status_id'] ?? $statusAnterior;
+            
+            Log::info('Conteúdo do update PPP', [
+                'dados' => $dados,
+                'request_acao' => $request->input('acao'),
+                'esperado_status' => $dados['status_id'] ?? 'N/A',
+            ]);
+            
+            $ppp->update($dados);
+            
+            // Registrar histórico se status mudou
+            if ($statusAnterior != $statusNovo) {
+                PppHistorico::create([
+                    'ppp_id'         => $ppp->id,
+                    'status_anterior'=> $statusAnterior,
+                    'status_atual'   => $statusNovo,
+                    'justificativa'  => $request->input('justificativa'),
+                    'user_id'        => Auth::id(),
+                ]);
+                Log::info('Histórico registrado após alteração de status.', [
+                    'ppp_id' => $ppp->id,
+                    'status_anterior' => $statusAnterior,
+                    'status_novo' => $statusNovo,
+                ]);
+            }
+            
+            // Verificar se é uma requisição AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PPP atualizado com sucesso.',
+                    'ppp_id' => $ppp->id
+                ]);
+            }
+
+            return redirect()->route('ppp.index')->with('success', 'PPP atualizado com sucesso.');
+          
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao atualizar PPP: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'ppp_id' => $id,
+            ]);
+            
+            // Verificar se é uma requisição AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar PPP: ' . $ex->getMessage()
+                ], 500);
+            }
+            
+            return back()->withInput()->withErrors(['msg' => 'Erro ao atualizar.']);
+        }
+    }   
         
     public function index(Request $request)
     {
@@ -286,73 +400,7 @@ class PppController extends Controller
         }
     }
 
-    public function update(StorePppRequest $request, $id)
-    {
-        try {
-            $ppp = PcaPpp::findOrFail($id);
-            $dados = $request->validated();
-            
-            // ✅ CORREÇÃO: Processar valores monetários dos dados validados
-            if (isset($dados['estimativa_valor'])) {
-                $estimativaLimpa = str_replace(['R$', ' '], '', $dados['estimativa_valor']);
-                $estimativaLimpa = str_replace(['.'], '', $estimativaLimpa);
-                $dados['estimativa_valor'] = floatval(str_replace(',', '.', $estimativaLimpa));
-            }
-            
-            if (isset($dados['valor_contrato_atualizado'])) {
-                $valorLimpo = str_replace(['R$', ' '], '', $dados['valor_contrato_atualizado']);
-                $valorLimpo = str_replace(['.'], '', $valorLimpo);
-                $dados['valor_contrato_atualizado'] = floatval(str_replace(',', '.', $valorLimpo));
-            }
-            
-            $statusAnterior = $ppp->status_id;
-            $statusNovo = $dados['status_id'] ?? $statusAnterior;
-            
-            $ppp->update($dados);
-
-            // Registrar histórico se status mudou
-            if ($statusAnterior != $statusNovo) {
-                PppHistorico::create([
-                    'ppp_id'         => $ppp->id,
-                    'status_anterior'=> $statusAnterior,
-                    'status_atual'   => $statusNovo,
-                    'justificativa'  => $request->input('justificativa'),
-                    'user_id'        => Auth::id(),
-                ]);
-                Log::info('Histórico registrado após alteração de status.', [
-                    'ppp_id' => $ppp->id,
-                    'status_anterior' => $statusAnterior,
-                    'status_novo' => $statusNovo,
-                ]);
-            }
-
-            // Verificar se é uma requisição AJAX
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'PPP atualizado com sucesso.',
-                    'ppp_id' => $ppp->id
-                ]);
-            }
-
-            return redirect()->route('ppp.index')->with('success', 'PPP atualizado com sucesso.');
-        } catch (\Throwable $ex) {
-            Log::error('Erro ao atualizar PPP: ' . $ex->getMessage(), [
-                'exception' => $ex,
-                'ppp_id' => $id,
-            ]);
-            
-            // Verificar se é uma requisição AJAX
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Erro ao atualizar PPP: ' . $ex->getMessage()
-                ], 500);
-            }
-            
-            return back()->withInput()->withErrors(['msg' => 'Erro ao atualizar.']);
-        }
-    }
+    
 
     public function destroy($id)
     {
@@ -415,18 +463,6 @@ class PppController extends Controller
                 $statusFormatado = str_replace('[destinatario]', $destinatarioTexto, $statusFormatado);
             }
         }
-        // dd($statusFormatado);
-        // // Criar novo status dinâmico
-        // return \App\Models\PppStatusDinamico::create([
-        //     'ppp_id' => $ppp->id,
-        //     'status_tipo_id' => $tipoStatus === 'rascunho' ? null : \App\Models\PppStatus::where('tipo', $tipoStatus)->first()->id,
-        //     'remetente_nome' => $remetente->name ?? null,
-        //     'remetente_sigla' => $remetenteSigla,
-        //     'destinatario_nome' => $destinatario->name ?? null,
-        //     'destinatario_sigla' => $destinatarioSigla,
-        //     'status_formatado' => $statusFormatado,
-        //     'ativo' => true,
-        // ]);
     }
 
     /**
@@ -825,6 +861,28 @@ class PppController extends Controller
         }
         
         return false; // Todos os campos estão preenchidos, não é rascunho
+    }
+}
+
+// Verificar se a ação é "enviar_aprovacao"
+if ($request->input('acao') === 'enviar_aprovacao') {
+    // Forçar status para aguardando_aprovacao
+    $dados['status_id'] = 2;
+    
+    // Processar envio para aprovação
+    $resultado = $this->processarEnvioAprovacao($ppp, $request);
+    
+    if (!$resultado['success']) {
+        Log::error('Erro ao processar envio: ' . $resultado['message']);
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $resultado['message']
+            ], 400);
+        }
+        
+        return back()->withInput()->withErrors(['msg' => $resultado['message']]);
     }
 }
 

@@ -63,3 +63,30 @@
 @vite(['resources/css/ppp-form.css', 'resources/js/ppp-form.js'])
 <script src="{{ asset('js/maskMoney.js') }}?v=20250708"></script>
 
+
+@section('page_js')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        const inputAcao = document.querySelector('#inputAcao');
+
+        // Quando clicar em algum botão com data-acao, atualiza IMEDIATAMENTE
+        document.querySelectorAll('button[data-acao]').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                const acaoValue = this.getAttribute('data-acao');
+                inputAcao.value = acaoValue; // ✅ Atualiza imediatamente o campo hidden
+                console.log('Ação definida:', acaoValue);
+            });
+        });
+
+        // Antes de submeter o form, força o valor
+        form.addEventListener('submit', function (e) {
+            inputAcao.value = acao;
+        });
+    });
+</script>
+@endsection
+
+
+
+

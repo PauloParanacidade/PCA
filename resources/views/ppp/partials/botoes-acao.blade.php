@@ -14,12 +14,17 @@
                         Cancelar
                     </a>
                 @endif
-               
-                <!-- Botão Salvar e Enviar para Aprovação -->
-                <button type="submit" class="btn btn-primary btn-lg px-4">
-                    <i class="fas fa-paper-plane me-2"></i>
-                    {{ $edicao ? 'Salvar e Enviar para Aprovação' : 'Salvar e Enviar para Aprovação' }}
-                </button>
+
+<!-- Esse campo envia o valor -->
+<input type="hidden" name="acao" id="inputAcao" value="rascunho">
+
+<!-- Este botão apenas dispara o submit -->
+<button type="submit" class="btn btn-primary btn-lg px-4" data-acao="enviar" id="btnUpdate">
+    <i class="fas fa-paper-plane me-2"></i>
+    {{ $edicao ? 'Salvar e Enviar para Aprovação' : 'Salvar e Enviar para Aprovação' }}
+</button>
+
+
             </div>
         </div>
     </div>
