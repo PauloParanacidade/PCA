@@ -188,7 +188,7 @@ class PppController extends Controller
                 'condicao_resultado' => $request->input('acao') === 'enviar'
             ]);
 
-dd($request->input('acao'));
+//dd($request->input('acao'));
                 
             
             // Verificar se a ação é para enviar para aprovação
