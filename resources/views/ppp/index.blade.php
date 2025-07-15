@@ -46,62 +46,67 @@
     @endif
 
     <!-- Card de Filtros -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-gradient-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-filter mr-2"></i>Filtros de Busca
-            </h5>
-        </div>
-        <div class="card-body">
-            <form method="GET" action="{{ route('ppp.index') }}" class="filters-form">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="status" class="form-label">Status:</label>
-                            <select name="status" id="status" class="form-control form-control-lg">
-                                <option value="">Todos os Status</option>
-                                <option value="novo" {{ request('status') == 'novo' ? 'selected' : '' }}>Novo</option>
-                                <option value="em_analise" {{ request('status') == 'em_analise' ? 'selected' : '' }}>Em Análise</option>
-                                <option value="aprovado" {{ request('status') == 'aprovado' ? 'selected' : '' }}>Aprovado</option>
-                                <option value="rejeitado" {{ request('status') == 'rejeitado' ? 'selected' : '' }}>Rejeitado</option>
-                            </select>
-                        </div>
+{{-- <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-gradient-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-filter mr-2"></i>Filtros de Busca
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ route('ppp.index') }}" class="filters-form">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="status_id" class="form-label">Status:</label>
+                        <select name="status_id" id="status_id" class="form-control form-control-lg">
+                            <option value="">Todos os Status</option>
+                            <option value="1" {{ request('status_id') == '1' ? 'selected' : '' }}>Rascunho</option>
+                            <option value="2" {{ request('status_id') == '2' ? 'selected' : '' }}>Aguardando Aprovação</option>
+                            <option value="3" {{ request('status_id') == '3' ? 'selected' : '' }}>Em Avaliação</option>
+                            <option value="4" {{ request('status_id') == '4' ? 'selected' : '' }}>Aguardando Correção</option>
+                            <option value="5" {{ request('status_id') == '5' ? 'selected' : '' }}>Em Correção</option>
+                            <option value="6" {{ request('status_id') == '6' ? 'selected' : '' }}>Aprovado Final</option>
+                            <option value="7" {{ request('status_id') == '7' ? 'selected' : '' }}>Cancelado</option>
+                        </select>
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="setor" class="form-label">Setor:</label>
-                            <select name="setor" id="setor" class="form-control form-control-lg">
-                                <option value="">Todos os Setores</option>
-                                <option value="TI" {{ request('setor') == 'TI' ? 'selected' : '' }}>TI</option>
-                                <option value="RH" {{ request('setor') == 'RH' ? 'selected' : '' }}>RH</option>
-                                <option value="Financeiro" {{ request('setor') == 'Financeiro' ? 'selected' : '' }}>Financeiro</option>
-                            </select>
-                        </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="tipo_visualizacao" class="form-label">Visualizar:</label>
+                        <select name="tipo_visualizacao" id="tipo_visualizacao" class="form-control form-control-lg">
+                            <option value="">Todos os PPPs</option>
+                            <option value="meus_ppps" {{ request('tipo_visualizacao') == 'meus_ppps' ? 'selected' : '' }}>Meus PPPs</option>
+                            <option value="pendentes_aprovacao" {{ request('tipo_visualizacao') == 'pendentes_aprovacao' ? 'selected' : '' }}>Pendentes de Aprovação</option>
+                        </select>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="busca" class="form-label">Buscar por Nome ou Descrição:</label>
-                            <input type="text" name="busca" id="busca" class="form-control form-control-lg" 
-                                   placeholder="Digite para buscar..." value="{{ request('busca') }}">
-                        </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="busca" class="form-label">Buscar:</label>
+                        <input type="text" name="busca" id="busca" class="form-control form-control-lg" 
+                               placeholder="Nome do item ou descrição..." value="{{ request('busca') }}">
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label class="form-label">&nbsp;</label>
-                            <div class="d-flex flex-column">
-                                <button type="submit" class="btn btn-primary btn-lg mb-2">
-                                    <i class="fas fa-search mr-1"></i>Filtrar
-                                </button>
-                                <a href="{{ route('ppp.index') }}" class="btn-clear">
-                                    <i class="fas fa-times mr-1"></i>Limpar Filtros
-                                </a>
-                            </div>
+                </div>
+                
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex flex-column">
+                            <button type="submit" class="btn btn-primary btn-lg mb-2">
+                                <i class="fas fa-search mr-1"></i>Filtrar
+                            </button>
+                            <a href="{{ route('ppp.index') }}" class="btn-clear">
+                                <i class="fas fa-times mr-1"></i>Limpar Filtros
+                            </a>
                         </div>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
+</div> --}}
 
     <!-- Card Principal -->
     <div class="card shadow-sm">
@@ -123,12 +128,13 @@
                         <thead class="thead-light">
                             <tr>
                                 <th width="5%">#</th>
-                                <th width="25%">Nome do Item</th>
-                                <th width="20%">Área Solicitante</th>
-                                <th width="15%">Valor Estimado</th>
+                                <th width="20%">Nome do Item</th>
+                                <th width="15%">Área Solicitante</th>
+                                <th width="15%">Área Avaliadora</th>
+                                <th width="10%">Valor Estimado</th>
                                 <th width="10%">Status</th>
-                                <th width="15%">Data Criação</th>
-                                <th width="10%" class="text-center">Ações</th>
+                                <th width="10%">Data Criação</th>
+                                <th width="15%" class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -144,8 +150,26 @@
                                         </div>
                                     </td>
                                     <td class="align-middle">
-                                        <span class="badge badge-secondary">{{ $ppp->user->name ?? 'N/A' }}</span>
+                                        <span class="badge badge-secondary">
+                                            {{ $ppp->user->name ?? 'N/A' }} - {{ $ppp->user->department ?? 'Área N/A' }}
+                                        </span>
                                     </td>
+
+                                    
+                                    <td class="align-middle">
+                                    @php
+                                        $managerRaw = $ppp->user->manager ?? '';
+                                        preg_match('/CN=([^,]+),OU=([^,]+)/', $managerRaw, $matches);
+                                        $nomeGestor = $matches[1] ?? 'Desconhecido';
+                                        $areaGestor = $matches[2] ?? 'Área N/A';
+                                    @endphp
+
+                                    <span class="badge badge-secondary">
+                                        {{ $nomeGestor }} - {{ $areaGestor }}
+                                    </span>
+                                </td>
+
+
                                     <td class="align-middle">
                                         <span class="text-success font-weight-bold">
                                             R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}

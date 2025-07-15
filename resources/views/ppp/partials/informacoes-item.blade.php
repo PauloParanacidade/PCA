@@ -1,14 +1,13 @@
 {{-- Seção 1: Informações do Item --}}
-<div class="col-12 mb-4">
-    <div class="card card-outline card-primary">
-        <div class="card-header bg-primary">
-            <h3 class="card-title text-white">
-                <i class="fas fa-box me-2"></i>
-                Informações do Item/Serviço
-            </h3>
-        </div>
-        <div class="card-body">
-            <div class="row">
+<div class="card card-outline card-primary">
+    <div class="card-header bg-primary">
+        <h3 class="card-title text-white">
+            <i class="fas fa-box me-2"></i>
+            Informações do Item/Serviço
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
                 <div class="col-lg-6 mb-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-tag text-primary me-1"></i>
@@ -97,6 +96,15 @@
                         @endforeach
                     </select>
                 </div>
+                {{-- Botão Próximo - apenas no modo criação --}}
+            @if(!isset($ppp) || !$ppp->id)
+            <div class="d-flex justify-content-end mt-3">
+                <button type="button" id="btn-proximo-card-azul" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    Próximo
+                </button>
+            </div>
+            @endif
             </div>
         </div>
     </div>

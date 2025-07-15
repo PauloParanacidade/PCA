@@ -15,6 +15,7 @@ class PppHistorico extends Model
         'status_atual',
         'justificativa',
         'user_id',
+        'acao',
     ];
 
     // Relacionamento com o PPP

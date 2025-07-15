@@ -30,143 +30,112 @@ class PppController extends Controller
     }
 
     public function store(StorePppRequest $request)
-    {
-        try {
+{
+    try {
+        $manager = Auth::user();
 
-            // 🔎 Novo log detalhado sobre a ação
-            Log::info('🛠️ Ação detectada no store()', [
-                'request_input_acao' => $request->input('acao'),
-                'request_get_acao' => request('acao'),
-                'request_method' => $request->method(),
-                'request_full_data' => $request->all()
-            ]);
-
-            // ✅ NOVO LOG: Verificar todos os parâmetros recebidos
-            Log::info('🔍 PppController.store() - Parâmetros recebidos', [
-                'all_params' => $request->all(),
-                'enviar_aprovacao_exists' => $request->has('enviar_aprovacao'),
-                'enviar_aprovacao_value' => $request->input('enviar_aprovacao', 'NÃO INFORMADO'),
-                'method' => $request->method(),
-                'url' => $request->url()
-            ]);
-            
-            $manager = Auth::user();
-            
-            // ✅ NOVA REGRA: Verificar e atribuir papel de gestor automaticamente
-            if ($manager) {
-                try {
-                    $manager->garantirPapelGestor();
-                } catch (\Exception $e) {
-                    Log::error('Erro ao garantir papel de gestor: ' . $e->getMessage(), [
-                        'user_id' => $manager->id,
-                        'user_name' => $manager->name
-                    ]);
-                }
-            }
-            
-            // ✅ CORREÇÃO: Processar valores monetários corretamente
-            // Remove R$, espaços e converte formato brasileiro para decimal
-            $estimativaLimpa = str_replace(['R$', ' '], '', $request->estimativa_valor);
-            // Remove pontos (separadores de milhares) e converte vírgula para ponto decimal
-            $estimativaLimpa = str_replace(['.'], '', $estimativaLimpa); // Remove pontos
-            $estimativaFloat = floatval(str_replace(',', '.', $estimativaLimpa)); // Converte vírgula para ponto
-            
-            $valorLimpo = null;
-            $valorFloat = null;
-            if ($request->filled('valor_contrato_atualizado')) {
-                $valorLimpo = str_replace(['R$', ' '], '', $request->valor_contrato_atualizado);
-                $valorLimpo = str_replace(['.'], '', $valorLimpo); // Remove pontos
-                $valorFloat = floatval(str_replace(',', '.', $valorLimpo)); // Converte vírgula para ponto
-            }
-            
-            // ✅ NOVO: Verificar se é um rascunho (apenas card azul preenchido)
-            $isRascunho = $this->isRascunho($request);
-
-            // 💡 Decisão baseada no input "acao"
-            Log::info('📌 isRascunho calculado', [
-                'acao_bruta' => $request->input('acao'),
-                'resultado_is_rascunho' => $isRascunho
-            ]);
-            
-            // ✅ NOVO LOG: Status antes da criação
-            Log::info('📊 Status antes da criação do PPP', [
-                'is_rascunho' => $isRascunho,
-                'status_id_sera_criado' => 1,
-                'gestor_atual_id' => $manager->id
-            ]);
-            
-            $ppp = PcaPpp::create([
-                'user_id' => Auth::id(),
-                'status_id' => 1,
-                'gestor_atual_id' => $manager->id,
-                'categoria' => $request->categoria,
-                'nome_item' => $request->nome_item,
-                'descricao' => $request->descricao,
-                'quantidade' => $request->quantidade,
-                'justificativa_pedido' => $request->justificativa_pedido,
-                'estimativa_valor' => $estimativaFloat ?: 0.01,
-                'justificativa_valor' => $request->justificativa_valor,
-                'grau_prioridade' => $request->grau_prioridade,
-                // Aplicar valores padrão diretamente
-                'origem_recurso' => $request->origem_recurso ?: 'PRC',
-                'vinculacao_item' => $request->vinculacao_item ?: 'Não',
-                'justificativa_vinculacao' => $request->justificativa_vinculacao ?: '.',
-                'renov_contrato' => $request->renov_contrato ?: 'Não',
-                'valor_contrato_atualizado' => $valorFloat ?: 0.01,
-                'num_contrato' => $request->num_contrato ?: '.',
-                'mes_vigencia_final' => $request->mes_vigencia_final ?: '.',
-                'contrato_prorrogavel' => $request->contrato_prorrogavel ?: 'Não',
-                'tem_contrato_vigente' => $request->tem_contrato_vigente ?: 'Não',
-                'natureza_objeto' => $request->natureza_objeto ?: '.',
-                // Adicionar campos que podem estar faltando
-                'dependencia_item' => $request->dependencia_item ?: 'Não',
-                'justificativa_dependencia' => $request->justificativa_dependencia ?: '.',
-                'cronograma_jan' => $request->cronograma_jan ?: 'Não',
-                'cronograma_fev' => $request->cronograma_fev ?: 'Não',
-                'cronograma_mar' => $request->cronograma_mar ?: 'Não',
-                'cronograma_abr' => $request->cronograma_abr ?: 'Não',
-                'cronograma_mai' => $request->cronograma_mai ?: 'Não',
-                'cronograma_jun' => $request->cronograma_jun ?: 'Não',
-                'cronograma_jul' => $request->cronograma_jul ?: 'Não',
-                'cronograma_ago' => $request->cronograma_ago ?: 'Não',
-                'cronograma_set' => $request->cronograma_set ?: 'Não',
-                'cronograma_out' => $request->cronograma_out ?: 'Não',
-                'cronograma_nov' => $request->cronograma_nov ?: 'Não',
-                'cronograma_dez' => $request->cronograma_dez ?: 'Não',
-            ]);
-            
-            // Registrar no histórico
-            $this->historicoService->registrarCriacao($ppp);
-            
-            Log::info('✅ PPP criado com sucesso', [
-                'ppp_id' => $ppp->id,
-                'status_atual' => $ppp->status_id,
-                'gestor_atual_id' => $ppp->gestor_atual_id
-            ]);
-
-            // Fluxo normal (sem envio para aprovação)
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'PPP criado com sucesso.',
-                    'ppp_id' => $ppp->id,
-                    'actionValue' => 'aguardando_aprovacao'
+        // ✅ Verificar e atribuir papel de gestor automaticamente
+        if ($manager) {
+            try {
+                $manager->garantirPapelGestor();
+            } catch (\Exception $e) {
+                Log::error('Erro ao garantir papel de gestor: ' . $e->getMessage(), [
+                    'user_id' => $manager->id,
+                    'user_name' => $manager->name
                 ]);
             }
-            
-            return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');
-            
-        } catch (\Throwable $ex) {
-            Log::error('💥 ERRO CRÍTICO ao criar PPP', [
-                'exception_message' => $ex->getMessage(),
-                'exception_file' => $ex->getFile(),
-                'exception_line' => $ex->getLine(),
-                'stack_trace' => $ex->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
-            return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP: ' . $ex->getMessage()]);
         }
+
+        // ✅ Obter o próximo gestor
+        $proximoGestor = $this->obterProximoGestor($manager);
+
+        Log::info('🔍 Gestor identificado na criação', [
+            'user_id' => Auth::id(),
+            'proximo_gestor_id' => $proximoGestor?->id,
+            'proximo_gestor_nome' => $proximoGestor?->name,
+        ]);
+
+        // ✅ Processar valores monetários
+        $estimativaFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->estimativa_valor)));
+
+        $valorFloat = null;
+        if ($request->filled('valor_contrato_atualizado')) {
+            $valorFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->valor_contrato_atualizado)));
+        }
+
+        // ✅ Criar PPP
+        $ppp = PcaPpp::create([
+            'user_id' => Auth::id(),
+            'gestor_atual_id' => $proximoGestor?->id,
+            'status_id' => 1, // rascunho
+            'nome_item' => $request->nome_item,
+            'descricao_item' => $request->descricao_item,
+            'categoria' => $request->categoria,
+            'quantidade' => $request->quantidade,
+            'unidade_medida' => $request->unidade_medida,
+            'valor_total_estimado' => $estimativaFloat,
+            'grau_prioridade' => $request->grau_prioridade,
+            'area_solicitante' => $request->area_solicitante,
+            'justificativa_contratacao' => $request->justificativa_contratacao,
+            'origem_recurso' => $request->origem_recurso ?: 'PRC',
+            'valor_contrato_atualizado' => $valorFloat ?: 0.01,
+            'tem_contrato_vigente' => $request->tem_contrato_vigente ?: 'Não',
+            'contrato_prorrogavel' => $request->contrato_prorrogavel ?: 'Não',
+            'renov_contrato' => $request->renov_contrato ?: 'Não',
+            'num_contrato' => $request->num_contrato ?: '.',
+            'mes_vigencia_final' => $request->mes_vigencia_final ?: '.',
+            'natureza_objeto' => $request->natureza_objeto ?: '.',
+            'vinculacao_item' => $request->vinculacao_item ?: 'Não',
+            'justificativa_vinculacao' => $request->justificativa_vinculacao ?: '.',
+            'dependencia_item' => $request->dependencia_item ?: 'Não',
+            'justificativa_dependencia' => $request->justificativa_dependencia ?: '.',
+            'cronograma_jan' => $request->cronograma_jan ?: 'Não',
+            'cronograma_fev' => $request->cronograma_fev ?: 'Não',
+            'cronograma_mar' => $request->cronograma_mar ?: 'Não',
+            'cronograma_abr' => $request->cronograma_abr ?: 'Não',
+            'cronograma_mai' => $request->cronograma_mai ?: 'Não',
+            'cronograma_jun' => $request->cronograma_jun ?: 'Não',
+            'cronograma_jul' => $request->cronograma_jul ?: 'Não',
+            'cronograma_ago' => $request->cronograma_ago ?: 'Não',
+            'cronograma_set' => $request->cronograma_set ?: 'Não',
+            'cronograma_out' => $request->cronograma_out ?: 'Não',
+            'cronograma_nov' => $request->cronograma_nov ?: 'Não',
+            'cronograma_dez' => $request->cronograma_dez ?: 'Não',
+        ]);
+
+        // ✅ Registrar histórico
+        $this->historicoService->registrarCriacao($ppp);
+
+        Log::info('✅ PPP criado com sucesso', [
+            'ppp_id' => $ppp->id,
+            'status_atual' => $ppp->status_id,
+            'gestor_atual_id' => $ppp->gestor_atual_id,
+        ]);
+
+        // ✅ Resposta
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'PPP criado com sucesso.',
+                'ppp_id' => $ppp->id,
+                'actionValue' => 'aguardando_aprovacao'
+            ]);
+        }
+
+        return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');
+    } catch (\Throwable $ex) {
+        Log::error('💥 ERRO CRÍTICO ao criar PPP', [
+            'exception_message' => $ex->getMessage(),
+            'exception_file' => $ex->getFile(),
+            'exception_line' => $ex->getLine(),
+            'stack_trace' => $ex->getTraceAsString(),
+            'request_data' => $request->all()
+        ]);
+
+        return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP: ' . $ex->getMessage()]);
     }
+}
+
 
     public function update(StorePppRequest $request, $id)
     {
@@ -304,104 +273,75 @@ if ($request->input('acao') === 'enviar_aprovacao') {
     }   
         
     public function index(Request $request)
-    {
-        //dd($request);  
-        try {
-            // LOG 1: Verificar usuário atual
-            Log::info('DEBUG PPP Index - Usuário atual', [
-                'user_id' => Auth::id(),
-                'user_name' => Auth::user()->name ?? 'N/A'
-            ]);
-            
-            // LOG 2: Total de PPPs no banco (incluindo soft deleted)
-            $totalPppsComDeleted = PcaPpp::withTrashed()->count();
-            $totalPppsAtivos = PcaPpp::count();
-            Log::info('DEBUG PPP Index - Total PPPs no banco', [
-                'total_com_deleted' => $totalPppsComDeleted,
-                'total_ativos' => $totalPppsAtivos
-            ]);
-            
-            $query = PcaPpp::where(function($q) {
-                    $q->where('user_id', Auth::id())
-                      ->orWhere('gestor_atual_id', Auth::id());
-                })
-                ->with([
-                    'user', 
-                    'status', // ✅ ADICIONAR: Carregar o relacionamento status
-                    'gestorAtual',
-                    'historicos.usuario'
-                ])
-                ->orderBy('created_at', 'desc');
+{
+    try {
+        Log::info('DEBUG PPP Index - Usuário atual', [
+            'user_id' => Auth::id(),
+            'user_name' => Auth::user()->name ?? 'N/A'
+        ]);
         
-            // LOG 3: Quantos PPPs passam pelo filtro inicial (user_id ou gestor_atual_id)
-            $totalFiltroInicial = clone $query;
-            $countFiltroInicial = $totalFiltroInicial->count();
-            Log::info('DEBUG PPP Index - PPPs após filtro inicial', [
-                'count_filtro_inicial' => $countFiltroInicial,
-                'filtros_aplicados' => [
-                    'user_id' => Auth::id(),
-                    'gestor_atual_id' => Auth::id()
-                ]
-            ]);
-            
-            // ✅ CORRIGIR: Filtro deve usar status_id ao invés de status_fluxo
-            if ($request->filled('status_id')) {
-                $query->where('status_id', $request->status_id);
-                Log::info('DEBUG PPP Index - Filtro status_id aplicado', [
-                    'status_id' => $request->status_id
-                ]);
-            }
-            
-            // Campo area_solicitante foi removido
-            
-            if ($request->filled('busca')) {
-                $busca = $request->busca;
-                $query->where(function($q) use ($busca) {
-                    $q->where('nome_item', 'like', "%{$busca}%")
-                      ->orWhere('descricao', 'like', "%{$busca}%");
-                });
-                Log::info('DEBUG PPP Index - Filtro busca aplicado', [
-                    'busca' => $busca
-                ]);
-            }
-            
-            // LOG 4: Quantos PPPs após todos os filtros (antes da paginação)
-            $totalAposFiltros = clone $query;
-            $countAposFiltros = $totalAposFiltros->count();
-            Log::info('DEBUG PPP Index - PPPs após todos os filtros', [
-                'count_apos_filtros' => $countAposFiltros
-            ]);
-            
-            // LOG 5: SQL da query para debug
-            $sqlQuery = $query->toSql();
-            $bindings = $query->getBindings();
-            Log::info('DEBUG PPP Index - SQL Query', [
-                'sql' => $sqlQuery,
-                'bindings' => $bindings
-            ]);
-            
-            $ppps = $query->paginate(10)->withQueryString();
-            
-            // LOG 6: Resultado final da paginação
-            Log::info('DEBUG PPP Index - Resultado final', [
-                'total_paginated' => $ppps->total(),
-                'current_page' => $ppps->currentPage(),
-                'per_page' => $ppps->perPage(),
-                'items_na_pagina_atual' => $ppps->count()
-            ]);
+        $query = PcaPpp::query();
         
-            return view('ppp.index', compact('ppps'));
-        } catch (\Exception $e) {
-            // dd($e); // ❌ COMENTAR ESTA LINHA
-            Log::error('Erro ao listar PPPs: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs.');
+        // Aplicar filtro baseado no tipo de visualização
+        if ($request->filled('tipo_visualizacao')) {
+            switch ($request->tipo_visualizacao) {
+                case 'meus_ppps':
+                    $query->where('user_id', Auth::id());
+                    break;
+                case 'pendentes_aprovacao':
+                    $query->where('gestor_atual_id', Auth::id())
+                          ->where('status_id', 2); // aguardando_aprovacao
+                    break;
+                default:
+                    $query->where(function($q) {
+                        $q->where('user_id', Auth::id())
+                          ->orWhere('gestor_atual_id', Auth::id());
+                    });
+            }
+        } else {
+            // Comportamento padrão: mostrar PPPs criados pelo usuário OU onde ele é gestor
+            $query->where(function($q) {
+                $q->where('user_id', Auth::id())
+                  ->orWhere('gestor_atual_id', Auth::id());
+            });
         }
+        
+        $query->with([
+            'user', 
+            'status',
+            'gestorAtual',
+            'historicos.usuario'
+        ])->orderBy('created_at', 'desc');
+        
+        // Filtro por status
+        if ($request->filled('status_id')) {
+            $query->where('status_id', $request->status_id);
+        }
+        
+        // Filtro por busca
+        if ($request->filled('busca')) {
+            $busca = $request->busca;
+            $query->where(function($q) use ($busca) {
+                $q->where('nome_item', 'like', "%{$busca}%")
+                  ->orWhere('descricao', 'like', "%{$busca}%");
+            });
+        }
+        
+        $ppps = $query->paginate(10)->withQueryString();
+        
+        return view('ppp.index', compact('ppps'));
+        
+    } catch (\Exception $e) {
+        Log::error('Erro ao listar PPPs: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs.');
     }
+}
 
     public function show($id)
     {
         try {
             $ppp = PcaPpp::findOrFail($id);
+            //dd($ppp);
             $historicos = PppHistorico::where('ppp_id', $ppp->id)
                 ->with(['statusAnterior', 'statusAtual', 'usuario'])
                 ->orderBy('created_at')
@@ -424,7 +364,8 @@ if ($request->input('acao') === 'enviar_aprovacao') {
     {
         try {
             $ppp = PcaPpp::findOrFail($id);
-            return view('ppp.form', compact('ppp'));
+            $edicao = true;
+            return view('ppp.form', compact('ppp','edicao'));
         } catch (\Throwable $ex) {
             Log::error('Erro ao carregar PPP para edição:', [
                 'exception' => $ex,
@@ -753,7 +694,7 @@ if ($request->input('acao') === 'enviar_aprovacao') {
     
         try {
             // Usar o PppService para aprovar
-            $resultado = $pppService->aprovarPpp($ppp, $request->input('comentario'));
+            $resultado = $pppService->aprovarPpp($ppp, $request->input('comentario')); // envio para o service, onde irá executar a transferência de responsabilidade
             
             if ($resultado) {
                 return redirect()->route('ppp.index')->with('success', 'PPP aprovado com sucesso!');

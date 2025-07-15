@@ -15,122 +15,344 @@
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-/* Labels e formulários */
-.form-label.fw-bold {
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
-    color: #495057;
+/* Card específicos por cor */
+.card-outline.card-primary {
+    border-color: #007bff;
 }
 
+.card-outline.card-warning {
+    border-color: #ffc107;
+}
+
+.card-outline.card-success {
+    border-color: #28a745;
+}
+
+.card-outline.card-info {
+    border-color: #17a2b8;
+}
+
+/* Headers dos cards */
+.card-header.bg-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border-bottom: 2px solid #0056b3;
+}
+
+.card-header.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+    border-bottom: 2px solid #e0a800;
+}
+
+.card-header.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+    border-bottom: 2px solid #1e7e34;
+}
+
+.card-header.bg-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%) !important;
+    border-bottom: 2px solid #117a8b;
+}
+
+/* Campos de formulário */
 .form-control-lg {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-    border: 2px solid #e9ecef;
-    transition: all 0.15s ease-in-out;
-}
-
-.form-control-lg:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-/* Botões */
-.btn-lg {
-    padding: 0.75rem 2rem;
     font-size: 1.1rem;
     border-radius: 0.5rem;
-}
-
-/* Headers de cards */
-.card-header {
-    border-radius: 0.5rem 0.5rem 0 0 !important;
-}
-
-/* Textos e alertas */
-.text-danger {
-    font-weight: bold;
-}
-
-.alert-info {
-    border-left: 4px solid #17a2b8;
-}
-
-.invalid-feedback {
-    font-size: 0.875rem;
-}
-
-.char-counter {
-    font-size: 0.75rem;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-/* Campos com máscaras */
-.money-field {
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    text-align: right;
-    background: linear-gradient(45deg, #f8f9fa 0%, #ffffff 100%);
-}
-
-.contract-number {
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    text-align: center;
-    letter-spacing: 1px;
-}
-
-/* Validação visual */
-.is-valid {
-    border-color: #28a745 !important;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73l.4-.4 1.4-1.4.7-.4.4.7-2.1 2.1z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(.375em + .1875rem) center;
-    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
-}
-
-.is-invalid {
-    border-color: #dc3545 !important;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke='%23dc3545' d='m5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(.375em + .1875rem) center;
-    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
-}
-
-/* Animações suaves */
-.form-control, .form-select {
+    border: 2px solid #e9ecef;
     transition: all 0.3s ease;
 }
 
-.form-control:hover:not(:focus) {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.1);
+.form-control-lg:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transform: translateY(-1px);
 }
 
-/* Placeholder personalizado */
-.form-control::placeholder {
+/* Labels */
+.form-label.fw-bold {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-label.fw-bold i {
+    margin-right: 0.5rem;
+}
+
+/* Campos obrigatórios */
+.text-danger {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+/* Máscaras de dinheiro */
+.money-field {
+    text-align: right;
+    font-weight: 600;
+    color: #28a745;
+}
+
+/* Contador de caracteres */
+.char-counter {
+    font-size: 0.8rem;
     color: #6c757d;
-    opacity: 0.8;
-    font-style: italic;
+    text-align: right;
+    margin-top: 0.25rem;
 }
 
-/* Tooltip para campos obrigatórios */
-.form-label[data-required="true"]::after {
-    content: "";
-    margin-left: 0.25rem;
+.char-counter.text-danger {
     color: #dc3545;
     font-weight: bold;
 }
 
-/* Responsividade */
+/* ===================================
+   NOVO SISTEMA DE CARDS
+   =================================== */
+
+/* Container principal do formulário */
+#form-container {
+    min-height: 400px;
+}
+
+/* Cards adicionais - inicialmente ocultos */
+#cards-adicionais {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    display: none;
+}
+
+/* Cards adicionais quando visíveis */
+#cards-adicionais.show {
+    opacity: 1;
+    transform: translateY(0);
+    display: block;
+}
+
+/* Animação de entrada para cada card */
+#cards-adicionais .card {
+    animation: slideInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+#cards-adicionais .card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+#cards-adicionais .card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+#cards-adicionais .card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================
+   BOTÕES
+   =================================== */
+
+/* Botão próximo do card azul */
+#btn-proximo-card-azul {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-radius: 10px;
+    color: white;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+#btn-proximo-card-azul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+#btn-proximo-card-azul:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+}
+
+#btn-proximo-card-azul:hover::before {
+    left: 100%;
+}
+
+#btn-proximo-card-azul:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+/* Botões finais */
+#botoes-finais {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s ease-in-out;
+}
+
+#botoes-finais.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Botão salvar e enviar */
+.btn-success.btn-lg {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-success.btn-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+}
+
+/* Botão cancelar */
+.btn-secondary.btn-lg {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-secondary.btn-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+}
+
+/* Botão histórico */
+.btn-info.btn-lg {
+    background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-info.btn-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+    background: linear-gradient(135deg, #117a8b 0%, #0c5460 100%);
+}
+
+/* ===================================
+   VALIDAÇÃO E FEEDBACK
+   =================================== */
+
+/* Campos inválidos */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Campos válidos */
+.form-control.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.valid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* ===================================
+   LOADING E ESTADOS
+   =================================== */
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Estado desabilitado */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ===================================
+   RESPONSIVIDADE
+   =================================== */
+
 @media (max-width: 768px) {
     .card-body {
         padding: 1rem;
     }
     
     .btn-lg {
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    #btn-proximo-card-azul {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+    }
+    
+    .form-control-lg {
+        padding: 0.5rem 0.75rem;
         font-size: 1rem;
     }
     
@@ -141,73 +363,126 @@
     .char-counter {
         font-size: 0.7rem;
     }
-}
-
-/* Estilos para interface progressiva */
-.card-navigation {
-    border-top: 1px solid #dee2e6;
-    margin-top: 1rem;
-    padding-top: 1rem;
-}
-
-.step-indicator {
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.step-indicator:hover {
-    color: #007bff !important;
-}
-
-.step-icon {
-    transition: all 0.3s ease;
-}
-
-/* Layout responsivo para cards lado a lado */
-@media (max-width: 768px) {
-    .col-md-8, .col-md-4 {
-        flex: 0 0 100%;
-        max-width: 100%;
+    
+    /* Cards em mobile */
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    /* Botões em mobile */
+    .btn-lg {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    #btn-proximo-card-azul {
+        width: 80%;
+        margin: 0 auto;
+        display: block;
     }
 }
 
-/* Animações suaves */
-.card {
-    transition: all 0.3s ease;
+@media (max-width: 576px) {
+    .card-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .form-label.fw-bold {
+        font-size: 0.9rem;
+    }
+    
+    #btn-proximo-card-azul {
+        padding: 10px 25px;
+        font-size: 1rem;
+    }
 }
 
+/* ===================================
+   ANIMAÇÕES ADICIONAIS
+   =================================== */
+
+/* Pulse para elementos importantes */
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+}
+
+/* Shake para erros */
+.shake {
+    animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+    20%, 80% {
+        transform: translate3d(2px, 0, 0);
+    }
+    30%, 50%, 70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+    40%, 60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+/* Fade in para elementos que aparecem */
 .fade-in {
-    animation: fadeIn 0.3s ease-in;
+    animation: fadeIn 0.5s ease-in;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Notificação de sucesso */
-.position-fixed {
-    position: fixed !important;
-}
-
-#success-notification {
-    animation: slideInRight 0.5s ease-out;
-}
-
-@keyframes slideInRight {
     from {
-        transform: translateX(100%);
         opacity: 0;
     }
     to {
-        transform: translateX(0);
         opacity: 1;
     }
 }
 
-/* Melhorar aparência dos cards na interface progressiva */
-.card-navigation {
-    background-color: #f8f9fa;
-    margin: 0 -1.25rem -1.25rem -1.25rem;
-    padding: 1rem 1.25rem;
+/* ===================================
+   UTILITÁRIOS
+   =================================== */
+
+/* Texto com gradiente */
+.text-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
+/* Sombras customizadas */
+.shadow-soft {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-medium {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.shadow-strong {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+}
+
+/* Bordas arredondadas */
+.rounded-lg {
+    border-radius: 0.75rem;
+}
+
+.rounded-xl {
+    border-radius: 1rem;
 }

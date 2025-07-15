@@ -14,16 +14,16 @@
                         <i class="fas fa-money-bill-wave text-success me-1"></i>
                         Valor total estimado (exercício) <span class="text-danger">*</span>
                     </label>
-                    <input type="text" name="estimativa_valor" class="form-control form-control-lg estimativa_valor money-field protocolDisplayMask" required
+                    <input type="text" name="estimativa_valor" class="form-control form-control-lg money-mask" required
                         value="{{ old('estimativa_valor', $ppp->estimativa_valor ?? '') }}" 
                         placeholder="R$ 0,00" autocomplete="off">
                 </div>
                 <div class="col-12 mb-3">
                     <label class="form-label fw-bold">
-                        <i class="fas fa-university text-success me-1"></i>
+                        <i class="fas fa-hand-holding-usd text-success me-1"></i>
                         Origem do recurso <span class="text-danger">*</span>
                     </label>
-                    <select class="form-control form-control-lg" name="origem_recurso" required>
+                    <select name="origem_recurso" class="form-control form-control-lg" required>
                         <option value="" disabled {{ old('origem_recurso', $ppp->origem_recurso ?? '') == '' ? 'selected' : '' }}>Selecione</option>
                         @foreach (['PRC', 'FDU', 'BID/FDU'] as $origem)
                             <option value="{{ $origem }}" {{ old('origem_recurso', $ppp->origem_recurso ?? '') == $origem ? 'selected' : '' }}>{{ $origem }}</option>
@@ -35,25 +35,49 @@
                         <i class="fas fa-calendar-plus text-success me-1"></i>
                         Valor se +1 exercício <span class="text-danger">*</span>
                     </label>
-                    <input type="text" name="valor_contrato_atualizado" class="form-control form-control-lg valor_contrato_atualizado money-field protocolDisplayMask" required
-                        value="{{ old('valor_contrato_atualizado', $ppp->valor_contrato_atualizado ?? '') }}"
+                    <input type="text" name="valor_contrato_atualizado" class="form-control form-control-lg money-mask" required
+                        value="{{ old('valor_contrato_atualizado', $ppp->valor_contrato_atualizado ?? '') }}" 
                         placeholder="R$ 0,00" autocomplete="off">
                 </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-12">
+                <div class="col-12 mb-3">
                     <label class="form-label fw-bold">
-                        <i class="fas fa-calculator text-success me-1"></i>
+                        <i class="fas fa-clipboard-list text-success me-1"></i>
                         Justificativa do valor estimado <span class="text-danger">*</span>
                     </label>
-                    <textarea name="justificativa_valor" class="form-control @error('justificativa_valor') is-invalid @enderror" rows="3" maxlength="800" required
-                        placeholder="Ex: Cotação realizada em 01/01/2025 no portal gov. Índice de aumento x% conforme indicador y">{{ old('justificativa_valor', $ppp->justificativa_valor ?? '') }}</textarea>
-                    @error('justificativa_valor')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <textarea name="justificativa_valor" class="form-control" rows="4" required
+                        placeholder="Justifique como chegou ao valor estimado...">{{ old('justificativa_valor', $ppp->justificativa_valor ?? '') }}</textarea>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Aplicar máscara monetária
+    function applyMoneyMask(element) {
+        element.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = (value / 100).toFixed(2) + '';
+            value = value.replace('.', ',');
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            e.target.value = 'R$ ' + value;
+        });
+        
+        element.addEventListener('focus', function(e) {
+            if (e.target.value === 'R$ 0,00') {
+                e.target.value = '';
+            }
+        });
+        
+        element.addEventListener('blur', function(e) {
+            if (e.target.value === '' || e.target.value === 'R$ ') {
+                e.target.value = 'R$ 0,00';
+            }
+        });
+    }
+    
+    // Aplicar máscara a todos os campos monetários
+    document.querySelectorAll('.money-mask').forEach(applyMoneyMask);
+});
+</script>

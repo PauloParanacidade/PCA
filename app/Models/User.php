@@ -126,12 +126,18 @@ class User extends Authenticatable implements LdapAuthenticatable
     }
 
     public function hasRole($role): bool
-    {
-        if (is_string($role)) {
-            return $this->roles->contains('name', $role);
-        }
-        return ! ! $role->intersect($this->roles)->count();
+{
+    if (is_string($role)) {
+        return $this->roles->contains('name', $role);
     }
+    
+    // Garantir que sempre trabalhamos com Collection
+    $roleNames = collect($role)->map(function($r) {
+        return is_string($r) ? $r : (is_object($r) ? $r->name : $r);
+    });
+    
+    return $this->roles->pluck('name')->intersect($roleNames)->isNotEmpty();
+}
 
     public function hasAnyRole($roles): bool
     {

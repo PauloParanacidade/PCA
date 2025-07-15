@@ -16,12 +16,13 @@
                     </label>
                     <select name="vinculacao_item" id="vinculacao_item" class="form-control form-control-lg" required>
                         <option value="" disabled {{ old('vinculacao_item', $ppp->vinculacao_item ?? '') == '' ? 'selected' : '' }}>Selecione</option>
-                        <option value="Sim" {{ old('vinculacao_item', $ppp->vinculacao_item ?? '') == 'Sim' ? 'selected' : '' }}>✅ Sim</option>
-                        <option value="Não" {{ old('vinculacao_item', $ppp->vinculacao_item ?? '') == 'Não' ? 'selected' : '' }}>❌ Não</option>
+                        <option value="Sim" {{ old('vinculacao_item', $ppp->vinculacao_item ?? '') == 'Sim' ? 'selected' : '' }}>Sim</option>
+                        <option value="Não" {{ old('vinculacao_item', $ppp->vinculacao_item ?? '') == 'Não' ? 'selected' : '' }}>Não</option>
                     </select>
                 </div>
                 
-                <div class="col-12" id="campo_justificativa_vinculacao" style="display: none;">
+                {{-- Campo condicional - aparece apenas quando "Sim" é selecionado --}}
+                <div id="campo-justificativa-vinculacao" class="col-12 mb-3" style="display: none;">
                     <label class="form-label fw-bold">
                         <i class="fas fa-edit text-info me-1"></i>
                         Justificativa da vinculação
@@ -40,3 +41,24 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectVinculacao = document.getElementById('vinculacao_item');
+    const campoJustificativa = document.getElementById('campo-justificativa-vinculacao');
+    
+    function toggleJustificativaVinculacao() {
+        if (selectVinculacao.value === 'Sim') {
+            campoJustificativa.style.display = 'block';
+        } else {
+            campoJustificativa.style.display = 'none';
+        }
+    }
+    
+    // Verificar estado inicial
+    toggleJustificativaVinculacao();
+    
+    // Adicionar listener para mudanças
+    selectVinculacao.addEventListener('change', toggleJustificativaVinculacao);
+});
+</script>
