@@ -8,7 +8,7 @@
     </div>
     <div class="card-body">
         <div class="row">
-                <div class="col-lg-6 mb-3">
+                <div class="col-lg-12 mb-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-tag text-primary me-1"></i>
                         Nome do Item <span class="text-danger">*</span>
@@ -20,7 +20,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="col-lg-3 mb-3">
+                <div class="col-lg-8 mb-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-cubes text-primary me-1"></i>
                         Quantidade <span class="text-danger">*</span>
@@ -32,7 +32,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="col-lg-3 mb-3">
+                <div class="col-lg-4 mb-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-exclamation-triangle text-primary me-1"></i>
                         Grau de prioridade <span class="text-danger">*</span>

@@ -148,7 +148,7 @@ class PppService
         // CORRIGIDO: usar status_id
         $ppp->update([
             'status_id' => 7, // cancelado/reprovado (conforme PPPStatusSeeder)
-            'gestor_atual_id' => null,
+            //'gestor_atual_id' => null,   // gestor_atual_id mantido (não alterado)
         ]);
 
         // Registrar no histórico

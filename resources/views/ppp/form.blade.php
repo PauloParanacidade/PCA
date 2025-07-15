@@ -75,14 +75,14 @@
             @endif
 
             {{-- Primeira linha: Card Azul e Card Amarelo --}}
-            <div class="row mb-4">
+            <div class="row mb-4 align-items-stretch">
                 {{-- Card Azul - Sempre visível --}}
-                <div class="col-lg-6">
+                <div class="col-lg-6 d-flex">
                     @include('ppp.partials.informacoes-item')
                 </div>
                 
                 {{-- Card Amarelo - Visível após clicar em Próximo (criação) ou sempre (edição) --}}
-                <div class="col-lg-6" id="card-amarelo" style="{{ $isCreating ? 'display: none;' : 'display: block;' }}">
+                <div class="col-lg-6 d-flex" id="card-amarelo" style="{{ $isCreating ? 'display: none;' : 'display: flex;' }}">
                     @include('ppp.partials.contrato-vigente')
                 </div>
             </div>
@@ -209,7 +209,9 @@
                     if (todosPreenchidos) {
                         // Mostrar card amarelo com animação
                         if (cardAmarelo) {
-                            cardAmarelo.style.display = 'block';
+                            cardAmarelo.style.display = 'flex';
+                            cardAmarelo.style.visibility = 'visible';
+                            cardAmarelo.style.opacity = '1';
                             cardAmarelo.classList.add('fade-in-cards');
                         }
 
@@ -227,15 +229,15 @@
                             btnSalvarEnviar.style.display = 'inline-block';
                         }
 
-                        // Scroll suave para os novos cards
-                        setTimeout(() => {
-                            if (cardAmarelo) {
-                                cardAmarelo.scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'start'
-                                });
-                            }
-                        }, 300);
+                        // // Scroll suave para os novos cards
+                        // setTimeout(() => {
+                        //     if (cardAmarelo) {
+                        //         cardAmarelo.scrollIntoView({
+                        //             behavior: 'smooth',
+                        //             block: 'start'
+                        //         });
+                        //     }
+                        // }, 300);
                     } else {
                         // Focar no primeiro campo com erro
                         if (primeiroErro) {

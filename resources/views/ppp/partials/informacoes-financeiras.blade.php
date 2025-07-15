@@ -1,5 +1,5 @@
 {{-- Seção 3: Informações Financeiras (Card Verde) --}}
-<div class="col-lg-6 mb-4">
+<div class="col-12 mb-4">
     <div class="card card-outline card-success h-100">
         <div class="card-header bg-success">
             <h3 class="card-title text-white">

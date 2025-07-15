@@ -89,13 +89,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     btnSalvarEnviar.style.display = 'inline-block';
                 }
                 
-                // Scroll suave para os novos cards
-                setTimeout(() => {
-                    cardsAdicionais.scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }, 300);
+                // // Scroll suave para os novos cards
+                // setTimeout(() => {
+                //     cardsAdicionais.scrollIntoView({ 
+                //         behavior: 'smooth',
+                //         block: 'start'
+                //     });
+                // }, 300);
             } else {
                 // Mostrar alerta de campos obrigatórios
                 alert('Por favor, preencha todos os campos obrigatórios antes de continuar.');

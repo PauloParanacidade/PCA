@@ -45,69 +45,6 @@
         </div>
     @endif
 
-    <!-- Card de Filtros -->
-{{-- <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-gradient-primary text-white">
-        <h5 class="mb-0">
-            <i class="fas fa-filter mr-2"></i>Filtros de Busca
-        </h5>
-    </div>
-    <div class="card-body">
-        <form method="GET" action="{{ route('ppp.index') }}" class="filters-form">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="status_id" class="form-label">Status:</label>
-                        <select name="status_id" id="status_id" class="form-control form-control-lg">
-                            <option value="">Todos os Status</option>
-                            <option value="1" {{ request('status_id') == '1' ? 'selected' : '' }}>Rascunho</option>
-                            <option value="2" {{ request('status_id') == '2' ? 'selected' : '' }}>Aguardando Aprovação</option>
-                            <option value="3" {{ request('status_id') == '3' ? 'selected' : '' }}>Em Avaliação</option>
-                            <option value="4" {{ request('status_id') == '4' ? 'selected' : '' }}>Aguardando Correção</option>
-                            <option value="5" {{ request('status_id') == '5' ? 'selected' : '' }}>Em Correção</option>
-                            <option value="6" {{ request('status_id') == '6' ? 'selected' : '' }}>Aprovado Final</option>
-                            <option value="7" {{ request('status_id') == '7' ? 'selected' : '' }}>Cancelado</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="tipo_visualizacao" class="form-label">Visualizar:</label>
-                        <select name="tipo_visualizacao" id="tipo_visualizacao" class="form-control form-control-lg">
-                            <option value="">Todos os PPPs</option>
-                            <option value="meus_ppps" {{ request('tipo_visualizacao') == 'meus_ppps' ? 'selected' : '' }}>Meus PPPs</option>
-                            <option value="pendentes_aprovacao" {{ request('tipo_visualizacao') == 'pendentes_aprovacao' ? 'selected' : '' }}>Pendentes de Aprovação</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="busca" class="form-label">Buscar:</label>
-                        <input type="text" name="busca" id="busca" class="form-control form-control-lg" 
-                               placeholder="Nome do item ou descrição..." value="{{ request('busca') }}">
-                    </div>
-                </div>
-                
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-flex flex-column">
-                            <button type="submit" class="btn btn-primary btn-lg mb-2">
-                                <i class="fas fa-search mr-1"></i>Filtrar
-                            </button>
-                            <a href="{{ route('ppp.index') }}" class="btn-clear">
-                                <i class="fas fa-times mr-1"></i>Limpar Filtros
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div> --}}
-
     <!-- Card Principal -->
     <div class="card shadow-sm">
         <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center">
@@ -155,7 +92,6 @@
                                         </span>
                                     </td>
 
-                                    
                                     <td class="align-middle">
                                     @php
                                         $managerRaw = $ppp->user->manager ?? '';
@@ -167,8 +103,7 @@
                                     <span class="badge badge-secondary">
                                         {{ $nomeGestor }} - {{ $areaGestor }}
                                     </span>
-                                </td>
-
+                                    </td>
 
                                     <td class="align-middle">
                                         <span class="text-success font-weight-bold">
@@ -178,11 +113,10 @@
                                     
                                     <td class="align-middle">
                                         <span class="badge badge-info">
-                                            <!-- ✅ CORRIGIR: Usar o relacionamento status correto -->
                                             @if($ppp->status)
-                                            <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
+                                                <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
                                             @else
-                                            <i class="fas fa-info-circle mr-1"></i>Status não definido
+                                                <i class="fas fa-info-circle mr-1"></i>Status não definido
                                             @endif
                                         </span>
                                     </td>
@@ -197,12 +131,12 @@
                                             <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-sm btn-outline-warning" title="Editar" onclick="event.stopPropagation();">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" 
-                                                    data-toggle="modal" data-target="#historicoModal{{ $ppp->id }}" title="Histórico" onclick="event.stopPropagation();">
+                                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                                onclick="event.stopPropagation(); carregarHistorico({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')" title="Histórico">
                                                 <i class="fas fa-history"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="event.stopPropagation(); confirmarExclusao({{ $ppp->id }}, '{{ $ppp->nome_item }}')" title="Remover">
+                                                    onclick="event.stopPropagation(); confirmarExclusao({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')" title="Remover">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -234,94 +168,130 @@
 </div>
 
 <!-- Modais de Histórico -->
-@foreach($ppps as $ppp)
-    <div class="modal fade" id="historicoModal{{ $ppp->id }}" tabindex="-1" role="dialog" aria-labelledby="historicoModalLabel{{ $ppp->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title" id="historicoModalLabel{{ $ppp->id }}">
-                        <i class="fas fa-history mr-2"></i>Histórico: {{ $ppp->nome_item }}
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+<!-- Modal único reutilizável para histórico -->
+<div class="modal fade" id="historicoModal" tabindex="-1" role="dialog" aria-labelledby="historicoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="historicoModalTitle">
+                    <i class="fas fa-history mr-2"></i>Histórico do PPP
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="historicoModalBody">
+                <div class="text-center py-3">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...
                 </div>
-                <div class="modal-body">
-                    @if($ppp->historicos && $ppp->historicos->count() > 0)
-                        <div class="timeline">
-                            @foreach($ppp->historicos as $historico)
-                                <div class="timeline-item">
-                                    <div class="timeline-marker bg-success"></div>
-                                    <div class="timeline-content">
-                                        <h6 class="timeline-title">
-                                            @if($historico->status_anterior)
-                                                Status alterado
-                                            @else
-                                                PPP Criado
-                                            @endif
-                                        </h6>
-                                        <p class="timeline-text">
-                                            @if($historico->status_anterior)
-                                                Status alterado para: <strong>{{ $historico->statusAtual->nome ?? 'Status atual' }}</strong>
-                                            @else
-                                                PPP foi criado com sucesso.
-                                            @endif
-                                        </p>
-                                        @if($historico->justificativa)
-                                            <p class="timeline-text"><strong>Justificativa:</strong> {{ $historico->justificativa }}</p>
-                                        @endif
-                                        <small class="text-muted">
-                                            {{ $historico->created_at ? $historico->created_at->format('d/m/Y H:i') : 'Data não disponível' }}
-                                            @if($historico->usuario)
-                                                - por {{ $historico->usuario->name }}
-                                            @endif
-                                        </small>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-3">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Histórico detalhado será implementado em breve.
-                        </div>
-                    @endif
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Fechar
-                    </button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Fechar
+                </button>
             </div>
         </div>
     </div>
-@endforeach
+</div>
 
-<!-- Modal de Confirmação de Exclusão -->
-<div class="modal fade" id="confirmarExclusaoModal" tabindex="-1" role="dialog" aria-labelledby="confirmarExclusaoModalLabel" aria-hidden="true">
+<!-- Modal 1: Comentário Obrigatório para Exclusão -->
+<div class="modal fade" id="comentarioExclusaoModal" tabindex="-1" role="dialog" aria-labelledby="comentarioExclusaoModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="confirmarExclusaoModalLabel">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>Confirmar Exclusão
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="comentarioExclusaoModalLabel">
+                    <i class="fas fa-comment-alt mr-2"></i>Comentário para Exclusão
                 </h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p>Tem certeza que deseja excluir o PPP <strong id="nomeItemExclusao"></strong>?</p>
-                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Você está prestes a excluir o PPP <strong id="nomeItemExclusaoComentario"></strong>.
+                </div>
+                
+                <div class="form-group">
+                    <label for="comentarioExclusao">Motivo da exclusão <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="comentarioExclusao" name="comentario" rows="4" 
+                            placeholder="Descreva o motivo da exclusão deste PPP..." required></textarea>
+                    <small class="form-text text-muted">
+                        Este comentário será registrado no histórico do PPP antes da exclusão.
+                    </small>
+                    <div class="invalid-feedback" id="comentarioExclusaoError">
+                        O comentário é obrigatório para prosseguir com a exclusão.
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                     <i class="fas fa-times mr-1"></i>Cancelar
                 </button>
-                <form id="formExclusao" method="POST" style="display: inline;">
+                <button type="button" class="btn btn-warning" onclick="validarComentarioEProsseguir()">
+                    <i class="fas fa-save mr-1"></i>Salvar mensagem e excluir definitivamente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Confirmação Final de Exclusão -->
+<div class="modal fade" id="confirmacaoFinalExclusaoModal" tabindex="-1" role="dialog" aria-labelledby="confirmacaoFinalExclusaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmacaoFinalExclusaoModalLabel">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Confirmação Final de Exclusão
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <h6><i class="fas fa-info-circle mr-2"></i>Importante: Diferença entre Reprovar e Excluir</h6>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="fas fa-times-circle mr-1"></i>Reprovar PPP:</h6>
+                            <ul class="mb-0">
+                                <li>PPP permanece disponível para consultas futuras</li>
+                                <li>Histórico é mantido</li>
+                                <li>Pode ser visualizado posteriormente</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-danger"><i class="fas fa-trash mr-1"></i>Excluir PPP:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Elimina o PPP do sistema permanentemente</strong></li>
+                                <li>Não pode ser recuperado</li>
+                                <li>Histórico será perdido</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <strong>Tem certeza que deseja excluir definitivamente o PPP "<span id="nomeItemConfirmacaoFinal"></span>"?</strong>
+                </div>
+                
+                <div class="bg-light p-3 rounded">
+                    <h6><i class="fas fa-comment mr-2"></i>Comentário registrado:</h6>
+                    <p class="mb-0 font-italic" id="comentarioRegistrado"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-arrow-left mr-1"></i>Voltar
+                </button>
+                <form id="formExclusaoFinal" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
+                    <input type="hidden" id="comentarioExclusaoHidden" name="comentario">
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash mr-1"></i>Excluir
+                        <i class="fas fa-trash mr-1"></i>Confirmar Exclusão Definitiva
                     </button>
                 </form>
             </div>
@@ -460,28 +430,163 @@
         margin-bottom: 5px;
         color: #6c757d;
     }
+    <!-- CSS para timeline do histórico -->
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #dee2e6;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.timeline-title {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    color: #495057;
+}
+
+.timeline-text {
+    margin: 0 0 8px 0;
+    color: #6c757d;
+}
+
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+    
 </style>
 @endsection
 
 @section('js')
-<script>
+    <script>
+        let pppParaExcluir = {
+        id: null,
+        nome: null
+        };
+
     function confirmarExclusao(id, nomeItem) {
-        document.getElementById('nomeItemExclusao').textContent = nomeItem;
-        document.getElementById('formExclusao').action = '/ppp/' + id;
-        $('#confirmarExclusaoModal').modal('show');
-    }
-    
-    $(document).ready(function() {
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            $('.alert').fadeOut('slow');
-        }, 5000);
+        // Armazenar dados do PPP
+        pppParaExcluir.id = id;
+        pppParaExcluir.nome = nomeItem;
         
-        // Clique em qualquer parte da linha do PPP para visualizar
-        $('.ppp-row').click(function() {
-            var pppId = $(this).data('ppp-id');
-            window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
+        // Limpar campos da modal anterior
+        document.getElementById('comentarioExclusao').value = '';
+        document.getElementById('comentarioExclusao').classList.remove('is-invalid');
+        document.getElementById('nomeItemExclusaoComentario').textContent = nomeItem;
+        
+        // Abrir primeira modal
+        $('#comentarioExclusaoModal').modal('show');
+    }
+
+    function validarComentarioEProsseguir() {
+        const comentario = document.getElementById('comentarioExclusao').value.trim();
+        const comentarioField = document.getElementById('comentarioExclusao');
+        
+            if (comentario === '') {
+                // Mostrar erro de validação
+                comentarioField.classList.add('is-invalid');
+                comentarioField.focus();
+                return;
+            }
+        
+            // Remover classe de erro se existir
+            comentarioField.classList.remove('is-invalid');
+            
+            // Fechar primeira modal
+            $('#comentarioExclusaoModal').modal('hide');
+            
+            // Aguardar fechamento da primeira modal antes de abrir a segunda
+            $('#comentarioExclusaoModal').on('hidden.bs.modal', function() {
+                // Configurar segunda modal
+                document.getElementById('nomeItemConfirmacaoFinal').textContent = pppParaExcluir.nome;
+                document.getElementById('comentarioRegistrado').textContent = comentario;
+                document.getElementById('comentarioExclusaoHidden').value = comentario;
+                document.getElementById('formExclusaoFinal').action = '/ppp/' + pppParaExcluir.id;
+                
+                // Abrir segunda modal
+                $('#confirmacaoFinalExclusaoModal').modal('show');
+                
+                // Remover o listener para evitar múltiplas execuções
+                $(this).off('hidden.bs.modal');
+            });
+        }
+
+        $(document).ready(function() {
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+            
+            // Clique em qualquer parte da linha do PPP para visualizar
+            $('.ppp-row').click(function() {
+                var pppId = $(this).data('ppp-id');
+                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
+            });
         });
-    });
-</script>
+
+        // Função para carregar histórico via AJAX
+        function carregarHistorico(pppId, nomeItem) {
+            // Atualizar título do modal
+            $('#historicoModalTitle').html('<i class="fas fa-history mr-2"></i>Histórico: ' + nomeItem);
+            
+            // Mostrar loading
+            $('#historicoModalBody').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...</div>');
+            
+            // Abrir modal
+            $('#historicoModal').modal('show');
+            
+            // Fazer requisição AJAX
+            $.ajax({
+                url: '/ppp/' + pppId + '/historico',
+                type: 'GET',
+                success: function(response) {
+                    $('#historicoModalBody').html(response);
+                },
+                error: function(xhr, status, error) {
+                    $('#historicoModalBody').html('<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Erro ao carregar histórico. Tente novamente.</div>');
+                    console.error('Erro ao carregar histórico:', error);
+                }
+            });
+        }
+    </script>
 @endsection

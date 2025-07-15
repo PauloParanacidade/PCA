@@ -310,8 +310,7 @@
         <!-- Sidebar com Ações -->
         <div class="col-lg-3">
             <!-- Card de Ações (ROXO) -->
-            <!-- Card de Ações (ROXO) -->
-<div class="card card-outline card-purple shadow-sm">
+    <div class="card card-outline card-purple shadow-sm">
     <div class="card-header bg-purple py-2">
         <h3 class="card-title text-white mb-0">
             <i class="fas fa-cogs mr-2"></i>
@@ -499,6 +498,79 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Reprovação -->
+<div class="modal fade" id="reprovarModal" tabindex="-1" role="dialog" aria-labelledby="reprovarModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="reprovarModalLabel">
+                    <i class="fas fa-times-circle mr-2"></i>Reprovar PPP
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('ppp.reprovar', $ppp->id) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle mr-2"></i>Importante: Diferença entre Reprovar e Excluir</h6>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-success"><i class="fas fa-times-circle mr-1"></i>Reprovar PPP:</h6>
+                                <ul class="mb-0">
+                                    <li>PPP permanece disponível para consultas futuras</li>
+                                    <li>Histórico é mantido</li>
+                                    <li>Pode ser editado posteriormente</li>
+                                    <li>Gestor responsável é mantido</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-danger"><i class="fas fa-trash mr-1"></i>Excluir PPP:</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Elimina o PPP do sistema permanentemente</strong></li>
+                                    <li>Não pode ser recuperado</li>
+                                    <li>Remove todos os dados</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Você está prestes a reprovar o PPP <strong>{{ $ppp->nome_item }}</strong>.
+                        O PPP será marcado como reprovado mas permanecerá disponível para consultas e edições futuras.
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="motivo">Motivo da reprovação <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="4" 
+                                placeholder="Descreva o motivo da reprovação..." required></textarea>
+                        <small class="form-text text-muted">
+                            Este comentário será registrado no histórico do PPP e é obrigatório.
+                        </small>
+                        <div class="invalid-feedback">
+                            O motivo da reprovação é obrigatório.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times mr-1"></i>Confirmar Reprovação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Solicitar Correção -->
+
 
 @stop
 
