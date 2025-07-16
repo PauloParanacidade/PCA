@@ -59,4 +59,9 @@ class PcaPpp extends Model
     {
         return $this->hasMany(\App\Models\PppHistorico::class, 'ppp_id');
     }
+
+    public function gestoresHistorico()
+    {
+        return $this->hasMany(PppGestorHistorico::class, 'ppp_id');
+    }
 }

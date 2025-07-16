@@ -13,6 +13,7 @@ use App\Services\PppHistoricoService;
 use App\Services\HierarquiaService; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PppController extends Controller
@@ -39,18 +40,6 @@ public function store(StorePppRequest $request)
 {
     try {
         $manager = Auth::user();
-
-        // ✅ Verificar e atribuir papel de gestor automaticamente
-        if ($manager) {
-            try {
-                $manager->garantirPapelGestor();
-            } catch (\Exception $e) {
-                Log::error('Erro ao garantir papel de gestor: ' . $e->getMessage(), [
-                    'user_id' => $manager->id,
-                    'user_name' => $manager->name
-                ]);
-            }
-        }
 
         // ✅ Usar HierarquiaService para obter o próximo gestor
         $proximoGestor = $this->hierarquiaService->obterProximoGestor($manager);
@@ -289,29 +278,38 @@ if ($request->input('acao') === 'enviar_aprovacao') {
         
         $query = PcaPpp::query();
         
-        // Aplicar filtro baseado no tipo de visualização
         if ($request->filled('tipo_visualizacao')) {
-            switch ($request->tipo_visualizacao) {
-                case 'meus_ppps':
-                    $query->where('user_id', Auth::id());
-                    break;
-                case 'pendentes_aprovacao':
-                    $query->where('gestor_atual_id', Auth::id())
-                          ->where('status_id', 2); // aguardando_aprovacao
-                    break;
-                default:
-                    $query->where(function($q) {
-                        $q->where('user_id', Auth::id())
-                          ->orWhere('gestor_atual_id', Auth::id());
+        switch ($request->tipo_visualizacao) {
+            case 'meus_ppps':
+                $query->where('user_id', Auth::id());
+                break;
+
+            case 'pendentes_aprovacao':
+                $query->where('gestor_atual_id', Auth::id())
+                    ->where('status_id', 2); // aguardando_aprovacao
+                break;
+
+            default:
+                $query->where(function ($q) {
+                    $q->where('user_id', Auth::id())
+                    ->orWhere('gestor_atual_id', Auth::id())
+                    ->orWhereExists(function ($subQuery) {
+                        $subQuery->select(DB::raw(1))
+                                ->from('ppp_gestores_historico')
+                                ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
+                                ->where('ppp_gestores_historico.gestor_id', Auth::id());
                     });
+                });
+                break;
             }
-        } else {
-            // Comportamento padrão: mostrar PPPs criados pelo usuário OU onde ele é gestor
-            $query->where(function($q) {
-                $q->where('user_id', Auth::id())
-                  ->orWhere('gestor_atual_id', Auth::id());
-            });
-        }
+    } else {
+        // Comportamento padrão: mostrar PPPs criados pelo usuário OU onde ele é gestor atual
+        $query->where(function ($q) {
+            $q->where('user_id', Auth::id())
+            ->orWhere('gestor_atual_id', Auth::id());
+        });
+    }
+
         
         $query->with([
             'user', 

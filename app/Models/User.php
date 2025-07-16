@@ -126,18 +126,18 @@ class User extends Authenticatable implements LdapAuthenticatable
     }
 
     public function hasRole($role): bool
-{
-    if (is_string($role)) {
-        return $this->roles->contains('name', $role);
+    {
+        if (is_string($role)) {
+            return $this->roles->contains('name', $role);
+        }
+        
+        // Garantir que sempre trabalhamos com Collection
+        $roleNames = collect($role)->map(function($r) {
+            return is_string($r) ? $r : (is_object($r) ? $r->name : $r);
+        });
+        
+        return $this->roles->pluck('name')->intersect($roleNames)->isNotEmpty();
     }
-    
-    // Garantir que sempre trabalhamos com Collection
-    $roleNames = collect($role)->map(function($r) {
-        return is_string($r) ? $r : (is_object($r) ? $r->name : $r);
-    });
-    
-    return $this->roles->pluck('name')->intersect($roleNames)->isNotEmpty();
-}
 
     public function hasAnyRole($roles): bool
     {
@@ -185,55 +185,35 @@ class User extends Authenticatable implements LdapAuthenticatable
         $this->notify(new \App\Notifications\ResetPassword($token));
     }
 
-/**
- * Extrai o nome do gestor do campo manager
- */
-public function getNomeGestorAttribute()
-{
-    if (!$this->manager) {
-        return null;
-    }
-    
-    if (preg_match('/CN=([^,]+)/', $this->manager, $matches)) {
-        return trim($matches[1]);
-    }
-    
-    return null;
-}
-
-/**
- * Extrai a sigla da área do gestor do campo manager
- */
-public function getSiglaAreaGestorAttribute()
-{
-    if (!$this->manager) {
-        return null;
-    }
-    
-    if (preg_match('/OU=([^,]+)/', $this->manager, $matches)) {
-        return trim($matches[1]);
-    }
-    
-    return null;
-}
-
-/**
- * Garante que o usuário tenha o papel de gestor
- * Se não tiver, atribui automaticamente
- */
-public function garantirPapelGestor(): void
-{
-    if (!$this->hasRole('gestor')) {
-        $gestorRole = \App\Models\Role::where('name', 'gestor')->first();
-        
-        if ($gestorRole) {
-            $this->roles()->attach($gestorRole->id);
-            \Illuminate\Support\Facades\Log::info('Papel de gestor atribuído automaticamente', [
-                'user_id' => $this->id,
-                'user_name' => $this->name,
-                'role_id' => $gestorRole->id
-            ]);
+    /**
+     * Extrai o nome do gestor do campo manager
+     */
+    public function getNomeGestorAttribute()
+    {
+        if (!$this->manager) {
+            return null;
         }
+        
+        if (preg_match('/CN=([^,]+)/', $this->manager, $matches)) {
+            return trim($matches[1]);
+        }
+        
+        return null;
     }
-}
+
+    /**
+     * Extrai a sigla da área do gestor do campo manager
+     */
+    public function getSiglaAreaGestorAttribute()
+    {
+        if (!$this->manager) {
+            return null;
+        }
+        
+        if (preg_match('/OU=([^,]+)/', $this->manager, $matches)) {
+            return trim($matches[1]);
+        }
+        
+        return null;
+    }
 }
