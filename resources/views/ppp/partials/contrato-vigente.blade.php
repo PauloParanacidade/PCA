@@ -1,5 +1,5 @@
 {{-- Seção 2: Contrato Vigente (Card Amarelo) --}}
-
+<div class="col-12 mb-4">
     <div class="card card-outline card-warning h-100">
         <div class="card-header bg-warning">
             <h3 class="card-title text-dark">
@@ -66,7 +66,7 @@
             </div>
         </div>
     </div>
-
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

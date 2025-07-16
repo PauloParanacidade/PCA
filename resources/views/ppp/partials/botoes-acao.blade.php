@@ -1,58 +1,69 @@
 <div class="row mt-4" id="botoes-finais">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-center flex-wrap gap-3">
+
             {{-- Botão Cancelar --}}
-            <div>
-                @if(!isset($ppp) || !$ppp->id)
-                    {{-- Modo criação: retorna para dashboard --}}
-                    <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-times me-2"></i>
-                        Cancelar
-                    </a>
-                @else
-                    {{-- Modo edição: retorna para tela anterior --}}
-                    <button type="button" onclick="history.back()" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-arrow-left me-2"></i>
-                        Cancelar
-                    </button>
-                @endif
-            </div>
-            
+            @if(!isset($ppp) || !$ppp->id)
+                {{-- Modo criação: retorna para dashboard --}}
+                <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-lg mx-2">
+                    <i class="fas fa-times me-2"></i>
+                    Cancelar
+                </a>
+            @else
+                {{-- Modo edição: retorna para tela anterior --}}
+                <button type="button" onclick="history.back()" class="btn btn-secondary btn-lg mx-2">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Cancelar
+                </button>
+            @endif
+
             {{-- Botões de ação --}}
-            <div>
-                @if(!isset($ppp) || !$ppp->id)
-                    {{-- Modo criação: botão aparece após clicar em Próximo --}}
-                    <button type="submit" id="btn-salvar-enviar" class="btn btn-success btn-lg" style="display: none;">
-                        <i class="fas fa-paper-plane me-2"></i>
-                        Salvar e Enviar para Avaliação
-                    </button>
-                @else
-                    {{-- Modo edição: botões normais --}}
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#historicoModal">
-                            <i class="fas fa-history me-2"></i>
-                            Histórico
-                        </button>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save me-2"></i>
-                            Salvar
-                        </button>
-                    </div>
-                @endif
-            </div>
+            @if(!isset($ppp) || !$ppp->id)
+                {{-- Botão Salvar e Enviar para Avaliação (só aparece após clicar em Próximo) --}}
+                <button type="submit" id="btn-salvar-enviar" class="btn btn-success btn-lg mx-2" style="display: none;">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    Salvar e Enviar para Avaliação
+                </button>
+            @else
+                {{-- Modo edição: botão histórico --}}
+                <button type="button" class="btn btn-info btn-lg mx-2" 
+                    data-id="{{ $ppp->id }}" onclick="carregarHistoricoPPP(this)">
+                <i class="fas fa-history me-2"></i>
+                Histórico
+            </button>
+            @endif
+
         </div>
     </div>
 </div>
+
+@push('js')
+<script>
+function carregarHistoricoPPP(button) {
+    const pppId = button.getAttribute('data-id');
+
+    $.get(`/ppp/${pppId}/historico`, function(modalHtml) {
+        // Remove modais anteriores com mesmo ID (evita duplicidade)
+        $('#historicoModal' + pppId).remove();
+
+        // Adiciona novo modal ao final do <body>
+        $('body').append(modalHtml);
+        $('#historicoModal' + pppId).modal('show');
+    }).fail(function() {
+        alert('Erro ao carregar histórico do PPP.');
+    });
+}
+</script>
+@endpush
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const btnProximo = document.getElementById('btn-proximo-card-azul');
     const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
-    const cardsAdicionais = document.getElementById('cards-adicionais');
-    
+
     if (btnProximo) {
         btnProximo.addEventListener('click', function() {
-            // Validar campos obrigatórios do card azul
             const camposObrigatorios = [
                 'nome_item',
                 'quantidade', 
@@ -61,43 +72,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 'previsao_contratacao',
                 'descricao_especificacao'
             ];
-            
+
             let todosPreenchidos = true;
-            
+
             camposObrigatorios.forEach(function(campo) {
                 const elemento = document.querySelector(`[name="${campo}"]`);
-                if (elemento && !elemento.value.trim()) {
-                    elemento.classList.add('is-invalid');
+                if (!elemento || !elemento.value.trim()) {
+                    if (elemento) elemento.classList.add('is-invalid');
                     todosPreenchidos = false;
                 } else if (elemento) {
                     elemento.classList.remove('is-invalid');
                 }
             });
-            
+
             if (todosPreenchidos) {
-                // Mostrar cards adicionais com animação
-                if (cardsAdicionais) {
-                    cardsAdicionais.style.display = 'block';
-                    cardsAdicionais.classList.add('fade-in-cards');
-                }
-                
+                // Desbloquear cards com animação
+                const cardsParaDesbloquear = document.querySelectorAll('.card-bloqueado.bloqueado');
+
+                cardsParaDesbloquear.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('desbloqueando');
+
+                        setTimeout(() => {
+                            card.classList.remove('bloqueado', 'desbloqueando');
+                            card.classList.add('card-desbloqueado');
+                        }, 300);
+                    }, index * 200);
+                });
+
                 // Esconder botão próximo
-                btnProximo.style.display = 'none';
-                
+                btnProximo.style.transition = 'all 0.3s ease';
+                btnProximo.style.opacity = '0';
+                btnProximo.style.transform = 'translateY(-10px)';
+
+                setTimeout(() => {
+                    btnProximo.style.display = 'none';
+                }, 300);
+
                 // Mostrar botão salvar e enviar
                 if (btnSalvarEnviar) {
-                    btnSalvarEnviar.style.display = 'inline-block';
+                    setTimeout(() => {
+                        btnSalvarEnviar.style.display = 'inline-block';
+                        btnSalvarEnviar.style.opacity = '0';
+                        btnSalvarEnviar.style.transform = 'translateY(10px)';
+
+                        setTimeout(() => {
+                            btnSalvarEnviar.style.transition = 'all 0.3s ease';
+                            btnSalvarEnviar.style.opacity = '1';
+                            btnSalvarEnviar.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, 800);
                 }
-                
-                // // Scroll suave para os novos cards
-                // setTimeout(() => {
-                //     cardsAdicionais.scrollIntoView({ 
-                //         behavior: 'smooth',
-                //         block: 'start'
-                //     });
-                // }, 300);
+
             } else {
-                // Mostrar alerta de campos obrigatórios
                 alert('Por favor, preencha todos os campos obrigatórios antes de continuar.');
             }
         });

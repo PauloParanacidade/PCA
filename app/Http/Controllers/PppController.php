@@ -29,7 +29,10 @@ class PppController extends Controller
     
     public function create()
     {
-        return view('ppp.form', ['isCreating' => true]);
+        return view('ppp.form', [
+            'isCreating' => true,
+            'showAllCards' => true // Nova flag para mostrar todos os cards
+        ]);
     }
 
 public function store(StorePppRequest $request)

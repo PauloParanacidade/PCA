@@ -44,7 +44,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('ppp/{ppp}/aprovar', [PppController::class, 'aprovar'])->name('ppp.aprovar');
     Route::post('/ppp/{ppp}/reprovar', [PppController::class, 'reprovar'])->name('ppp.reprovar');
     Route::post('ppp/{ppp}/enviar-aprovacao', [PppController::class, 'enviarParaAprovacao'])->name('ppp.enviar-aprovacao');
-    Route::get('/ppp/{id}/historico', [PppController::class, 'historico'])->name('ppp.historico');
+    Route::get('/ppp/{id}/historico', [PppController::class, 'historico'])->name('ppp.history');
 });
 
 // Rota para depuração (ambiente local)
