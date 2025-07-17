@@ -346,15 +346,15 @@ if ($request->input('acao') === 'enviar_aprovacao') {
     {
         try {
             $ppp = PcaPpp::findOrFail($id);
-            //dd($ppp);
             $historicos = PppHistorico::where('ppp_id', $ppp->id)
                 ->with(['statusAnterior', 'statusAtual', 'usuario'])
                 ->orderBy('created_at')
                 ->get();
 
             Log::info('Exibindo PPP e histórico.', ['ppp_id' => $ppp->id, 'historico_count' => $historicos->count()]);
+            $isCreating = false;
 
-            return view('ppp.show', compact('ppp', 'historicos'));
+            return view('ppp.show', compact('ppp', 'historicos', 'isCreating'));
         } catch (\Throwable $ex) {
             Log::error('Erro ao exibir PPP:', [
                 'exception' => $ex,
@@ -388,7 +388,8 @@ if ($request->input('acao') === 'enviar_aprovacao') {
         try {
             $ppp = PcaPpp::findOrFail($id);
             $edicao = true;
-            return view('ppp.form', compact('ppp','edicao'));
+            $isCreating = false;
+            return view('ppp.form', compact('ppp','edicao', 'isCreating'));
         } catch (\Throwable $ex) {
             Log::error('Erro ao carregar PPP para edição:', [
                 'exception' => $ex,
