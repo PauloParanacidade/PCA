@@ -20,10 +20,12 @@
             {{-- Botões de ação --}}
             @if(!isset($ppp) || !$ppp->id)
                 {{-- Botão Salvar e Enviar para Avaliação (só aparece após clicar em Próximo) --}}
-                <button type="submit" id="btn-salvar-enviar" class="btn btn-success btn-lg mx-2" style="display: none;">
+                <button type="submit" id="btn-salvar-enviar" name="acao" value="enviar_aprovacao" class="btn btn-success btn-lg mx-2" style="display: none;">
                     <i class="fas fa-paper-plane me-2"></i>
                     Salvar e Enviar para Avaliação
                 </button>
+            @endif
+
             @else
                 {{-- Modo edição: botão histórico --}}
                 <button type="button" class="btn btn-info btn-lg mx-2" 

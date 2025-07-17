@@ -98,14 +98,13 @@
             </div>
         </div>
 
-        {{-- Botão Próximo - apenas no modo criação --}}
         @if(!isset($ppp) || !$ppp->id)
-        <div class="d-flex justify-content-end mt-3">
-            <button type="button" id="btn-proximo-card-azul" class="btn btn-primary btn-lg">
-                <i class="fas fa-arrow-right me-2"></i>
-                Próximo
-            </button>
-        </div>
+            <div class="d-flex justify-content-end mt-3">
+                <button type="button" id="btn-avancar-card-azul" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    Avançar
+                </button>
+            </div>
         @endif
     </div>
 </div>

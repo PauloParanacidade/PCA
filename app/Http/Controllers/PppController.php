@@ -42,6 +42,12 @@ class PppController extends Controller
 public function store(StorePppRequest $request)
 {
     try {
+        Log::info('🛠️ Ação detectada no store()', [
+            'request_input_acao' => $request->input('acao'),
+            'request_get_acao' => request('acao'),
+            'request_method' => $request->method(),
+            'request_full_data' => $request->all()
+        ]);
         $manager = Auth::user();
 
         // ✅ Usar HierarquiaService para obter o próximo gestor
@@ -65,7 +71,7 @@ public function store(StorePppRequest $request)
         $ppp = PcaPpp::create([
             'user_id' => Auth::id(),
             'gestor_atual_id' => $proximoGestor?->id,
-            'status_id' => 1, // rascunho
+            'status_id' => 2, // 
             'nome_item' => $request->nome_item,
             'descricao' => $request->descricao,
             'categoria' => $request->categoria,
@@ -146,7 +152,7 @@ public function store(StorePppRequest $request)
             ]);
 
             $ppp = PcaPpp::findOrFail($id);
-            $dados = $request->validated();
+            $dados = $request->validated(); //ficou redundante a validação do request mas deixei aqui para lembrança no futuro
 
             Log::info('🔍 Verificando se ação é "enviar_aprovacao"', [
                 'acao_recebida' => $request->input('acao'),

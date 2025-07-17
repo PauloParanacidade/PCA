@@ -22,9 +22,9 @@
 @endsection
 
 @section('content')
-    <form method="POST" action="{{ $isCreating ? route('ppp.store') : route('ppp.update', $ppp->id) }}">
+    <form id="form-ppp" method="POST" action="#">
         @csrf
-        @if(!$isCreating)
+        @if (!$isCreating)
             @method('PUT')
             <input type="hidden" name="acao" value="enviar_aprovacao">
         @endif
@@ -34,11 +34,6 @@
             <div class="col-lg-6 d-flex">
                 <div class="w-100">
                     @include('ppp.partials.informacoes-item')
-                    <div class="text-right mt-3">
-                        <button id="btn-avancar-card-azul" type="button" class="btn btn-primary">
-                            <i class="fas fa-chevron-right mr-1"></i>Avançar
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -176,6 +171,31 @@
             const btnProximo = document.getElementById('btn-proximo-card-azul');
             const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
             const btnCancelar = document.getElementById('btn-cancelar');
+            const btnAvancar = document.getElementById('btn-avancar-card-azul');
+            const form = document.getElementById('form-ppp');
+
+            // ===================================
+            // FUNÇÃO PARA DEFINIR O STORE PARA AVANÇAR E UPDATE PARA SALVAR E ENVIAR PARA AVALIAÇÃO
+            // ===================================
+
+            if (btnAvancar) {
+                btnAvancar.addEventListener('click', function () {
+                    form.action = "{{ route('ppp.store') }}"; // salvar rascunho via store
+
+                    // remover campo 'acao' se existir (evitar conflito)
+                    const acaoInput = form.querySelector('input[name="acao"]');
+                    if (acaoInput) {
+                        acaoInput.remove();
+                    }
+                    form.submit();
+                });
+            }
+
+            if (btnSalvarEnviar) {
+                btnSalvarEnviar.addEventListener('click', function () {
+                    form.action = "{{ route('ppp.update', $ppp->id ?? 0) }}";
+                });
+            }
 
             // ===================================
             // FUNÇÃO PARA DESBLOQUEAR CARDS
@@ -299,7 +319,7 @@
                         }, 1200);
 
                         // Mostrar notificação de sucesso
-                        mostrarNotificacao('Cards desbloqueados! Agora você pode preencher todos os campos.', 'success');
+                        mostrarNotificacao('Rascunho salvo.', 'gray-dark');
 
                     } else {
                         // Mostrar notificação de erro
@@ -321,7 +341,32 @@
 
                 // Criar nova notificação
                 const notificacao = document.createElement('div');
-                notificacao.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show notificacao-ppp`;
+                let corBootstrap;
+
+                switch (tipo) {
+                    case 'success':
+                        corBootstrap = 'success';
+                        break;
+                    case 'warning':
+                        corBootstrap = 'warning';
+                        break;
+                    case 'info':
+                        corBootstrap = 'info';
+                        break;
+                    case 'secondary':
+                        corBootstrap = 'secondary';
+                        break;
+                    case 'gray':
+                    case 'gray-dark':
+                        corBootstrap = 'dark'; // Personalizável com CSS
+                        break;
+                    default:
+                        corBootstrap = 'danger';
+                        break;
+                }
+
+                notificacao.className = `alert alert-${corBootstrap} alert-dismissible fade show notificacao-ppp`;
+
                 notificacao.style.cssText = `
                     position: fixed;
                     top: 20px;
@@ -348,6 +393,7 @@
                     }
                 }, 5000);
             }
+
 
             // ===================================
             // CAMPOS CONDICIONAIS

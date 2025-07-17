@@ -62,12 +62,13 @@
             @if($ppps->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-hover table-striped mb-0">
-                        <thead class="thead-light">
+                        <thead class="thead-light text-center">
                             <tr>
-                                <th width="5%">#</th>
-                                <th width="20%">Nome do Item</th>
-                                <th width="15%">Área Solicitante</th>
-                                <th width="15%">Área Avaliadora</th>
+                                <th width="1%">#</th>
+                                <th width="23%">Nome do Item</th>
+                                <th width="10%">Área Solicitante</th>
+                                <th width="12%">Área Atual</th>
+                                <th width="12%">Área Avaliadora</th>
                                 <th width="10%">Valor Estimado</th>
                                 <th width="10%">Status</th>
                                 <th width="10%">Data Criação</th>
@@ -76,9 +77,9 @@
                         </thead>
                         <tbody>
                             @foreach($ppps as $ppp)
-                                <tr class="ppp-row" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
-                                    <td class="align-middle font-weight-bold">#{{ $ppp->id }}</td>
-                                    <td class="align-middle">
+                                <tr class="ppp-row text-center" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
+                                    <td class="align-middle font-weight-bold">{{ $ppp->id }}</td> 
+                                    <td class="align-middle">  {{-- Nome do Item --}}
                                         <div class="d-flex flex-column">
                                             <span class="font-weight-bold">{{ $ppp->nome_item }}</span>
                                             @if($ppp->descricao)
@@ -86,32 +87,45 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="align-middle">
+                                    <td class="align-middle"> {{-- Sigla da Área solicitante --}}
                                         <span class="badge badge-secondary">
-                                            {{ $ppp->user->name ?? 'N/A' }} - {{ $ppp->user->department ?? 'Área N/A' }}
+                                            {{ $ppp->user->department ?? 'Área N/A' }}
                                         </span>
                                     </td>
-
-                                    <td class="align-middle">
-                                    @php
-                                        $managerRaw = $ppp->user->manager ?? '';
-                                        preg_match('/CN=([^,]+),OU=([^,]+)/', $managerRaw, $matches);
-                                        $nomeGestor = $matches[1] ?? 'Desconhecido';
-                                        $areaGestor = $matches[2] ?? 'Área N/A';
-                                    @endphp
-
-                                    <span class="badge badge-secondary">
-                                        {{ $nomeGestor }} - {{ $areaGestor }}
-                                    </span>
+                                    <td class="align-middle"> {{-- 1º Nome do usuário atual e sua área --}}
+                                        @php
+                                            $primeiroNome = explode(' ', Auth::user()->name)[0] ?? 'Nome';
+                                            $siglaDepartamento = Auth::user()->department ?? 'Área N/A';
+                                        @endphp
+                                        <span class="badge badge-info">
+                                            {{ $primeiroNome }} - {{ $siglaDepartamento }}
+                                        </span>
                                     </td>
+                                    <td class="align-middle"> {{-- 1º Nome do avaliador e sua área --}}
+                                        @php
+                                            $managerRaw = $ppp->user->manager ?? '';
+                                            preg_match('/CN=([^,]+),OU=([^,]+)/', $managerRaw, $matches);
 
-                                    <td class="align-middle">
+                                            // Nome completo do gestor
+                                            $nomeCompletoGestor = $matches[1] ?? 'Desconhecido';
+
+                                            // Extrair primeiro nome do gestor
+                                            $primeiroNomeGestor = explode(' ', $nomeCompletoGestor)[0];
+
+                                            // Área do gestor
+                                            $areaGestor = $matches[2] ?? 'Área N/A';
+                                        @endphp
+                                        <span class="badge badge-secondary">
+                                            {{ $primeiroNomeGestor }} - {{ $areaGestor }}
+                                        </span>
+                                    </td>
+                                    <td class="align-middle text-left"> {{-- Valor estimado --}}
                                         <span class="text-success font-weight-bold">
                                             R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
                                         </span>
                                     </td>
                                     
-                                    <td class="align-middle">
+                                    <td class="align-middle text-left"> {{-- Status --}}
                                         <span class="badge badge-info">
                                             @if($ppp->status)
                                                 <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
@@ -120,10 +134,10 @@
                                             @endif
                                         </span>
                                     </td>
-                                    <td class="align-middle">
+                                    <td class="align-middle"> {{-- Data Criação --}}
                                         <small>{{ $ppp->created_at ? $ppp->created_at->format('d/m/Y H:i') : 'N/A' }}</small>
                                     </td>
-                                    <td class="align-middle text-center">
+                                    <td class="align-middle text-center"> {{-- Ações --}}
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('ppp.show', $ppp->id) }}" class="btn btn-sm btn-outline-info" title="Visualizar" onclick="event.stopPropagation();">
                                                 <i class="fas fa-eye"></i>
