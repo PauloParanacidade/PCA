@@ -151,6 +151,40 @@ class User extends Authenticatable implements LdapAuthenticatable
         }
         return false;
     }
+
+
+
+/**
+ * Garante que o usuário tenha o papel de gestor
+ * Atribui automaticamente o role 'gestor' se não tiver
+ */
+public function garantirPapelGestor(): void
+{
+    // Verificar se já tem algum role de gestão
+    if (!$this->hasAnyRole(['admin', 'daf', 'gestor'])) {
+        // Buscar o role 'gestor'
+        $gestorRole = \App\Models\Role::where('name', 'gestor')->first();
+        
+        if ($gestorRole) {
+            // Atribuir o role gestor mantendo os roles existentes
+            $this->roles()->syncWithoutDetaching([$gestorRole->id]);
+            
+            \Illuminate\Support\Facades\Log::info("Role 'gestor' atribuído automaticamente", [
+                'user_id' => $this->id,
+                'user_name' => $this->name,
+                'context' => 'garantirPapelGestor'
+            ]);
+        } else {
+            \Illuminate\Support\Facades\Log::error("Role 'gestor' não encontrado no sistema", [
+                'user_id' => $this->id,
+                'user_name' => $this->name
+            ]);
+        }
+    }
+}
+
+
+
     public function getAreaResponsavelFormatadaAttribute(): string
     {
         $manager = $this->manager;

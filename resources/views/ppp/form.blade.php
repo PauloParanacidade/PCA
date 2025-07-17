@@ -1,178 +1,154 @@
 @extends('layouts.adminlte-custom')
 
-@php
-    use Carbon\Carbon;
-@endphp
-
-@php
-    $isCreating = !isset($ppp) || !$ppp->id;
-    $pageTitle = $isCreating ? 'Criar PPP' : 'Editar PPP';
-@endphp
-
-@section('title', $pageTitle)
+@section('title', $isCreating ? 'Criar PPP' : 'Editar PPP')
 
 @section('content_header')
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">
-                        <i class="fas fa-file-contract text-primary mr-2"></i>
-                        {{ $pageTitle }}
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('ppp.index') }}">PPPs</a></li>
-                        <li class="breadcrumb-item active">{{ $isCreating ? 'Criar' : 'Editar' }}</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
+    @parent
+    <h1><i class="fas fa-plus-circle mr-2"></i>{{ $isCreating ? 'Criar novo PPP' : 'Editar PPP' }}</h1>
 @endsection
 
 @section('content')
-    <div class="container-fluid">
-        <!-- Alertas -->
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
+    <form method="POST" action="{{ $isCreating ? route('ppp.store') : route('ppp.update', $ppp->id) }}">
+        @csrf
+        @if(!$isCreating)
+            @method('PUT')
         @endif
 
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+        <div class="row mb-4 align-items-stretch">
+            {{-- Lado esquerdo: Azul ocupa metade da linha --}}
+            <div class="col-lg-6 d-flex">
+                <div class="w-100">
+                    @include('ppp.partials.informacoes-item')
+                    <div class="text-right mt-3">
+                        <button id="btn-avancar-card-azul" type="button" class="btn btn-primary">
+                            <i class="fas fa-chevron-right mr-1"></i>Avançar
+                        </button>
+                    </div>
+                </div>
             </div>
-        @endif
 
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <h6><i class="fas fa-exclamation-triangle mr-2"></i>Há erros no formulário:</h6>
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+            {{-- Lado direito: Amarelo + Verde + Ciano empilhados --}}
+            <div class="col-lg-6">
+                <div class="row h-100">
+                    {{-- Card Amarelo --}}
+                    <div class="col-6 d-flex mb-3">
+                        <div id="card-amarelo" class="{{ $isCreating ? 'card-bloqueado bloqueado' : '' }} w-100">
+                            @include('ppp.partials.contrato-vigente')
+                        </div>
+                    </div>
+
+                    {{-- Card Verde --}}
+                    <div class="col-6 d-flex mb-3">
+                        <div id="card-verde" class="{{ $isCreating ? 'card-bloqueado bloqueado' : '' }} w-100">
+                            @include('ppp.partials.informacoes-financeiras')
+                        </div>
+                    </div>
+
+                    {{-- Card Ciano --}}
+                    <div class="col-12 d-flex mb-3">
+                        <div id="card-ciano" class="{{ $isCreating ? 'card-bloqueado bloqueado' : '' }} w-100">
+                            @include('ppp.partials.vinculacao-dependencia')
+                        </div>
+                    </div>
+                </div>
             </div>
-        @endif
-
-        <form method="POST" action="{{ $isCreating ? route('ppp.store') : route('ppp.update', $ppp->id) }}" id="ppp-form">
-            @csrf
-            @if(!$isCreating)
-                @method('PUT')
-            @endif
-
-{{-- Primeira linha: Card Azul e Card Amarelo --}}
-<div class="row mb-4 align-items-stretch">
-    {{-- Card Azul --}}
-    <div class="col-lg-6 d-flex">
-        @include('ppp.partials.informacoes-item')
-    </div>
-
-    {{-- Card Amarelo --}}
-    <div class="col-lg-6 d-flex" id="card-amarelo">
-        <div class="card-bloqueado {{ $isCreating ? 'bloqueado' : '' }}">
-            @include('ppp.partials.contrato-vigente')
         </div>
-    </div>
-</div> {{-- ← FECHAMENTO DA PRIMEIRA ROW --}}
 
-{{-- Segunda linha: Card Verde e Card Ciano --}}
-<div class="row mb-4 align-items-stretch">
-    <div class="col-lg-6 d-flex">
-        <div class="card-bloqueado {{ $isCreating ? 'bloqueado' : '' }}">
-            @include('ppp.partials.informacoes-financeiras')
+        {{-- Botões finais --}}
+        <div class="row">
+            <div class="col-12 text-right">
+                <button type="submit" id="btn-salvar-enviar" class="btn btn-success" style="{{ $isCreating ? 'display: none;' : '' }}">
+                    <i class="fas fa-paper-plane mr-1"></i>Salvar e Enviar
+                </button>
+                <a href="{{ route('ppp.index') }}" id="btn-cancelar" class="btn btn-secondary">
+                    <i class="fas fa-times mr-1"></i>Cancelar
+                </a>
+            </div>
         </div>
-    </div>
-
-    <div class="col-lg-6 d-flex">
-        <div class="card-bloqueado {{ $isCreating ? 'bloqueado' : '' }}">
-            @include('ppp.partials.vinculacao-dependencia')
-        </div>
-    </div>
-</div>
-
-
-
-            {{-- Botões de Ação --}}
-            @include('ppp.partials.botoes-acao')
-        </form>
-    </div>
+    </form>
 @endsection
 
 @section('css')
-    <link rel="stylesheet" href="{{ asset('css/ppp-form.css') }}">
-    <style>
-        /* Animações para os cards */
-        .fade-in-cards {
-            animation: fadeInUp 0.6s ease-out;
+<link rel="stylesheet" href="{{ asset('css/ppp-form.css') }}">
+<style>
+    .content-wrapper,
+    .content,
+    .container-fluid {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .card-body {
+        padding-bottom: 0.5rem !important;
+    }
+
+    #btn-avancar-card-azul {
+        margin-bottom: 0 !important;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    #btn-avancar-card-azul:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    }
+
+    /* Animação */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    .shake {
+        animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        75% { transform: translateX(-5px); }
+        100% { transform: translateX(0); }
+    }
+
+    .bloqueado {
+        display: none !important;
+    }
+
+    @media (max-width: 768px) {
+        .col-lg-6 {
+            margin-bottom: 1rem;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        #btn-avancar-card-azul {
+            width: 100%;
+            margin-top: 1rem;
         }
+    }
 
-        /* Estilo para campos inválidos */
-        .is-invalid {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-        }
+    .card {
+        height: 100%;
+    }
 
-        /* Estilo para o botão próximo */
-        #btn-proximo-card-azul {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            border: none;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        #btn-proximo-card-azul:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .col-lg-6 {
-                margin-bottom: 1rem;
-            }
-
-            #btn-proximo-card-azul {
-                width: 100%;
-                margin-top: 1rem;
-            }
-        }
-
-        /* Garantir altura igual dos cards */
-        .card {
-            height: 100%;
-        }
-
-        /* Espaçamento entre as linhas de cards */
-        .row.mb-4 {
-            margin-bottom: 1.5rem !important;
-        }
-    </style>
+    .row.mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+</style>
 @endsection
+
 
 @section('js')
     <script>
