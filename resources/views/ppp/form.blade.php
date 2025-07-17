@@ -171,29 +171,29 @@
             // ===================================
             // CONFIGURAÇÕES INICIAIS
             // ===================================
-            
+
             const isCreating = {{ $isCreating ? 'true' : 'false' }};
             const btnProximo = document.getElementById('btn-proximo-card-azul');
             const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
             const btnCancelar = document.getElementById('btn-cancelar');
-            
+
             // ===================================
             // FUNÇÃO PARA DESBLOQUEAR CARDS
             // ===================================
-            
+
             function desbloquearCards() {
                 const cardsParaDesbloquear = document.querySelectorAll('.card-bloqueado.bloqueado');
-                
+
                 cardsParaDesbloquear.forEach((card, index) => {
                     setTimeout(() => {
                         // Adicionar classe de desbloqueio
                         card.classList.add('desbloqueando');
-                        
+
                         // Remover classe bloqueado após a animação
                         setTimeout(() => {
                             card.classList.remove('bloqueado', 'desbloqueando');
                             card.classList.add('card-desbloqueado');
-                            
+
                             // Remover classe de destaque após a animação
                             setTimeout(() => {
                                 card.classList.remove('card-desbloqueado');
@@ -202,35 +202,35 @@
                     }, index * 200); // Delay escalonado para cada card
                 });
             }
-            
+
             // ===================================
             // VALIDAÇÃO DOS CAMPOS OBRIGATÓRIOS
             // ===================================
-            
+
             function validarCamposCardAzul() {
                 const camposObrigatorios = [
                     'nome_item',
-                    'categoria', 
+                    'categoria',
                     'descricao',
                     'quantidade',
                     'justificativa_pedido'
                 ];
-                
+
                 let todosPreenchidos = true;
                 let primeiroErro = null;
-                
+
                 camposObrigatorios.forEach(campo => {
                     const elemento = document.querySelector(`[name="${campo}"]`);
                     if (elemento && !elemento.value.trim()) {
                         todosPreenchidos = false;
                         elemento.classList.add('is-invalid');
-                        
+
                         // Adicionar efeito shake
                         elemento.classList.add('shake');
                         setTimeout(() => {
                             elemento.classList.remove('shake');
                         }, 820);
-                        
+
                         if (!primeiroErro) {
                             primeiroErro = elemento;
                         }
@@ -238,7 +238,7 @@
                         elemento.classList.remove('is-invalid');
                     }
                 });
-                
+
                 // Focar no primeiro campo com erro
                 if (primeiroErro) {
                     primeiroErro.focus();
@@ -247,38 +247,38 @@
                         block: 'center'
                     });
                 }
-                
+
                 return todosPreenchidos;
             }
-            
+
             // ===================================
             // EVENTO DO BOTÃO PRÓXIMO
             // ===================================
-            
+
             if (btnProximo && isCreating) {
                 btnProximo.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
+
                     if (validarCamposCardAzul()) {
                         // Desbloquear os cards com animação
                         desbloquearCards();
-                        
+
                         // Esconder botão próximo com animação
                         btnProximo.style.transition = 'all 0.3s ease';
                         btnProximo.style.opacity = '0';
                         btnProximo.style.transform = 'translateY(-10px)';
-                        
+
                         setTimeout(() => {
                             btnProximo.style.display = 'none';
                         }, 300);
-                        
+
                         // Mostrar botão salvar e enviar com animação
                         if (btnSalvarEnviar) {
                             setTimeout(() => {
                                 btnSalvarEnviar.style.display = 'inline-block';
                                 btnSalvarEnviar.style.opacity = '0';
                                 btnSalvarEnviar.style.transform = 'translateY(10px)';
-                                
+
                                 setTimeout(() => {
                                     btnSalvarEnviar.style.transition = 'all 0.3s ease';
                                     btnSalvarEnviar.style.opacity = '1';
@@ -286,7 +286,7 @@
                                 }, 50);
                             }, 800);
                         }
-                        
+
                         // Scroll suave para os cards desbloqueados
                         setTimeout(() => {
                             const cardAmarelo = document.getElementById('card-amarelo');
@@ -297,28 +297,28 @@
                                 });
                             }
                         }, 1200);
-                        
+
                         // Mostrar notificação de sucesso
                         mostrarNotificacao('Cards desbloqueados! Agora você pode preencher todos os campos.', 'success');
-                        
+
                     } else {
                         // Mostrar notificação de erro
                         mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
                     }
                 });
             }
-            
+
             // ===================================
             // FUNÇÃO DE NOTIFICAÇÃO
             // ===================================
-            
+
             function mostrarNotificacao(mensagem, tipo = 'info') {
                 // Remover notificação existente
                 const notificacaoExistente = document.querySelector('.notificacao-ppp');
                 if (notificacaoExistente) {
                     notificacaoExistente.remove();
                 }
-                
+
                 // Criar nova notificação
                 const notificacao = document.createElement('div');
                 notificacao.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show notificacao-ppp`;
@@ -330,7 +330,7 @@
                     min-width: 300px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                 `;
-                
+
                 notificacao.innerHTML = `
                     <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} mr-2"></i>
                     ${mensagem}
@@ -338,9 +338,9 @@
                         <span>&times;</span>
                     </button>
                 `;
-                
+
                 document.body.appendChild(notificacao);
-                
+
                 // Auto remover após 5 segundos
                 setTimeout(() => {
                     if (notificacao.parentNode) {
@@ -348,15 +348,15 @@
                     }
                 }, 5000);
             }
-            
+
             // ===================================
             // CAMPOS CONDICIONAIS
             // ===================================
-            
+
             // Contrato Vigente
             const temContratoVigente = document.getElementById('tem_contrato_vigente');
             const camposContratoVigente = document.getElementById('campos-contrato-vigente');
-            
+
             if (temContratoVigente && camposContratoVigente) {
                 function toggleCamposContrato() {
                     if (temContratoVigente.value === 'Sim') {
@@ -366,15 +366,15 @@
                         camposContratoVigente.style.display = 'none';
                     }
                 }
-                
+
                 temContratoVigente.addEventListener('change', toggleCamposContrato);
                 toggleCamposContrato(); // Executar na inicialização
             }
-            
+
             // Vinculação/Dependência
             const vinculacaoItem = document.getElementById('vinculacao_item');
             const camposVinculacao = document.getElementById('campos-vinculacao');
-            
+
             if (vinculacaoItem && camposVinculacao) {
                 function toggleCamposVinculacao() {
                     if (vinculacaoItem.value === 'Sim') {
@@ -384,15 +384,15 @@
                         camposVinculacao.style.display = 'none';
                     }
                 }
-                
+
                 vinculacaoItem.addEventListener('change', toggleCamposVinculacao);
                 toggleCamposVinculacao(); // Executar na inicialização
             }
-            
+
             // ===================================
             // MÁSCARAS E FORMATAÇÃO
             // ===================================
-            
+
             // Máscara para valores monetários
             const camposMonetarios = document.querySelectorAll('.money-field');
             camposMonetarios.forEach(campo => {
@@ -404,7 +404,7 @@
                     e.target.value = 'R$ ' + valor;
                 });
             });
-            
+
             // Contador de caracteres para textareas
             const textareasComContador = document.querySelectorAll('textarea[maxlength]');
             textareasComContador.forEach(textarea => {
@@ -413,33 +413,33 @@
                 contador.className = 'char-counter';
                 contador.innerHTML = `<span class="current">0</span>/${maxLength} caracteres`;
                 textarea.parentNode.appendChild(contador);
-                
+
                 textarea.addEventListener('input', function() {
                     const current = this.value.length;
                     const currentSpan = contador.querySelector('.current');
                     currentSpan.textContent = current;
-                    
+
                     if (current > maxLength * 0.9) {
                         contador.classList.add('text-warning');
                     } else {
                         contador.classList.remove('text-warning');
                     }
-                    
+
                     if (current >= maxLength) {
                         contador.classList.add('text-danger');
                     } else {
                         contador.classList.remove('text-danger');
                     }
                 });
-                
+
                 // Trigger inicial
                 textarea.dispatchEvent(new Event('input'));
             });
-            
+
             // ===================================
             // VALIDAÇÃO EM TEMPO REAL
             // ===================================
-            
+
             // Remover classe de erro quando o usuário começar a digitar
             const camposComValidacao = document.querySelectorAll('input[required], select[required], textarea[required]');
             camposComValidacao.forEach(campo => {
@@ -449,7 +449,7 @@
                         this.classList.add('is-valid');
                     }
                 });
-                
+
                 campo.addEventListener('change', function() {
                     if (this.value.trim()) {
                         this.classList.remove('is-invalid');
@@ -457,38 +457,38 @@
                     }
                 });
             });
-            
+
             // ===================================
             // BOTÃO CANCELAR
             // ===================================
-            
+
             if (btnCancelar) {
                 btnCancelar.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
+
                     if (confirm('Tem certeza que deseja cancelar? Todas as alterações não salvas serão perdidas.')) {
                         window.location.href = '{{ route("ppp.index") }}';
                     }
                 });
             }
-            
+
             // ===================================
             // PREVENÇÃO DE PERDA DE DADOS
             // ===================================
-            
+
             let formAlterado = false;
             const formulario = document.querySelector('form');
-            
+
             if (formulario) {
                 // Monitorar mudanças no formulário
                 formulario.addEventListener('input', function() {
                     formAlterado = true;
                 });
-                
+
                 formulario.addEventListener('change', function() {
                     formAlterado = true;
                 });
-                
+
                 // Avisar antes de sair da página
                 window.addEventListener('beforeunload', function(e) {
                     if (formAlterado && isCreating) {
@@ -497,20 +497,20 @@
                         return e.returnValue;
                     }
                 });
-                
+
                 // Não avisar ao submeter o formulário
                 formulario.addEventListener('submit', function() {
                     formAlterado = false;
                 });
             }
-            
+
             // ===================================
             // INICIALIZAÇÃO FINAL
             // ===================================
-            
+
             console.log('🚀 PPP Form JavaScript inicializado com sucesso!');
             console.log('📝 Modo:', isCreating ? 'Criação' : 'Edição');
-            
+
             // Se não estiver criando, mostrar todos os cards desbloqueados
             if (!isCreating) {
                 const cardsParaDesbloquear = document.querySelectorAll('.card-bloqueado.bloqueado');
