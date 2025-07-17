@@ -4,6 +4,20 @@
 
 @section('content_header')
     @parent
+    @if($errors->any() || session('error'))
+        <div class="alert alert-danger">
+            @if(session('error'))
+                <p>{{ session('error') }}</p>
+            @endif
+            @if($errors->any())
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    @endif
     <h1><i class="fas fa-plus-circle mr-2"></i>{{ $isCreating ? 'Criar novo PPP' : 'Editar PPP' }}</h1>
 @endsection
 

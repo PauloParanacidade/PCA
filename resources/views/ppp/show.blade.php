@@ -3,6 +3,11 @@
 @section('title', 'Visualizar PPP')
 
 @section('content_header')
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
