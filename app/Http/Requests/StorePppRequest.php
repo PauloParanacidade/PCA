@@ -106,6 +106,7 @@ class StorePppRequest extends FormRequest
             redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
+                ->with('error', '')
         );
     }
 }

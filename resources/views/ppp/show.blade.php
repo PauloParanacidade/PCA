@@ -3,6 +3,11 @@
 @section('title', 'Visualizar PPP')
 
 @section('content_header')
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -44,7 +49,7 @@
                                 #{{ $ppp->id }}
                             </span>
                             <div class="mt-1">
-                                <span class="badge 
+                                <span class="badge
                                     @if($ppp->status_fluxo === 'rascunho') badge-secondary
                                     @elseif($ppp->status_fluxo === 'aguardando_aprovacao') badge-warning
                                     @elseif($ppp->status_fluxo === 'em_avaliacao') badge-info
@@ -109,7 +114,7 @@
                                         <label class="info-label">Prioridade</label>
                                         <div class="info-value">
                                             @if($ppp->grau_prioridade)
-                                                <span class="badge badge-lg 
+                                                <span class="badge badge-lg
                                                     @if($ppp->grau_prioridade === 'Alta') badge-danger
                                                     @elseif($ppp->grau_prioridade === 'Média') badge-warning
                                                     @else badge-secondary
@@ -156,7 +161,7 @@
                                     </span>
                                 </div>
                             </div>
-                            
+
                             @if($ppp->tem_contrato_vigente === 'Sim')
                                 <div class="row mb-2">
                                     <div class="col-md-6">
@@ -323,20 +328,20 @@
                 <i class="fas fa-history mr-2"></i>
                 Histórico
             </button>
-            
+
             @php
                 $usuarioLogado = auth()->user();
                 $ehCriadorDoPpp = $ppp->user_id === $usuarioLogado->id;
                 $ehGestorAtual = $ppp->gestor_atual_id === $usuarioLogado->id;
                 $temPerfilDAF = $usuarioLogado->hasRole('daf');
-                
+
                 // Nova lógica: mostrar botões se:
                 // 1. É o gestor atual (independente de ser criador ou não)
                 // 2. OU tem perfil DAF (mesmo se for criador)
                 // 3. E NÃO é apenas o criador sem ser gestor ou DAF
                 $podeVerBotoes = ($ehGestorAtual || $temPerfilDAF) && !($ehCriadorDoPpp && !$ehGestorAtual && !$temPerfilDAF);
             @endphp
-            
+
             @if($podeVerBotoes)
                 <button type="button" class="btn btn-outline-success btn-lg mb-3" data-toggle="modal" data-target="#aprovarModal">
                     <i class="fas fa-check mr-2"></i>
@@ -351,12 +356,12 @@
                     Reprovar
                 </button>
             @endif
-            
+
             <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-outline-primary btn-lg mb-3">
                 <i class="fas fa-edit mr-2"></i>
                 Editar
             </a>
-            
+
             <a href="{{ route('ppp.index') }}" class="btn btn-outline-secondary btn-lg">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Retornar
@@ -383,9 +388,9 @@
                     <div class="timeline">
                         @foreach($historicos as $historico)
                             <div class="timeline-item">
-                                <div class="timeline-marker 
+                                <div class="timeline-marker
                                     @if($historico->status_atual == 1) bg-secondary
-                                    @elseif($historico->status_atual == 2) bg-info  
+                                    @elseif($historico->status_atual == 2) bg-info
                                     @elseif($historico->status_atual == 3) bg-warning
                                     @elseif($historico->status_atual == 4) bg-orange
                                     @elseif($historico->status_atual == 5) bg-purple
@@ -417,7 +422,7 @@
                                     </h6>
                                     <p class="timeline-text">
                                         @if($historico->status_anterior)
-                                            Status alterado de <strong>{{ $historico->statusAnterior->nome ?? 'Status anterior' }}</strong> 
+                                            Status alterado de <strong>{{ $historico->statusAnterior->nome ?? 'Status anterior' }}</strong>
                                             para <strong>{{ $historico->statusAtual->nome ?? 'Status atual' }}</strong>
                                         @else
                                             PPP foi criado com status <strong>{{ $historico->statusAtual->nome ?? 'Rascunho' }}</strong>
@@ -476,10 +481,10 @@
                         Você está prestes a aprovar o PPP <strong>{{ $ppp->nome_item }}</strong>.
                         O PPP será encaminhado para o próximo nível da hierarquia.
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="comentario">Comentário (opcional)</label>
-                        <textarea class="form-control" id="comentario" name="comentario" rows="3" 
+                        <textarea class="form-control" id="comentario" name="comentario" rows="3"
                                 placeholder="Adicione um comentário sobre a aprovação (opcional)..."></textarea>
                         <small class="form-text text-muted">
                             Este comentário será registrado no histórico do PPP.
@@ -537,16 +542,16 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle mr-2"></i>
                         Você está prestes a reprovar o PPP <strong>{{ $ppp->nome_item }}</strong>.
                         O PPP será marcado como reprovado mas permanecerá disponível para consultas e edições futuras.
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="motivo">Motivo da reprovação <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="motivo" name="motivo" rows="4" 
+                        <textarea class="form-control" id="motivo" name="motivo" rows="4"
                                 placeholder="Descreva o motivo da reprovação..." required></textarea>
                         <small class="form-text text-muted">
                             Este comentário será registrado no histórico do PPP e é obrigatório.

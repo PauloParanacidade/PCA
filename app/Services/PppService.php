@@ -45,7 +45,7 @@ class PppService
     try {
         // Obter próximo gestor
         $proximoGestor = $this->hierarquiaService->obterProximoGestor($ppp->user_id);
-        
+
         if (!$proximoGestor) {
             throw new \Exception('Não foi possível identificar o próximo gestor.');
         }
@@ -73,49 +73,41 @@ class PppService
     }
 }
 
-
     /**
      * Aprova um PPP
      */
     public function aprovarPpp(PcaPpp $ppp, ?string $comentario = null): bool
-{
-    try {
-        // ✅ CORREÇÃO: Buscar próximo gestor baseado no criador original
-        $gestorAtual = User::find($ppp->gestor_atual_id);
-        
-        // Buscar o próximo gestor na hierarquia do gestor atual
-        $proximoGestor = $this->hierarquiaService->obterProximoGestor($gestorAtual);
+    {
+        try {
+            $gestorAtual = User::find($ppp->gestor_atual_id);
 
-        if ($proximoGestor) {
-            // Garantir que o próximo gestor tenha o papel de gestor
-            $proximoGestor->garantirPapelGestor();
-            
-            // Ainda há níveis na hierarquia
-            $ppp->update([
-                'status_id' => 2, // aguardando_aprovacao
-                'gestor_atual_id' => $proximoGestor->id,
-            ]);
-        } else {
-            // Aprovação final
-            $ppp->update([
-                'status_id' => 6, // aprovado_final
-                'gestor_atual_id' => null,
-            ]);
+            $proximoGestor = $this->hierarquiaService->obterProximoGestor($gestorAtual);
+
+            if ($proximoGestor) {
+                $proximoGestor->garantirPapelGestor();
+
+                // Ainda há níveis na hierarquia
+                $ppp->update([
+                    'status_id' => 2, // aguardando_aprovacao
+                    'gestor_atual_id' => $proximoGestor->id,
+                ]);
+            } else {
+                // Aprovação final
+                $ppp->update([
+                    'status_id' => 6, // aprovado_final
+                    'gestor_atual_id' => null,
+                ]);
+            }
+
+            $this->historicoService->registrarAprovacao($ppp,$comentario ?? 'PPP aprovado');
+
+            return true;
+
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao aprovar PPP: ' . $ex->getMessage());
+            throw $ex;
         }
-
-        // Registrar no histórico
-        $this->historicoService->registrarAprovacao(
-            $ppp,
-            $comentario ?? 'PPP aprovado'
-        );
-
-        return true;
-
-    } catch (\Throwable $ex) {
-        Log::error('Erro ao aprovar PPP: ' . $ex->getMessage());
-        throw $ex;
     }
-}
 
     /**
      * Solicita correção do PPP
