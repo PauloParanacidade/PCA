@@ -10,6 +10,7 @@ use App\Models\PppStatusDinamico;
 use App\Models\User;
 // ❌ REMOVER: use App\Services\PppStatusService;
 use App\Services\PppHistoricoService;
+use App\Services\PppService;
 use App\Services\HierarquiaService; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,11 +22,13 @@ class PppController extends Controller
     // ❌ REMOVER: protected $statusService;
     protected $historicoService;
     protected $hierarquiaService;
+    protected $pppService;
     
-    public function __construct(PppHistoricoService $historicoService, \App\Services\HierarquiaService $hierarquiaService)
+    public function __construct(PppHistoricoService $historicoService, \App\Services\HierarquiaService $hierarquiaService, PppService $pppService)
     {
         $this->historicoService = $historicoService;
         $this->hierarquiaService = $hierarquiaService;
+        $this->pppService = $pppService;
     }
     
     public function create()
@@ -448,6 +451,23 @@ if ($request->input('acao') === 'enviar_aprovacao') {
             return back()->withErrors(['msg' => 'Erro ao excluir PPP: ' . $ex->getMessage()]);
         }
     }
+
+    public function solicitarCorrecao(Request $request, PcaPpp $ppp)
+        {
+            $request->validate([
+                'motivo' => 'required|string|max:1000'
+            ]);
+
+            try {
+                $this->pppService->solicitarCorrecao($ppp, $request->motivo);
+                
+                return redirect()->route('ppp.show', $ppp->id)
+                    ->with('success', 'Correção solicitada com sucesso!');
+            } catch (\Exception $e) {
+                return redirect()->back()
+                    ->with('error', 'Erro ao solicitar correção: ' . $e->getMessage());
+            }
+        }
 
     private function criarStatusDinamico($ppp, $tipoStatus, $remetenteId = null, $destinatarioId = null, $statusCustom = null)
     {

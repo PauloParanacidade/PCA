@@ -124,7 +124,7 @@ class PppService
     {
         try {
             $ppp->update([
-                'status_fluxo' => 'correcao_solicitada',
+                'status_id' => 4, // aguardando_correcao
                 'gestor_atual_id' => null,
             ]);
 

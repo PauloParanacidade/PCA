@@ -570,6 +570,41 @@
 </div>
 
 <!-- Modal de Solicitar Correção -->
+<div class="modal fade" id="solicitarCorrecaoModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit mr-2"></i>Solicitar Correção
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('ppp.solicitar-correcao', $ppp->id) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="motivo">Motivo da Correção *</label>
+                        <textarea name="motivo" id="motivo" class="form-control" rows="4" 
+                                placeholder="Descreva o que precisa ser corrigido..." required></textarea>
+                        <small class="form-text text-muted">
+                            Este comentário será registrado no histórico do PPP.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-edit mr-1"></i>Solicitar Correção
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 
 @stop
