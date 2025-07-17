@@ -26,6 +26,7 @@
         @csrf
         @if(!$isCreating)
             @method('PUT')
+            <input type="hidden" name="acao" value="enviar_aprovacao">
         @endif
 
         <div class="row mb-4 align-items-stretch">
