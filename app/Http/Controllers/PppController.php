@@ -461,7 +461,7 @@ if ($request->input('acao') === 'enviar_aprovacao') {
             try {
                 $this->pppService->solicitarCorrecao($ppp, $request->motivo);
                 
-                return redirect()->route('ppp.show', $ppp->id)
+                return redirect()->route('ppp.index')
                     ->with('success', 'Correção solicitada com sucesso!');
             } catch (\Exception $e) {
                 return redirect()->back()

@@ -89,8 +89,8 @@ class PppHistoricoService
             $ppp,
             'solicitacao_correcao',
             $comentario,
-            $statusAnterior,
-            $ppp->status_id
+            $statusAnterior, // ✅ Agora será passado corretamente
+            4 // status_atual: aguardando_correcao
         );
     }
     

@@ -123,13 +123,17 @@ class PppService
     public function solicitarCorrecao(PcaPpp $ppp, string $motivo): bool
     {
         try {
+            // ✅ CORREÇÃO: Capturar status anterior antes da mudança
+            $statusAnterior = $ppp->status_id;
+            
+            // ✅ CORREÇÃO: Manter gestor_atual_id (não definir como null)
             $ppp->update([
                 'status_id' => 4, // aguardando_correcao
-                'gestor_atual_id' => null,
+                // gestor_atual_id mantido (não alterado)
             ]);
 
-            // Registrar no histórico
-            $this->historicoService->registrarSolicitacaoCorrecao($ppp, $motivo);
+            // ✅ CORREÇÃO: Passar status_anterior para o histórico
+            $this->historicoService->registrarSolicitacaoCorrecao($ppp, $motivo, $statusAnterior);
 
             return true;
 
