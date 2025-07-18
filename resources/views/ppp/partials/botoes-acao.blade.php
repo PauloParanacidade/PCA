@@ -46,12 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnAvancar.addEventListener('click', function() {
             const camposObrigatorios = [
                 'nome_item',
-<<<<<<< HEAD
                 'quantidade', 
-=======
-                'quantidade',
-                'categoria',
->>>>>>> 3a6e549cf1ee0298dd159c4e5cf10a17b955c7b9
                 'grau_prioridade',
                 'descricao',
                 'natureza_objeto',

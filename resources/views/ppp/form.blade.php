@@ -171,40 +171,41 @@
 
             const isCreating = {{ $isCreating ? 'true' : 'false' }};
             const btnAvancar = document.getElementById('btn-avancar-card-azul');
-            // const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
+            const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
             // const btnCancelar = document.getElementById('btn-cancelar');
-            const btnAvancar = document.getElementById('btn-avancar-card-azul');
             const form = document.getElementById('form-ppp');
 
             // ===================================
             // FUNÇÃO PARA DEFINIR O STORE PARA AVANÇAR E UPDATE PARA SALVAR E ENVIAR PARA AVALIAÇÃO
             // ===================================
+            if(btnAvancar){
+                btnAvancar.addEventListener('click', function (e) {
+                    e.preventDefault(); // impede submit automático
 
-            btnAvancar.addEventListener('click', function (e) {
-                e.preventDefault(); // impede submit automático
+                    // valida campos do card azul ANTES de salvar rascunho
+                    if (!validarCamposCardAzul()) {
+                        mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
+                        return;
+                    }
 
-                // valida campos do card azul ANTES de salvar rascunho
-                if (!validarCamposCardAzul()) {
-                    mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
-                    return;
-                }
+                    // código atual que cria o input[name="acao"] e submete
+                    form.action = "{{ route('ppp.store') }}";
 
-                // código atual que cria o input[name="acao"] e submete
-                form.action = "{{ route('ppp.store') }}";
+                    let inputAcao = form.querySelector('input[name="acao"]');
+                    if (inputAcao) {
+                        inputAcao.remove();
+                    }
 
-                let inputAcao = form.querySelector('input[name="acao"]');
-                if (inputAcao) {
-                    inputAcao.remove();
-                }
+                    inputAcao = document.createElement('input');
+                    inputAcao.type = 'hidden';
+                    inputAcao.name = 'acao';
+                    inputAcao.value = 'salvar_rascunho';
+                    form.appendChild(inputAcao);
 
-                inputAcao = document.createElement('input');
-                inputAcao.type = 'hidden';
-                inputAcao.name = 'acao';
-                inputAcao.value = 'salvar_rascunho';
-                form.appendChild(inputAcao);
-
-                form.submit();
-            });
+                    form.submit();
+                });
+            }
+            
 
 
             if (btnSalvarEnviar) {
