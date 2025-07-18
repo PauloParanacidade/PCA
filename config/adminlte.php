@@ -282,7 +282,7 @@ return [
     |
     */
 
-    'laravel_asset_bundling'                  => 'vite',
+    'laravel_asset_bundling'                  => false,
     'laravel_css_path'                        => 'css/app.css',
     'laravel_js_path'                         => 'js/app.js',
 

@@ -236,6 +236,9 @@ carregarHistoricoPPP: function(pppId, nomeItem) {
     $('#historicoModalBody').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...</div>');
     $('#historicoModal').modal('show');
     
+    // Usar apenas jQuery modal (Bootstrap 4)
+    $('#historicoModal').modal('show');
+    
     // Requisição AJAX
     $.ajax({
         url: `/ppp/${pppId}/historico`,

@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos básicos da aplicação */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* AdminLTE customizations */
+.main-sidebar {
+    min-height: 100vh !important;
+    height: auto !important;
+}
+
+.layout-fixed .main-sidebar {
+    position: fixed !important;
+    height: 100vh !important;
+}
+
+.layout-fixed .main-sidebar .sidebar {
+    height: calc(100vh - (3.5rem + 1px)) !important;
+    overflow-y: auto !important;
+}
+
+/* Wrapper height */
+.wrapper {
+    min-height: 100vh !important;
+}
+
+
+
 /* Banner de Impersonação */
 .impersonate-banner {
     background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);

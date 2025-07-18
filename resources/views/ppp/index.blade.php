@@ -515,59 +515,204 @@
 @section('js')
     @vite('resources/js/ppp-form.js')
     <script>
+        // ===================================
+        // VARIÁVEIS GLOBAIS
+        // ===================================
         let pppParaExcluir = {
-        id: null,
-        nome: null
+            id: null,
+            nome: null
         };
 
-    function confirmarExclusao(id, nomeItem) {
-        // Armazenar dados do PPP
-        pppParaExcluir.id = id;
-        pppParaExcluir.nome = nomeItem;
+        // ===================================
+        // FUNÇÕES DE DEBUG E TESTE
+        // ===================================
         
-        // Limpar campos da modal anterior
-        document.getElementById('comentarioExclusao').value = '';
-        document.getElementById('comentarioExclusao').classList.remove('is-invalid');
-        document.getElementById('nomeItemExclusaoComentario').textContent = nomeItem;
+        /**
+         * Função para testar o modal de histórico manualmente
+         */
+        window.testarModal = function() {
+            console.log('🧪 === TESTE MANUAL DO MODAL ===');
+            console.log('🔍 Verificando elementos no DOM...');
+            
+            const modal = $('#historicoModal');
+            console.log('Modal existe:', modal.length > 0);
+            
+            if (modal.length > 0) {
+                console.log('✅ Modal encontrado, tentando abrir...');
+                modal.modal('show');
+                console.log('✅ Comando modal.show() executado');
+            } else {
+                console.log('❌ Modal não encontrado no DOM');
+                console.log('🔧 Tentando criar modal dinamicamente...');
+                
+                const modalHtml = `
+                    <div class="modal fade" id="historicoModal" tabindex="-1" role="dialog">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-info text-white">
+                                    <h5 class="modal-title">Teste do Modal</h5>
+                                    <button type="button" class="close text-white" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Este é um teste do modal de histórico.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('body').append(modalHtml);
+                console.log('✅ Modal criado, tentando abrir...');
+                $('#historicoModal').modal('show');
+            }
+        };
         
-        // Abrir primeira modal
-        $('#comentarioExclusaoModal').modal('show');
-    }
+        /**
+         * Função para testar a requisição AJAX diretamente
+         */
+        window.testarAjax = function(pppId) {
+            console.log('🧪 === TESTE DA REQUISIÇÃO AJAX ===');
+            const url = `/ppp/${pppId}/historico`;
+            console.log('🌐 Testando URL:', url);
+            
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    console.log('✅ Requisição AJAX bem-sucedida');
+                    console.log('📄 Resposta:', response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Erro na requisição AJAX:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        error: error,
+                        response: xhr.responseText
+                    });
+                }
+            });
+        };
+        
+        /**
+         * Função para verificar dependências
+         */
+        window.verificarDependencias = function() {
+            console.log('🧪 === VERIFICAÇÃO DE DEPENDÊNCIAS ===');
+            console.log('jQuery disponível:', typeof $ !== 'undefined');
+            console.log('Bootstrap modal disponível:', typeof $.fn.modal !== 'undefined');
+            console.log('FormButtons disponível:', typeof FormButtons !== 'undefined');
+            console.log('Modal no DOM:', $('#historicoModal').length > 0);
+            
+            if (typeof FormButtons !== 'undefined') {
+                console.log('carregarHistoricoPPP disponível:', typeof FormButtons.carregarHistoricoPPP === 'function');
+            }
+            
+            // Verificar se há erros no console
+            console.log('🔍 Para verificar erros, abra a aba Console nas DevTools');
+        };
 
-    function validarComentarioEProsseguir() {
-        const comentario = document.getElementById('comentarioExclusao').value.trim();
-        const comentarioField = document.getElementById('comentarioExclusao');
+        // ===================================
+        // FUNÇÕES DO SISTEMA
+        // ===================================
         
-            if (comentario === '') {
-                // Mostrar erro de validação
-                comentarioField.classList.add('is-invalid');
-                comentarioField.focus();
+        function confirmarExclusao(id, nomeItem) {
+            // Armazenar dados do PPP
+            pppParaExcluir.id = id;
+            pppParaExcluir.nome = nomeItem;
+            
+            // Limpar campos da modal anterior
+            document.getElementById('comentarioExclusao').value = '';
+            document.getElementById('comentarioExclusao').classList.remove('is-invalid');
+            document.getElementById('nomeItemExclusaoComentario').textContent = nomeItem;
+            
+            // Abrir primeira modal
+            $('#comentarioExclusaoModal').modal('show');
+        }
+
+        function prosseguirParaConfirmacao() {
+            const comentario = document.getElementById('comentarioExclusao').value.trim();
+            
+            if (!comentario) {
+                document.getElementById('comentarioExclusao').classList.add('is-invalid');
                 return;
             }
-        
-            // Remover classe de erro se existir
-            comentarioField.classList.remove('is-invalid');
             
             // Fechar primeira modal
             $('#comentarioExclusaoModal').modal('hide');
             
-            // Aguardar fechamento da primeira modal antes de abrir a segunda
+            // Aguardar fechamento e abrir segunda modal
             $('#comentarioExclusaoModal').on('hidden.bs.modal', function() {
-                // Configurar segunda modal
-                document.getElementById('nomeItemConfirmacaoFinal').textContent = pppParaExcluir.nome;
-                document.getElementById('comentarioRegistrado').textContent = comentario;
-                document.getElementById('comentarioExclusaoHidden').value = comentario;
-                document.getElementById('formExclusaoFinal').action = '/ppp/' + pppParaExcluir.id;
+                document.getElementById('nomeItemExclusaoFinal').textContent = pppParaExcluir.nome;
+                $('#confirmacaoExclusaoModal').modal('show');
                 
-                // Abrir segunda modal
-                $('#confirmacaoFinalExclusaoModal').modal('show');
-                
-                // Remover o listener para evitar múltiplas execuções
+                // Remover listener para evitar múltiplas execuções
                 $(this).off('hidden.bs.modal');
             });
         }
 
+        function excluirPppDefinitivamente() {
+            const comentario = document.getElementById('comentarioExclusao').value.trim();
+            
+            if (!pppParaExcluir.id || !comentario) {
+                console.error('Dados insuficientes para exclusão');
+                return;
+            }
+            
+            // Criar formulário para envio
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/ppp/${pppParaExcluir.id}`;
+            
+            // Token CSRF
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
+            // Method spoofing para DELETE
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+            
+            // Comentário
+            const comentarioInput = document.createElement('input');
+            comentarioInput.type = 'hidden';
+            comentarioInput.name = 'comentario_exclusao';
+            comentarioInput.value = comentario;
+            form.appendChild(comentarioInput);
+            
+            // Adicionar ao DOM e submeter
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // ===================================
+        // INICIALIZAÇÃO
+        // ===================================
+        
         $(document).ready(function() {
+            console.log('🚀 === INICIALIZAÇÃO DA PÁGINA INDEX ===');
+            
+            // Debug: Verificar se elementos existem
+            console.log('🔍 Verificações iniciais:');
+            console.log('- Modal histórico existe:', $('#historicoModal').length > 0);
+            console.log('- FormButtons existe:', typeof FormButtons !== 'undefined');
+            console.log('- jQuery existe:', typeof $ !== 'undefined');
+            console.log('- Bootstrap modal existe:', typeof $.fn.modal !== 'undefined');
+            
+            // Verificar se há PPPs na tabela
+            const totalPpps = $('.ppp-row').length;
+            console.log('- Total de PPPs na tabela:', totalPpps);
+            
             // Auto-hide alerts after 5 seconds
             setTimeout(function() {
                 $('.alert').fadeOut('slow');
@@ -576,8 +721,16 @@
             // Clique em qualquer parte da linha do PPP para visualizar
             $('.ppp-row').click(function() {
                 var pppId = $(this).data('ppp-id');
+                console.log('🔗 Redirecionando para PPP:', pppId);
                 window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
             });
+            
+            // Log de inicialização completa
+            console.log('✅ Inicialização da página concluída');
+            console.log('💡 Comandos de teste disponíveis:');
+            console.log('   - testarModal() - Testa abertura do modal');
+            console.log('   - testarAjax(pppId) - Testa requisição AJAX');
+            console.log('   - verificarDependencias() - Verifica bibliotecas');
         });
     </script>
 @endsection

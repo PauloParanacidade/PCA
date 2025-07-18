@@ -29,7 +29,7 @@
             <button type="button" class="btn btn-sm btn-historico" 
     onclick="FormButtons.carregarHistoricoPPP({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')"
     title="Histórico">
-    <i class="fas fa-history"></i>
+    <i class="fas fa-history mr-1"></i>
     Histórico
 </button>
             @endif
