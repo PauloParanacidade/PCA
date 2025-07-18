@@ -324,12 +324,11 @@
     </div>
     <div class="card-body py-3">
         <div class="d-flex flex-column">
-            <button type="button" class="btn btn-historico btn-lg mb-3" 
-                onclick="FormButtons.carregarHistoricoPPP({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')"
-                title="Histórico">
-                <i class="fas fa-history"></i>
+            <button type="button" class="btn btn-outline-info btn-lg mb-3" data-toggle="modal" data-target="#historicoModal">
+                <i class="fas fa-history mr-2"></i>
                 Histórico
             </button>
+
             @php
                 $usuarioLogado = auth()->user();
                 $ehCriadorDoPpp = $ppp->user_id === $usuarioLogado->id;
@@ -504,7 +503,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="motivo">Motivo da Correção *</label>
-                        <textarea name="motivo" id="motivo" class="form-control" rows="4" 
+                        <textarea name="motivo" id="motivo" class="form-control" rows="4"
                                 placeholder="Descreva o que precisa ser corrigido..." required></textarea>
                         <small class="form-text text-muted">
                             Este comentário será registrado no histórico do PPP.
@@ -524,6 +523,93 @@
     </div>
 </div>
 
+<!-- Modal Historico -->
+<div class="modal fade" id="historicoModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Histórico do PPP {{ $ppp->nome_item }}</h4>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if($historicos && $historicos->count() > 0)
+                    <div class="timeline">
+                        @foreach($historicos as $historico)
+                            <div class="timeline-item">
+                                <div class="timeline-marker
+                                    @if($historico->status_atual == 1) bg-secondary
+                                    @elseif($historico->status_atual == 2) bg-info
+                                    @elseif($historico->status_atual == 3) bg-warning
+                                    @elseif($historico->status_atual == 4) bg-orange
+                                    @elseif($historico->status_atual == 5) bg-purple
+                                    @elseif($historico->status_atual == 6) bg-success
+                                    @elseif($historico->status_atual == 7) bg-danger
+                                    @else bg-dark
+                                    @endif"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">
+                                        @if($historico->status_anterior)
+                                            @if($historico->status_atual == 2)
+                                                📤 Enviado para Aprovação
+                                            @elseif($historico->status_atual == 3)
+                                                👁️ Em Avaliação
+                                            @elseif($historico->status_atual == 4)
+                                                ⚠️ Solicitada Correção
+                                            @elseif($historico->status_atual == 5)
+                                                ✏️ Em Correção
+                                            @elseif($historico->status_atual == 6)
+                                                ✅ Aprovado Final
+                                            @elseif($historico->status_atual == 7)
+                                                ❌ Cancelado
+                                            @else
+                                                🔄 Status Alterado
+                                            @endif
+                                        @else
+                                            📝 PPP Criado (Rascunho)
+                                        @endif
+                                    </h6>
+                                    <p class="timeline-text">
+                                        @if($historico->status_anterior)
+                                            Status alterado de <strong>{{ $historico->statusAnterior->nome ?? 'Status anterior' }}</strong>
+                                            para <strong>{{ $historico->statusAtual->nome ?? 'Status atual' }}</strong>
+                                        @else
+                                            PPP foi criado com status <strong>{{ $historico->statusAtual->nome ?? 'Rascunho' }}</strong>
+                                        @endif
+                                    </p>
+                                    @if($historico->justificativa)
+                                        <div class="alert alert-light p-2 mt-2">
+                                            <strong>💬 Mensagem:</strong> {{ $historico->justificativa }}
+                                        </div>
+                                    @endif
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        {{ $historico->created_at ? $historico->created_at->format('d/m/Y H:i') : 'Data não disponível' }}
+                                        @if($historico->usuario)
+                                            <br><i class="fas fa-user mr-1"></i>por {{ $historico->usuario->name }}
+                                        @endif
+                                    </small>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-4">
+                        <i class="fas fa-info-circle text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">Nenhum histórico encontrado</h5>
+                        <p class="text-muted">O histórico será exibido conforme as ações forem realizadas no PPP.</p>
+                    </div>
+                @endif
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @stop
 
@@ -622,6 +708,52 @@
 .btn-historico.btn-lg {
     padding: 0.5rem 1rem;
     font-size: 1.125rem;
+}
+
+/* ---------- TIMELINE HISTÓRICO ---------- */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-left: 2px solid #e9ecef;
+}
+.timeline-item:last-child {
+    border-left: none;
+}
+.timeline-marker {
+    position: absolute;
+    left: -8px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #e9ecef;
+}
+.timeline-content {
+    margin-left: 25px;
+}
+.timeline-title {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 1rem;
+}
+.timeline-text {
+    margin-bottom: 8px;
+    color: #6c757d;
+    line-height: 1.5;
+}
+/* Cores adicionais usadas em marcadores do histórico */
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+.bg-purple {
+    background-color: #6f42c1 !important;
 }
 </style>
 @stop
