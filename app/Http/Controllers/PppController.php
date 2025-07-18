@@ -380,6 +380,7 @@ public function store(StorePppRequest $request)
                     $siglaAreaGestor = trim($matches[2]);
                 }
                 $ppp->next_approver = $nomeGestor.' - '.$siglaAreaGestor;
+                $ppp->current_approver = $currentManager->name.' - '.$currentManager->department;
             }
         }
         return $ppps;

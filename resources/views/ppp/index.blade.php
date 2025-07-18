@@ -92,29 +92,12 @@
                                             {{ $ppp->user->department ?? 'Área N/A' }}
                                         </span>
                                     </td>
-                                    <td class="align-middle"> {{-- 1º Nome do usuário atual e sua área --}}
-                                        @php
-                                            $primeiroNome = explode(' ', Auth::user()->name)[0] ?? 'Nome';
-                                            $siglaDepartamento = Auth::user()->department ?? 'Área N/A';
-                                        @endphp
+                                    <td class="align-middle">
                                         <span class="badge badge-info">
-                                            {{ $primeiroNome }} - {{ $siglaDepartamento }}
+                                            {{ $ppp->current_approver }}
                                         </span>
                                     </td>
-                                    <td class="align-middle"> {{-- 1º Nome do avaliador e sua área --}}
-                                        @php
-                                            $managerRaw = $ppp->user->manager ?? '';
-                                            preg_match('/CN=([^,]+),OU=([^,]+)/', $managerRaw, $matches);
-
-                                            // Nome completo do gestor
-                                            $nomeCompletoGestor = $matches[1] ?? 'Desconhecido';
-
-                                            // Extrair primeiro nome do gestor
-                                            $primeiroNomeGestor = explode(' ', $nomeCompletoGestor)[0];
-
-                                            // Área do gestor
-                                            $areaGestor = $matches[2] ?? 'Área N/A';
-                                        @endphp
+                                    <td class="align-middle">
                                         <span class="badge badge-secondary">
                                             {{ $ppp->next_approver }}
                                         </span>
