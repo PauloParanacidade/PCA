@@ -24,7 +24,7 @@
 @section('content')
     <form id="form-ppp" method="POST" action="{{ $isCreating ? route('ppp.store') : route('ppp.update', $ppp->id) }}">
         @csrf
-        @if (!$isCreating)
+        @if(!$isCreating)
             @method('PUT')
             <input type="hidden" name="acao" value="enviar_aprovacao">
         @endif
@@ -61,6 +61,18 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        {{-- Botões finais --}}
+        <div class="row">
+            <div class="col-12 text-right">
+                <button type="submit" id="btn-salvar-enviar" class="btn btn-success" style="{{ $isCreating ? 'display: none;' : '' }}">
+                    <i class="fas fa-paper-plane mr-1"></i>Salvar e Enviar
+                </button>
+                <a href="{{ route('ppp.index') }}" id="btn-cancelar" class="btn btn-secondary">
+                    <i class="fas fa-times mr-1"></i>Cancelar
+                </a>
             </div>
         </div>
         {{-- Incluir botões da partial --}}

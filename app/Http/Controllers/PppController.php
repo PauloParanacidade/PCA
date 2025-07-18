@@ -286,76 +286,103 @@ public function store(StorePppRequest $request)
 
     public function index(Request $request)
     {
-    try {
-        Log::info('DEBUG PPP Index - Usuário atual', [
-            'user_id' => Auth::id(),
-            'user_name' => Auth::user()->name ?? 'N/A'
-        ]);
-        
-        $query = PcaPpp::query();
-        
-        if ($request->filled('tipo_visualizacao')) {
-        switch ($request->tipo_visualizacao) {
-            case 'meus_ppps':
-                $query->where('user_id', Auth::id());
-                break;
+        try {
+            Log::info('DEBUG PPP Index - Usuário atual', [
+                'user_id' => Auth::id(),
+                'user_name' => Auth::user()->name ?? 'N/A'
+            ]);
 
-            case 'pendentes_aprovacao':
-                $query->where('gestor_atual_id', Auth::id())
-                    ->where('status_id', 2); // aguardando_aprovacao
-                break;
+            $query = PcaPpp::query();
 
-            default:
+            if ($request->filled('tipo_visualizacao')) {
+                switch ($request->tipo_visualizacao) {
+                    case 'meus_ppps':
+                        $query->where('user_id', Auth::id());
+                        break;
+
+                    case 'pendentes_aprovacao':
+                        $query->where('gestor_atual_id', Auth::id())
+                            ->where('status_id', 2); // aguardando_aprovacao
+                        break;
+
+                    default:
+                        $query->where(function ($q) {
+                            $q->where('user_id', Auth::id())
+                            ->orWhere('gestor_atual_id', Auth::id())
+                            ->orWhereExists(function ($subQuery) {
+                                $subQuery->select(DB::raw(1))
+                                        ->from('ppp_gestores_historico')
+                                        ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
+                                        ->where('ppp_gestores_historico.gestor_id', Auth::id());
+                            });
+                        });
+                        break;
+                    }
+            } else {
+                // Comportamento padrão: mostrar PPPs criados pelo usuário OU onde ele é gestor atual
                 $query->where(function ($q) {
                     $q->where('user_id', Auth::id())
-                    ->orWhere('gestor_atual_id', Auth::id())
-                    ->orWhereExists(function ($subQuery) {
-                        $subQuery->select(DB::raw(1))
-                                ->from('ppp_gestores_historico')
-                                ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
-                                ->where('ppp_gestores_historico.gestor_id', Auth::id());
-                    });
+                    ->orWhere('gestor_atual_id', Auth::id());
                 });
-                break;
             }
-    } else {
-        // Comportamento padrão: mostrar PPPs criados pelo usuário OU onde ele é gestor atual
-        $query->where(function ($q) {
-            $q->where('user_id', Auth::id())
-            ->orWhere('gestor_atual_id', Auth::id());
-        });
-    }
 
-        
-        $query->with([
-            'user', 
-            'status',
-            'gestorAtual',
-            'historicos.usuario'
-        ])->orderBy('id', 'desc');
-        
-        // Filtro por status
-        if ($request->filled('status_id')) {
-            $query->where('status_id', $request->status_id);
-        }
-        
-        // Filtro por busca
-        if ($request->filled('busca')) {
-            $busca = $request->busca;
-            $query->where(function($q) use ($busca) {
-                $q->where('nome_item', 'like', "%{$busca}%")
-                  ->orWhere('descricao', 'like', "%{$busca}%");
-            });
-        }
-        
-        $ppps = $query->paginate(10)->withQueryString();
-        
-        return view('ppp.index', compact('ppps'));
-        
+
+            $query->with([
+                'user',
+                'status',
+                'gestorAtual',
+                'historicos.usuario'
+            ])->orderBy('id', 'desc');
+
+            // Filtro por status
+            if ($request->filled('status_id')) {
+                $query->where('status_id', $request->status_id);
+            }
+
+            // Filtro por busca
+            if ($request->filled('busca')) {
+                $busca = $request->busca;
+                $query->where(function($q) use ($busca) {
+                    $q->where('nome_item', 'like', "%{$busca}%")
+                      ->orWhere('descricao', 'like', "%{$busca}%");
+                });
+            }
+
+            $ppps = $query->paginate(10)->withQueryString();
+
+            $ppps = $this->getNextApprover($ppps);
+
+            return view('ppp.index', compact('ppps'));
+
         } catch (\Exception $e) {
             Log::error('Erro ao listar PPPs: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs.');
         }
+    }
+
+    public function getNextApprover($ppps)
+    {
+
+        $currentManagersIds = $ppps->map(function ($ppp) {
+            return $ppp->gestor_atual_id;
+        });
+
+        $userManagerByIds = User::whereIn('id', $currentManagersIds)
+            ->get()
+            ->keyBy('id');
+
+        foreach($ppps as $ppp) {
+            $currentManager = $userManagerByIds[$ppp->gestor_atual_id];
+            if($currentManager != null) {
+
+                if( preg_match('/CN=([^,]+),OU=([^,]+)/', $currentManager, $matches) ) {
+                    $nomeGestor = trim($matches[1]);
+                    $siglaAreaGestor = trim($matches[2]);
+                }
+                $ppp->next_approver = $nomeGestor.' - '.$siglaAreaGestor;
+            }
+        }
+        return $ppps;
     }
 
     public function show($id)

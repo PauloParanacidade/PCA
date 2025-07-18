@@ -116,7 +116,7 @@
                                             $areaGestor = $matches[2] ?? 'Área N/A';
                                         @endphp
                                         <span class="badge badge-secondary">
-                                            {{ $primeiroNomeGestor }} - {{ $areaGestor }}
+                                            {{ $ppp->next_approver }}
                                         </span>
                                     </td>
                                     <td class="align-middle text-left"> {{-- Valor estimado --}}
