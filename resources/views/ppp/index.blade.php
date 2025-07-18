@@ -78,7 +78,7 @@
                             @foreach($ppps as $ppp)
                                 <tr class="ppp-row text-center" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
                                     <td class="align-middle font-weight-bold">{{ $ppp->id }}</td> 
-                                    <td class="align-middle">  {{-- Nome do Item --}}
+                                    <td class="align-middle">  {{-- Coluna Nome do Item --}}
                                         <div class="d-flex flex-column">
                                             <span class="font-weight-bold">{{ $ppp->nome_item }}</span>
                                             @if($ppp->descricao)
@@ -86,23 +86,23 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="align-middle"> {{-- Sigla da Área solicitante --}}
+                                    <td class="align-middle"> {{-- Coluna Sigla da Área solicitante --}}
                                         <span class="badge badge-secondary">
                                             {{ $ppp->user->department ?? 'Área N/A' }}
                                         </span>
                                     </td>
-                                    <td class="align-middle"> {{-- Avaliador --}}
+                                    <td class="align-middle"> {{-- Coluna Avaliador --}}
                                         <span class="badge badge-info">
                                             {{ $ppp->current_approver }}
                                         </span>
                                     </td>
-                                    <td class="align-middle text-left"> {{-- Valor estimado --}}
+                                    <td class="align-middle text-left"> {{-- Coluna Valor estimado --}}
                                         <span class="text-success font-weight-bold">
                                             R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
                                         </span>
                                     </td>
                                     
-                                    <td class="align-middle text-left"> {{-- Status --}}
+                                    <td class="align-middle text-left"> {{-- Coluna Status --}}
                                         <span class="badge badge-info">
                                             @if($ppp->status)
                                                 <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
@@ -111,25 +111,25 @@
                                             @endif
                                         </span>
                                     </td>
-                                    <td class="align-middle"> {{-- Data Criação --}}
+                                    <td class="align-middle"> {{-- Coluna Data Criação --}}
                                         <small>{{ $ppp->created_at ? $ppp->created_at->format('d/m/Y H:i') : 'N/A' }}</small>
                                     </td>
-                                    <td class="align-middle text-center"> {{-- Ações --}}
+                                    <td class="align-middle text-center"> {{-- Coluna Ações --}}
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('ppp.show', $ppp->id) }}" class="btn btn-sm btn-outline-info" title="Visualizar" onclick="event.stopPropagation();">
-                                                <i class="fas fa-eye"></i>
+                                                <i class="fas fa-eye"></i>  {{-- Ver o PPP --}}
                                             </a>
                                             <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-sm btn-outline-warning" title="Editar" onclick="event.stopPropagation();">
-                                                <i class="fas fa-edit"></i>
+                                                <i class="fas fa-edit"></i> {{-- Editar o PPP --}}
                                             </a>
                                             <button type="button" class="btn btn-sm btn-historico" 
                                                 onclick="event.stopPropagation(); FormButtons.carregarHistoricoPPP({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')"
-                                                title="Histórico">
+                                                title="Histórico">          {{-- Histórico do PPP --}}
                                                 <i class="fas fa-history"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-danger" 
                                                     onclick="event.stopPropagation(); confirmarExclusao({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')" title="Remover">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash"></i> {{-- Apagar o PPP --}}
                                             </button>
                                         </div>
                                     </td>

@@ -763,11 +763,13 @@ private function processarEnvioAprovacao(PcaPpp $ppp, Request $request): array
             'gestor_de' => $ppp->gestor_atual_id,
             'gestor_para' => $proximoGestor->id
         ]);
-
-        // $ppp->update([
-        //     'status_id' => 2, // aguardando_aprovacao
-        //     'gestor_atual_id' => $proximoGestor->id,
-        // ]);
+        
+        //dd(HierarquiaService->extrairSiglaAreaGestor($proximoGestor));
+        
+        $ppp->update([
+            'status_id' => 2, // aguardando_aprovacao
+            'gestor_atual_id' => $proximoGestor->id,            
+        ]);
 
         Log::info('✅ Status do PPP atualizado', [
             'ppp_id' => $ppp->id,

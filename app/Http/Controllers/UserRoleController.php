@@ -30,12 +30,15 @@ class UserRoleController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'roles'   => 'required|array',
+            'roles'   => 'nullable|array',  // Mudança: de 'required' para 'nullable'
             'roles.*' => 'exists:roles,id',
         ]);
-
-        $user->roles()->sync($request->roles);
-
+    
+        // Se não há roles enviadas, define como array vazio
+        $roles = $request->input('roles', []);
+        
+        $user->roles()->sync($roles);
+    
         return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
     }
 
