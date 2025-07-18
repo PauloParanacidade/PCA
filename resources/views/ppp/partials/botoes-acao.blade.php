@@ -26,11 +26,12 @@
                 </button>
             @else
                 {{-- Modo edição: botão histórico --}}
-                <button type="button" class="btn btn-info btn-lg mx-2" 
-                    data-id="{{ $ppp->id }}" onclick="carregarHistoricoPPP(this)">
-                <i class="fas fa-history me-2"></i>
-                Histórico
-            </button>
+            <button type="button" class="btn btn-sm btn-historico" 
+    onclick="FormButtons.carregarHistoricoPPP({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')"
+    title="Histórico">
+    <i class="fas fa-history"></i>
+    Histórico
+</button>
             @endif
 
         </div>
@@ -39,20 +40,7 @@
 
 @push('js')
 <script>
-function carregarHistoricoPPP(button) {
-    const pppId = button.getAttribute('data-id');
 
-    $.get(`/ppp/${pppId}/historico`, function(modalHtml) {
-        // Remove modais anteriores com mesmo ID (evita duplicidade)
-        $('#historicoModal' + pppId).remove();
-
-        // Adiciona novo modal ao final do <body>
-        $('body').append(modalHtml);
-        $('#historicoModal' + pppId).modal('show');
-    }).fail(function() {
-        alert('Erro ao carregar histórico do PPP.');
-    });
-}
 </script>
 @endpush
 

@@ -145,8 +145,9 @@
                                             <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-sm btn-outline-warning" title="Editar" onclick="event.stopPropagation();">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-info" 
-                                                onclick="event.stopPropagation(); carregarHistorico({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')" title="Histórico">
+                                            <button type="button" class="btn btn-sm btn-historico" 
+                                                onclick="event.stopPropagation(); FormButtons.carregarHistoricoPPP({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')"
+                                                title="Histórico">
                                                 <i class="fas fa-history"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -512,6 +513,7 @@
 @endsection
 
 @section('js')
+    @vite('resources/js/ppp-form.js')
     <script>
         let pppParaExcluir = {
         id: null,
@@ -577,30 +579,5 @@
                 window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
             });
         });
-
-        // Função para carregar histórico via AJAX
-        function carregarHistorico(pppId, nomeItem) {
-            // Atualizar título do modal
-            $('#historicoModalTitle').html('<i class="fas fa-history mr-2"></i>Histórico: ' + nomeItem);
-            
-            // Mostrar loading
-            $('#historicoModalBody').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...</div>');
-            
-            // Abrir modal
-            $('#historicoModal').modal('show');
-            
-            // Fazer requisição AJAX
-            $.ajax({
-                url: '/ppp/' + pppId + '/historico',
-                type: 'GET',
-                success: function(response) {
-                    $('#historicoModalBody').html(response);
-                },
-                error: function(xhr, status, error) {
-                    $('#historicoModalBody').html('<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Erro ao carregar histórico. Tente novamente.</div>');
-                    console.error('Erro ao carregar histórico:', error);
-                }
-            });
-        }
     </script>
 @endsection

@@ -1,77 +1,126 @@
-<div class="modal-header">
-    <h4 class="modal-title">Histórico do PPP {{ $ppp->nome_item }}</h4>
-    <button type="button" class="close" data-dismiss="modal">
-        <span>&times;</span>
-    </button>
+<div class="modal-header bg-light">
+    <h5 class="modal-title">
+        <i class="fas fa-history mr-2"></i>Histórico do PPP: {{ $ppp->nome_item }}
+    </h5>
 </div>
+
 <div class="modal-body">
-    @if($historicos && $historicos->count() > 0)
+    @if($historico && $historico->count() > 0)
         <div class="timeline">
-            @foreach($historicos as $historico)
+            @foreach($historico as $item)
                 <div class="timeline-item">
                     <div class="timeline-marker 
-                        @if($historico->status_atual == 1) bg-secondary
-                        @elseif($historico->status_atual == 2) bg-info  
-                        @elseif($historico->status_atual == 3) bg-warning
-                        @elseif($historico->status_atual == 4) bg-orange
-                        @elseif($historico->status_atual == 5) bg-purple
-                        @elseif($historico->status_atual == 6) bg-success
-                        @elseif($historico->status_atual == 7) bg-danger
+                        @if($item->status_anterior === 'rascunho') bg-secondary
+                        @elseif($item->status_anterior === 'aguardando_aprovacao') bg-warning
+                        @elseif($item->status_anterior === 'em_avaliacao') bg-info
+                        @elseif($item->status_anterior === 'aprovado_final') bg-success
+                        @elseif($item->status_anterior === 'cancelado') bg-danger
                         @else bg-dark
-                        @endif"></div>
+                        @endif">
+                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                    </div>
                     <div class="timeline-content">
-                        <h6 class="timeline-title">
-                            @if($historico->status_anterior)
-                                @if($historico->status_atual == 2)
-                                    📤 Enviado para Aprovação
-                                @elseif($historico->status_atual == 3)
-                                    👁️ Em Avaliação
-                                @elseif($historico->status_atual == 4)
-                                    ⚠️ Solicitada Correção
-                                @elseif($historico->status_atual == 5)
-                                    ✏️ Em Correção
-                                @elseif($historico->status_atual == 6)
-                                    ✅ Aprovado Final
-                                @elseif($historico->status_atual == 7)
-                                    ❌ Cancelado
-                                @else
-                                    🔄 Status Alterado
-                                @endif
+                        <div class="timeline-title">
+                            @if($item->status_anterior === 'rascunho' && $item->status_novo === 'aguardando_aprovacao')
+                                Rascunho criado por {{ $item->usuario->name ?? 'Sistema' }} - {{ $item->usuario->setor ?? 'N/A' }}
                             @else
-                                📝 PPP Criado (Rascunho)
+                                {{ ucfirst(str_replace('_', ' ', $item->status_novo)) }}
                             @endif
-                        </h6>
-                        <p class="timeline-text">
-                            @if($historico->status_anterior)
-                                <strong>De:</strong> {{ $historico->statusAnterior->nome ?? 'Status anterior' }}<br>
-                                <strong>Para:</strong> {{ $historico->statusAtual->nome ?? 'Status atual' }}
-                            @else
-                                PPP foi criado com sucesso.
-                            @endif
-                        </p>
-                        @if($historico->justificativa)
-                            <p class="timeline-text"><strong>Justificativa:</strong> {{ $historico->justificativa }}</p>
+                        </div>
+                        @if($item->comentario)
+                            <div class="timeline-text">
+                                <strong>Comentário:</strong> {{ $item->comentario }}
+                            </div>
                         @endif
-                        <small class="text-muted">
-                            {{ $historico->created_at->format('d/m/Y H:i') }}
-                            @if($historico->usuario)
-                                - por {{ $historico->usuario->name }}
-                            @endif
-                        </small>
+                        <div class="timeline-date">
+                            <small class="text-muted">
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ $item->created_at->format('d/m/Y H:i') }}
+                            </small>
+                        </div>
                     </div>
                 </div>
             @endforeach
         </div>
     @else
         <div class="text-center py-4">
-            <i class="fas fa-info-circle text-muted" style="font-size: 3rem;"></i>
-            <h5 class="mt-3 text-muted">Nenhum histórico encontrado</h5>
-            <p class="text-muted">O histórico será exibido conforme as ações forem realizadas no PPP.</p>
+            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+            <p class="text-muted">Nenhum histórico encontrado para este PPP.</p>
         </div>
     @endif
 </div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-        <i class="fas fa-times mr-1"></i>Fechar
-    </button>
-</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.timeline-item:last-child::before {
+    display: none;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #dee2e6;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+    margin-left: 15px;
+}
+
+.timeline-title {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    color: #495057;
+    font-size: 1rem;
+}
+
+.timeline-text {
+    margin: 0 0 8px 0;
+    color: #6c757d;
+    line-height: 1.5;
+}
+
+.timeline-date {
+    margin: 0;
+}
+
+/* Cores específicas para diferentes status */
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+</style>
