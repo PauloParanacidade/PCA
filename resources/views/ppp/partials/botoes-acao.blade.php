@@ -24,8 +24,6 @@
                     <i class="fas fa-paper-plane me-2"></i>
                     Salvar e Enviar para Avaliação
                 </button>
-            @endif
-
             @else
                 {{-- Modo edição: botão histórico --}}
                 <button type="button" class="btn btn-info btn-lg mx-2" 

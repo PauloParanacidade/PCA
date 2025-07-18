@@ -17,18 +17,18 @@ class StorePppRequest extends FormRequest
     public function rules(): array
     {
         // Verificar se é rascunho (botão Avançar) ou envio completo (botão Salvar e Enviar)
-        $isRascunho = !$this->has('acao') || $this->input('acao') !== 'enviar_aprovacao';
+        $isRascunho = $this->input('acao') === 'salvar_rascunho';
+
         
         if ($isRascunho) {
             // Regras apenas para card azul (rascunho)
             return [
                 'nome_item' => 'required|string|max:200',
                 'quantidade' => 'required|string|max:50',
-                'unidade_medida' => 'required|string|max:20',
                 'categoria' => 'required|string|max:100',
                 'grau_prioridade' => 'required|string|in:Baixa,Média,Alta,Urgente',
-                'previsao_contratacao' => 'required|string|max:50',
-                'descricao_especificacao' => 'required|string|max:1000',
+                'descricao' => 'required|string|max:1000',
+                'justificativa_pedido' => 'required|string|max:1000',
                 'area_solicitante' => 'nullable|string|max:100',
             ];
         }
@@ -38,13 +38,11 @@ class StorePppRequest extends FormRequest
             // Informações do item (Card Azul)
             'categoria' => 'required|string|max:100',
             'nome_item' => 'required|string|max:200',
-            'descricao_especificacao' => 'required|string|max:1000',
+            'descricao' => 'required|string|max:1000',
             'quantidade' => 'required|string|max:50',
-            'unidade_medida' => 'required|string|max:20',
             'justificativa_pedido' => 'required|string|max:1000',
             'natureza_objeto' => 'required|string|max:100',
             'grau_prioridade' => 'required|string|in:Baixa,Média,Alta,Urgente',
-            'previsao_contratacao' => 'required|string|max:50',
             'area_solicitante' => 'required|string|max:100',
 
             // Informações financeiras (Card Verde) - REGEX corrigido para PCRE2
@@ -87,7 +85,7 @@ class StorePppRequest extends FormRequest
 
     public function messages(): array
     {
-        $isRascunho = !$this->has('acao') || $this->input('acao') !== 'enviar_aprovacao';
+        $isRascunho = $this->input('acao') === 'salvar_rascunho';
         
         if ($isRascunho) {
             // Mensagens específicas para rascunho (card azul)
@@ -96,16 +94,14 @@ class StorePppRequest extends FormRequest
                 'nome_item.max' => 'O nome do item não pode ter mais de 200 caracteres.',
                 'quantidade.required' => 'A quantidade é obrigatória.',
                 'quantidade.max' => 'A quantidade não pode ter mais de 50 caracteres.',
-                'unidade_medida.required' => 'A unidade de medida é obrigatória.',
-                'unidade_medida.max' => 'A unidade de medida não pode ter mais de 20 caracteres.',
                 'categoria.required' => 'A categoria é obrigatória.',
                 'categoria.max' => 'A categoria não pode ter mais de 100 caracteres.',
                 'grau_prioridade.required' => 'O grau de prioridade é obrigatório.',
                 'grau_prioridade.in' => 'O grau de prioridade deve ser: Baixa, Média, Alta ou Urgente.',
-                'previsao_contratacao.required' => 'A previsão de contratação é obrigatória.',
-                'previsao_contratacao.max' => 'A previsão de contratação não pode ter mais de 50 caracteres.',
-                'descricao_especificacao.required' => 'A descrição/especificação é obrigatória.',
-                'descricao_especificacao.max' => 'A descrição/especificação não pode ter mais de 1000 caracteres.',
+                'descricao.required' => 'A descrição é obrigatória.',
+                'descricao.max' => 'A descrição não pode ter mais de 1000 caracteres.',
+                'justificativa_pedido.required' => 'A justificativa do pedido é obrigatória.',
+                'justificativa_pedido.max' => 'A justificativa do pedido não pode ter mais de 1000 caracteres.',
                 'area_solicitante.max' => 'A área solicitante não pode ter mais de 100 caracteres.',
             ];
         }
@@ -117,23 +113,19 @@ class StorePppRequest extends FormRequest
             'categoria.max' => 'A categoria não pode ter mais de 100 caracteres.',
             'nome_item.required' => 'O nome do item é obrigatório.',
             'nome_item.max' => 'O nome do item não pode ter mais de 200 caracteres.',
-            'descricao_especificacao.required' => 'A descrição/especificação é obrigatória.',
-            'descricao_especificacao.max' => 'A descrição/especificação não pode ter mais de 1000 caracteres.',
+            'descricao.required' => 'A descrição é obrigatória.',
+            'descricao.max' => 'A descrição não pode ter mais de 1000 caracteres.',
             'quantidade.required' => 'A quantidade é obrigatória.',
             'quantidade.max' => 'A quantidade não pode ter mais de 50 caracteres.',
-            'unidade_medida.required' => 'A unidade de medida é obrigatória.',
-            'unidade_medida.max' => 'A unidade de medida não pode ter mais de 20 caracteres.',
             'justificativa_pedido.required' => 'A justificativa do pedido é obrigatória.',
             'justificativa_pedido.max' => 'A justificativa do pedido não pode ter mais de 1000 caracteres.',
             'natureza_objeto.required' => 'A natureza do objeto é obrigatória.',
             'natureza_objeto.max' => 'A natureza do objeto não pode ter mais de 100 caracteres.',
             'grau_prioridade.required' => 'O grau de prioridade é obrigatório.',
             'grau_prioridade.in' => 'O grau de prioridade deve ser: Baixa, Média, Alta ou Urgente.',
-            'previsao_contratacao.required' => 'A previsão de contratação é obrigatória.',
-            'previsao_contratacao.max' => 'A previsão de contratação não pode ter mais de 50 caracteres.',
             'area_solicitante.required' => 'A área solicitante é obrigatória.',
             'area_solicitante.max' => 'A área solicitante não pode ter mais de 100 caracteres.',
-            
+
             // Card Verde
             'estimativa_valor.required' => 'O valor estimado é obrigatório.',
             'estimativa_valor.regex' => 'O valor estimado deve estar no formato: R$ 1.000,00',

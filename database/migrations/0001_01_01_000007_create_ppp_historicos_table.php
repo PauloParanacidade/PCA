@@ -32,25 +32,28 @@ return new class extends Migration
                   ->constrained('ppp_statuses')
                   ->comment('Status atual do PPP');
             
-            // Justificativa/comentário da mudança
+            // Justificativa/comentário da mudança (apenas para comentários do usuário)
             $table->text('justificativa')
                   ->nullable()
-                  ->comment('Justificativa ou comentário da mudança de status');
+                  ->comment('Comentário do usuário sobre a ação (null para ações automáticas)');
             
             // Usuário responsável pela ação
             $table->foreignId('user_id')
                   ->constrained('users')
                   ->comment('Usuário que realizou a ação');
             
-            // Tipo de ação realizada (ENUM simplificado)
+            // Tipo de ação realizada (ENUM atualizado)
             $table->enum('acao', [
-                'criacao',
-                'edicao', 
-                'aprovacao',
-                'solicitacao_correcao',
+                'rascunho_criado',
+                'ppp_enviado', 
+                'aprovacao_intermediaria',
+                'aprovacao_final',
+                'correcao_solicitada',
+                'correcao_iniciada',
+                'correcao_enviada',
                 'reprovacao',
                 'exclusao',
-                'cancelamento'
+                'em_avaliacao'
             ])->comment('Tipo de ação realizada no PPP');
             
             // Dados adicionais em JSON (opcional)

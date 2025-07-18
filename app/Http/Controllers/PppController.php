@@ -48,6 +48,15 @@ public function store(StorePppRequest $request)
             'request_method' => $request->method(),
             'request_full_data' => $request->all()
         ]);
+
+        // 👉 AQUI: Logar tipo de ação
+        Log::info('🎯 Tipo de ação', [
+            'acao' => $request->input('acao')
+        ]);
+
+        if ($request->input('acao') === 'salvar_rascunho') {
+            Log::info('💾 Ação detectada: salvar_rascunho');
+        }
         $manager = Auth::user();
 
         // ✅ Usar HierarquiaService para obter o próximo gestor
@@ -71,7 +80,7 @@ public function store(StorePppRequest $request)
         $ppp = PcaPpp::create([
             'user_id' => Auth::id(),
             'gestor_atual_id' => $proximoGestor?->id,
-            'status_id' => 2, // 
+            'status_id' => 1, // 
             'nome_item' => $request->nome_item,
             'descricao' => $request->descricao,
             'categoria' => $request->categoria,
@@ -79,7 +88,7 @@ public function store(StorePppRequest $request)
             'unidade_medida' => $request->unidade_medida,
             'estimativa_valor' => $estimativaFloat,
             'grau_prioridade' => $request->grau_prioridade,
-            'justificativa_valor' => $request->justificativa_valor,
+            'justificativa_valor' => $request->justificativa_valor ?: '.',
             'area_solicitante' => $request->area_solicitante,
             'justificativa_pedido' => $request->justificativa_pedido,
             'origem_recurso' => $request->origem_recurso ?: 'PRC',
@@ -125,6 +134,12 @@ public function store(StorePppRequest $request)
                 'ppp_id' => $ppp->id,
                 'actionValue' => 'aguardando_aprovacao'
             ]);
+        }
+
+        //Verificar se é rascunho para redirecionar corretamente
+        if ($request->input('acao') === 'salvar_rascunho') {
+            return redirect()->route('ppp.edit', $ppp->id)
+                ->with('success', 'Rascunho salvo com sucesso! Agora você pode preencher os demais campos.');
         }
 
         return redirect()->route('ppp.index')->with('success', 'PPP criado com sucesso.');

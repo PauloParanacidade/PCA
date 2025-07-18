@@ -22,7 +22,7 @@
 @endsection
 
 @section('content')
-    <form id="form-ppp" method="POST" action="#">
+    <form id="form-ppp" method="POST" action="{{ $isCreating ? route('ppp.store') : route('ppp.update', $ppp->id) }}">
         @csrf
         @if (!$isCreating)
             @method('PUT')
@@ -63,18 +63,8 @@
                 </div>
             </div>
         </div>
-
-        {{-- Botões finais --}}
-        <div class="row">
-            <div class="col-12 text-right">
-                <button type="submit" id="btn-salvar-enviar" class="btn btn-success" style="{{ $isCreating ? 'display: none;' : '' }}">
-                    <i class="fas fa-paper-plane mr-1"></i>Salvar e Enviar
-                </button>
-                <a href="{{ route('ppp.index') }}" id="btn-cancelar" class="btn btn-secondary">
-                    <i class="fas fa-times mr-1"></i>Cancelar
-                </a>
-            </div>
-        </div>
+        {{-- Incluir botões da partial --}}
+        @include('ppp.partials.botoes-acao')
     </form>
 @endsection
 
@@ -169,8 +159,8 @@
 
             const isCreating = {{ $isCreating ? 'true' : 'false' }};
             const btnProximo = document.getElementById('btn-proximo-card-azul');
-            const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
-            const btnCancelar = document.getElementById('btn-cancelar');
+            // const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
+            // const btnCancelar = document.getElementById('btn-cancelar');
             const btnAvancar = document.getElementById('btn-avancar-card-azul');
             const form = document.getElementById('form-ppp');
 
@@ -178,18 +168,32 @@
             // FUNÇÃO PARA DEFINIR O STORE PARA AVANÇAR E UPDATE PARA SALVAR E ENVIAR PARA AVALIAÇÃO
             // ===================================
 
-            if (btnAvancar) {
-                btnAvancar.addEventListener('click', function () {
-                    form.action = "{{ route('ppp.store') }}"; // salvar rascunho via store
+            btnAvancar.addEventListener('click', function (e) {
+                e.preventDefault(); // impede submit automático
 
-                    // remover campo 'acao' se existir (evitar conflito)
-                    const acaoInput = form.querySelector('input[name="acao"]');
-                    if (acaoInput) {
-                        acaoInput.remove();
-                    }
-                    form.submit();
-                });
-            }
+                // valida campos do card azul ANTES de salvar rascunho
+                if (!validarCamposCardAzul()) {
+                    mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
+                    return;
+                }
+
+                // código atual que cria o input[name="acao"] e submete
+                form.action = "{{ route('ppp.store') }}";
+
+                let inputAcao = form.querySelector('input[name="acao"]');
+                if (inputAcao) {
+                    inputAcao.remove();
+                }
+
+                inputAcao = document.createElement('input');
+                inputAcao.type = 'hidden';
+                inputAcao.name = 'acao';
+                inputAcao.value = 'salvar_rascunho';
+                form.appendChild(inputAcao);
+
+                form.submit();
+            });
+
 
             if (btnSalvarEnviar) {
                 btnSalvarEnviar.addEventListener('click', function () {
@@ -508,15 +512,15 @@
             // BOTÃO CANCELAR
             // ===================================
 
-            if (btnCancelar) {
-                btnCancelar.addEventListener('click', function(e) {
-                    e.preventDefault();
+            // if (btnCancelar) {
+            //     btnCancelar.addEventListener('click', function(e) {
+            //         e.preventDefault();
 
-                    if (confirm('Tem certeza que deseja cancelar? Todas as alterações não salvas serão perdidas.')) {
-                        window.location.href = '{{ route("ppp.index") }}';
-                    }
-                });
-            }
+            //         if (confirm('Tem certeza que deseja cancelar? Todas as alterações não salvas serão perdidas.')) {
+            //             window.location.href = '{{ route("ppp.index") }}';
+            //         }
+            //     });
+            // }
 
             // ===================================
             // PREVENÇÃO DE PERDA DE DADOS
