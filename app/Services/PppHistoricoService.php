@@ -92,7 +92,7 @@ class PppHistoricoService
             $ppp,
             'aprovacao_intermediaria',
             $comentario, // Apenas se gestor digitou comentário opcional
-            2, // Status anterior: aguardando_aprovacao
+            $ppp->status_id, // Status anterior: aguardando_aprovacao
             2  // Status atual: aguardando_aprovacao (continua no fluxo)
         );
     }

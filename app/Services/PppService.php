@@ -41,37 +41,37 @@ class PppService
      * Envia PPP para aprovação
      */
     public function enviarParaAprovacao(PcaPpp $ppp, ?string $justificativa = null): bool
-{
-    try {
-        // Obter próximo gestor
-        $proximoGestor = $this->hierarquiaService->obterProximoGestor($ppp->user_id);
+    {
+        try {
+            // Obter próximo gestor
+            $proximoGestor = $this->hierarquiaService->obterProximoGestor($ppp->user_id);
 
-        if (!$proximoGestor) {
-            throw new \Exception('Não foi possível identificar o próximo gestor.');
+            if (!$proximoGestor) {
+                throw new \Exception('Não foi possível identificar o próximo gestor.');
+            }
+
+            // Garantir que o próximo gestor tenha o papel de gestor
+            $proximoGestor->garantirPapelGestor();
+
+            // Atualizar PPP - CORRIGIDO: usar status_id em vez de status_fluxo
+            $ppp->update([
+                'status_id' => 2, // aguardando_aprovacao
+                'gestor_atual_id' => $proximoGestor->id,
+            ]);
+
+            // Registrar no histórico
+            $this->historicoService->registrarEnvioAprovacao(
+                $ppp,
+                $justificativa ?? 'PPP enviado para aprovação'
+            );
+
+            return true;
+
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao enviar PPP para aprovação: ' . $ex->getMessage());
+            throw $ex;
         }
-
-        // Garantir que o próximo gestor tenha o papel de gestor
-        $proximoGestor->garantirPapelGestor();
-
-        // Atualizar PPP - CORRIGIDO: usar status_id em vez de status_fluxo
-        $ppp->update([
-            'status_id' => 2, // aguardando_aprovacao
-            'gestor_atual_id' => $proximoGestor->id,
-        ]);
-
-        // Registrar no histórico
-        $this->historicoService->registrarEnvioAprovacao(
-            $ppp,
-            $justificativa ?? 'PPP enviado para aprovação'
-        );
-
-        return true;
-
-    } catch (\Throwable $ex) {
-        Log::error('Erro ao enviar PPP para aprovação: ' . $ex->getMessage());
-        throw $ex;
     }
-}
 
     /**
      * Aprova um PPP
@@ -80,10 +80,9 @@ class PppService
     {
         try {
             $gestorAtual = User::find($ppp->gestor_atual_id);
-
             $proximoGestor = $this->hierarquiaService->obterProximoGestor($gestorAtual);
 
-            if ($proximoGestor) {
+            if($proximoGestor) {
                 $proximoGestor->garantirPapelGestor();
 
                 // Ainda há níveis na hierarquia
@@ -99,7 +98,7 @@ class PppService
                 ]);
             }
 
-            $this->historicoService->registrarAprovacao($ppp,$comentario ?? 'PPP aprovado');
+            $this->historicoService->registrarAprovacao($ppp, $comentario ?? 'PPP aprovado');
 
             return true;
 
@@ -117,7 +116,7 @@ class PppService
         try {
             // ✅ CORREÇÃO: Capturar status anterior antes da mudança
             $statusAnterior = $ppp->status_id;
-            
+
             // ✅ CORREÇÃO: Manter gestor_atual_id (não definir como null)
             $ppp->update([
                 'status_id' => 4, // aguardando_correcao
