@@ -14,8 +14,8 @@
                         <i class="fas fa-money-bill-wave text-success me-1"></i>
                         Valor total estimado (exercício) <span class="text-danger">*</span>
                     </label>
-                    <input type="text" name="estimativa_valor" class="form-control form-control-lg money-mask" required
-                        value="{{ old('estimativa_valor', $ppp->estimativa_valor ?? '') }}" 
+                    <input type="text" name="estimativa_valor" class="form-control form-control-lg money-field" required
+                        value="{{ old('estimativa_valor', isset($ppp->estimativa_valor) ? 'R$ ' . number_format($ppp->estimativa_valor, 2, ',', '.') : '') }}" 
                         placeholder="R$ 0,00" autocomplete="off">
                 </div>
                 <div class="col-12 mb-3">
@@ -35,8 +35,8 @@
                         <i class="fas fa-calendar-plus text-success me-1"></i>
                         Valor se +1 exercício <span class="text-danger">*</span>
                     </label>
-                    <input type="text" name="valor_contrato_atualizado" class="form-control form-control-lg money-mask" required
-                        value="{{ old('valor_contrato_atualizado', $ppp->valor_contrato_atualizado ?? '') }}" 
+                    <input type="text" name="valor_contrato_atualizado" class="form-control form-control-lg money-field" required
+                        value="{{ old('valor_contrato_atualizado', isset($ppp->valor_contrato_atualizado) ? 'R$ ' . number_format($ppp->valor_contrato_atualizado, 2, ',', '.') : '') }}" 
                         placeholder="R$ 0,00" autocomplete="off">
                 </div>
                 <div class="col-12 mb-3">

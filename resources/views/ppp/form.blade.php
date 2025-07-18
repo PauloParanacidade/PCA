@@ -178,41 +178,115 @@
             // ===================================
             // FUNÇÃO PARA DEFINIR O STORE PARA AVANÇAR E UPDATE PARA SALVAR E ENVIAR PARA AVALIAÇÃO
             // ===================================
-            if(btnAvancar){
-                btnAvancar.addEventListener('click', function (e) {
-                    e.preventDefault(); // impede submit automático
+            
+            btnAvancar.addEventListener('click', function(e) {
+                e.preventDefault();
 
-                    // valida campos do card azul ANTES de salvar rascunho
-                    if (!validarCamposCardAzul()) {
-                        mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
-                        return;
-                    }
+                if (!validarCamposCardAzul()) {
+                    mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
+                    return;
+                }
 
-                    // código atual que cria o input[name="acao"] e submete
+                if (isCreating) {
+                    // Criar FormData com os dados do formulário
+                    const formData = new FormData(form);
+                    formData.append('acao', 'salvar_rascunho');
+                    
+                    // Fazer requisição AJAX para salvar o rascunho
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Atualizar a URL para o modo de edição
+                            const newUrl = `{{ route('ppp.edit', ':id') }}`.replace(':id', data.ppp_id);
+                            window.history.replaceState({}, '', newUrl);
+                            
+                            // Atualizar a action do formulário para update
+                            form.action = `{{ route('ppp.update', ':id') }}`.replace(':id', data.ppp_id);
+                            
+                            // Adicionar método PUT
+                            let methodInput = form.querySelector('input[name="_method"]');
+                            if (!methodInput) {
+                                methodInput = document.createElement('input');
+                                methodInput.type = 'hidden';
+                                methodInput.name = '_method';
+                                methodInput.value = 'PUT';
+                                form.appendChild(methodInput);
+                            }
+                            
+                            // Alterar ação para enviar_aprovacao
+                            let inputAcao = form.querySelector('input[name="acao"]');
+                            if (inputAcao) inputAcao.remove();
+                            
+                            inputAcao = document.createElement('input');
+                            inputAcao.type = 'hidden';
+                            inputAcao.name = 'acao';
+                            inputAcao.value = 'enviar_aprovacao';
+                            form.appendChild(inputAcao);
+                            
+                            // Desbloquear os cards
+                            desbloquearCards();
+                    
+                            btnAvancar.style.transition = 'all 0.3s ease';
+                            btnAvancar.style.opacity = '0';
+                            btnAvancar.style.transform = 'translateY(-10px)';
+                            setTimeout(() => {
+                                btnAvancar.style.display = 'none';
+                            }, 300);
+                    
+                            if (btnSalvarEnviar) {
+                                setTimeout(() => {
+                                    btnSalvarEnviar.style.display = 'inline-block';
+                                    btnSalvarEnviar.style.opacity = '0';
+                                    btnSalvarEnviar.style.transform = 'translateY(10px)';
+                                    setTimeout(() => {
+                                        btnSalvarEnviar.style.transition = 'all 0.3s ease';
+                                        btnSalvarEnviar.style.opacity = '1';
+                                        btnSalvarEnviar.style.transform = 'translateY(0)';
+                                    }, 50);
+                                }, 800);
+                            }
+                    
+                            setTimeout(() => {
+                                const cardAmarelo = document.getElementById('card-amarelo');
+                                if (cardAmarelo) {
+                                    cardAmarelo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }, 1200);
+                    
+                            mostrarNotificacao('Rascunho salvo com sucesso!', 'success');
+                        } else {
+                            mostrarNotificacao('Erro ao salvar rascunho: ' + (data.message || 'Erro desconhecido'), 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição:', error);
+                        mostrarNotificacao('Erro ao salvar rascunho. Tente novamente.', 'error');
+                    });
+                } else {
+                    // modo edição: submete o formulário para salvar rascunho
                     form.action = "{{ route('ppp.store') }}";
-
+                    
                     let inputAcao = form.querySelector('input[name="acao"]');
-                    if (inputAcao) {
-                        inputAcao.remove();
-                    }
-
+                    if (inputAcao) inputAcao.remove();
+                    
                     inputAcao = document.createElement('input');
                     inputAcao.type = 'hidden';
                     inputAcao.name = 'acao';
                     inputAcao.value = 'salvar_rascunho';
                     form.appendChild(inputAcao);
-
+                    
                     form.submit();
-                });
-            }
-            
+                }
+            });
 
-
-            if (btnSalvarEnviar) {
-                btnSalvarEnviar.addEventListener('click', function () {
-                    form.action = "{{ route('ppp.update', $ppp->id ?? 0) }}";
-                });
-            }
 
             // ===================================
             // FUNÇÃO PARA DESBLOQUEAR CARDS
@@ -292,58 +366,7 @@
             // EVENTO DO BOTÃO AVANÇAR
             // ===================================
 
-            if (btnAvancar && isCreating) {
-                btnAvancar.addEventListener('click', function(e) {
-                    e.preventDefault();
-
-                    if (validarCamposCardAzul()) {
-                        // Desbloquear os cards com animação
-                        desbloquearCards();
-
-                        // Esconder botão avançar com animação
-                        btnAvancar.style.transition = 'all 0.3s ease';
-                        btnAvancar.style.opacity = '0';
-                        btnAvancar.style.transform = 'translateY(-10px)';
-
-                        setTimeout(() => {
-                            btnAvancar.style.display = 'none';
-                        }, 300);
-
-                        // Mostrar botão salvar e enviar com animação
-                        if (btnSalvarEnviar) {
-                            setTimeout(() => {
-                                btnSalvarEnviar.style.display = 'inline-block';
-                                btnSalvarEnviar.style.opacity = '0';
-                                btnSalvarEnviar.style.transform = 'translateY(10px)';
-
-                                setTimeout(() => {
-                                    btnSalvarEnviar.style.transition = 'all 0.3s ease';
-                                    btnSalvarEnviar.style.opacity = '1';
-                                    btnSalvarEnviar.style.transform = 'translateY(0)';
-                                }, 50);
-                            }, 800);
-                        }
-
-                        // Scroll suave para os cards desbloqueados
-                        setTimeout(() => {
-                            const cardAmarelo = document.getElementById('card-amarelo');
-                            if (cardAmarelo) {
-                                cardAmarelo.scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'start'
-                                });
-                            }
-                        }, 1200);
-
-                        // Mostrar notificação de sucesso
-                        mostrarNotificacao('Rascunho salvo.', 'gray-dark');
-
-                    } else {
-                        // Mostrar notificação de erro
-                        mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
-                    }
-                });
-            }
+            
 
             // ===================================
             // FUNÇÃO DE NOTIFICAÇÃO
