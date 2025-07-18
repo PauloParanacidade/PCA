@@ -13,7 +13,7 @@
                 {{-- Modo edição: retorna para tela anterior --}}
                 <button type="button" onclick="history.back()" class="btn btn-secondary btn-lg mx-2">
                     <i class="fas fa-arrow-left me-2"></i>
-                    Cancelar
+                    Voltar
                 </button>
             @endif
 
@@ -24,14 +24,6 @@
                     <i class="fas fa-paper-plane me-2"></i>
                     Salvar e Enviar para Avaliação
                 </button>
-            @else
-                {{-- Modo edição: botão histórico --}}
-            <button type="button" class="btn btn-sm btn-historico" 
-    onclick="FormButtons.carregarHistoricoPPP({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')"
-    title="Histórico">
-    <i class="fas fa-history mr-1"></i>
-    Histórico
-</button>
             @endif
 
         </div>
@@ -54,7 +46,12 @@ document.addEventListener('DOMContentLoaded', function() {
         btnAvancar.addEventListener('click', function() {
             const camposObrigatorios = [
                 'nome_item',
+<<<<<<< HEAD
                 'quantidade', 
+=======
+                'quantidade',
+                'categoria',
+>>>>>>> 3a6e549cf1ee0298dd159c4e5cf10a17b955c7b9
                 'grau_prioridade',
                 'descricao',
                 'natureza_objeto',

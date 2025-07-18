@@ -165,6 +165,7 @@ public function store(StorePppRequest $request)
                 'request_method' => $request->method(),
                 'request_full_data' => $request->all()
             ]);
+            
 
             $ppp = PcaPpp::findOrFail($id);
             $dados = $request->validated(); //ficou redundante a validação do request mas deixei aqui para lembrança no futuro
