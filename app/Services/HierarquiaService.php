@@ -46,6 +46,8 @@ class HierarquiaService
                 $nomeGestor = trim($matches[1]);
                 $siglaAreaGestor = trim($matches[2]);
 
+                //dd($nomeGestor, $siglaAreaGestor);
+
                 Log::info('✅ Dados extraídos do DN', [
                     'nome_gestor' => $nomeGestor,
                     'sigla_area' => $siglaAreaGestor
@@ -55,6 +57,8 @@ class HierarquiaService
                 $gestor = User::where('name', 'like', "%{$nomeGestor}%")
                              ->where('active', true)
                              ->first();
+                             
+                //dd($gestor);
 
                 if ($gestor) {
                     Log::info('✅ Gestor encontrado na hierarquia', [

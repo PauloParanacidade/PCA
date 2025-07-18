@@ -242,8 +242,8 @@
     border: 1px solid #e9ecef;
 }
 
-/* Botão próximo do card azul */
-#btn-proximo-card-azul {
+/* Botão avançar do card azul */
+#btn-avancar-card-azul {
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     border: none;
     padding: 15px 40px;
@@ -257,7 +257,7 @@
     overflow: hidden;
 }
 
-#btn-proximo-card-azul::before {
+#btn-avancar-card-azul::before {
     content: '';
     position: absolute;
     top: 0;
@@ -268,17 +268,17 @@
     transition: left 0.5s;
 }
 
-#btn-proximo-card-azul:hover {
+#btn-avancar-card-azul:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
     background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
 }
 
-#btn-proximo-card-azul:hover::before {
+#btn-avancar-card-azul:hover::before {
     left: 100%;
 }
 
-#btn-proximo-card-azul:active {
+#btn-avancar-card-azul:active {
     transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
@@ -495,7 +495,7 @@
         margin-bottom: 0.5rem;
     }
     
-    #btn-proximo-card-azul {
+    #btn-avancar-card-azul {
         padding: 12px 30px;
         font-size: 1.1rem;
         width: 100%;
@@ -548,7 +548,7 @@
         font-size: 0.9rem;
     }
     
-    #btn-proximo-card-azul {
+    #btn-avancar-card-azul {
         padding: 10px 25px;
         font-size: 1rem;
     }

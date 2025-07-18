@@ -80,7 +80,7 @@ public function store(StorePppRequest $request)
         $ppp = PcaPpp::create([
             'user_id' => Auth::id(),
             'gestor_atual_id' => $proximoGestor?->id,
-            'status_id' => 1, // 
+            'status_id' => 1,
             'nome_item' => $request->nome_item,
             'descricao' => $request->descricao,
             'categoria' => $request->categoria,
@@ -735,10 +735,10 @@ private function processarEnvioAprovacao(PcaPpp $ppp, Request $request): array
             'gestor_para' => $proximoGestor->id
         ]);
 
-        $ppp->update([
-            'status_id' => 2, // aguardando_aprovacao
-            'gestor_atual_id' => $proximoGestor->id,
-        ]);
+        // $ppp->update([
+        //     'status_id' => 2, // aguardando_aprovacao
+        //     'gestor_atual_id' => $proximoGestor->id,
+        // ]);
 
         Log::info('✅ Status do PPP atualizado', [
             'ppp_id' => $ppp->id,

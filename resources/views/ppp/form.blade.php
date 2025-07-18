@@ -158,7 +158,7 @@
             // ===================================
 
             const isCreating = {{ $isCreating ? 'true' : 'false' }};
-            const btnProximo = document.getElementById('btn-proximo-card-azul');
+            const btnAvancar = document.getElementById('btn-avancar-card-azul');
             // const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
             // const btnCancelar = document.getElementById('btn-cancelar');
             const btnAvancar = document.getElementById('btn-avancar-card-azul');
@@ -276,24 +276,24 @@
             }
 
             // ===================================
-            // EVENTO DO BOTÃO PRÓXIMO
+            // EVENTO DO BOTÃO AVANÇAR
             // ===================================
 
-            if (btnProximo && isCreating) {
-                btnProximo.addEventListener('click', function(e) {
+            if (btnAvancar && isCreating) {
+                btnAvancar.addEventListener('click', function(e) {
                     e.preventDefault();
 
                     if (validarCamposCardAzul()) {
                         // Desbloquear os cards com animação
                         desbloquearCards();
 
-                        // Esconder botão próximo com animação
-                        btnProximo.style.transition = 'all 0.3s ease';
-                        btnProximo.style.opacity = '0';
-                        btnProximo.style.transform = 'translateY(-10px)';
+                        // Esconder botão avançar com animação
+                        btnAvancar.style.transition = 'all 0.3s ease';
+                        btnAvancar.style.opacity = '0';
+                        btnAvancar.style.transform = 'translateY(-10px)';
 
                         setTimeout(() => {
-                            btnProximo.style.display = 'none';
+                            btnAvancar.style.display = 'none';
                         }, 300);
 
                         // Mostrar botão salvar e enviar com animação

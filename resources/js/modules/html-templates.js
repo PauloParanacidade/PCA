@@ -48,7 +48,7 @@ export const HtmlTemplates = {
                             <i class="fas fa-times me-2"></i>Cancelar
                         </a>
                         <button type="button" class="btn btn-primary btn-next" data-step="1">
-                            Próximo<i class="fas fa-arrow-right ms-2"></i>
+                            Avançar<i class="fas fa-arrow-right ms-2"></i>
                         </button>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ export const HtmlTemplates = {
                             </a>
                         </div>
                         <button type="button" class="btn btn-primary btn-next" data-step="2">
-                            Próximo<i class="fas fa-arrow-right ms-2"></i>
+                            Avançar<i class="fas fa-arrow-right ms-2"></i>
                         </button>
                     </div>
                 </div>

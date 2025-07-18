@@ -19,7 +19,7 @@
 
             {{-- Botões de ação --}}
             @if(!isset($ppp) || !$ppp->id)
-                {{-- Botão Salvar e Enviar para Avaliação (só aparece após clicar em Próximo) --}}
+                {{-- Botão Salvar e Enviar para Avaliação (só aparece após clicar em Avançar) --}}
                 <button type="submit" id="btn-salvar-enviar" name="acao" value="enviar_aprovacao" class="btn btn-success btn-lg mx-2" style="display: none;">
                     <i class="fas fa-paper-plane me-2"></i>
                     Salvar e Enviar para Avaliação
@@ -47,22 +47,22 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const btnProximo = document.getElementById('btn-proximo-card-azul');
+    const btnAvancar = document.getElementById('btn-avancar-card-azul');
     const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
 
-    if (btnProximo) {
-        btnProximo.addEventListener('click', function() {
+    if (btnAvancar) {
+        btnAvancar.addEventListener('click', function() {
             const camposObrigatorios = [
                 'nome_item',
                 'quantidade', 
-                'categoria',
                 'grau_prioridade',
-                'previsao_contratacao',
-                'descricao_especificacao'
+                'descricao',
+                'natureza_objeto',
+                'justificativa_pedido',
+                'categoria'
             ];
 
             let todosPreenchidos = true;
-
             camposObrigatorios.forEach(function(campo) {
                 const elemento = document.querySelector(`[name="${campo}"]`);
                 if (!elemento || !elemento.value.trim()) {
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     elemento.classList.remove('is-invalid');
                 }
             });
-
+            
             if (todosPreenchidos) {
                 // Desbloquear cards com animação
                 const cardsParaDesbloquear = document.querySelectorAll('.card-bloqueado.bloqueado');
@@ -88,13 +88,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, index * 200);
                 });
 
-                // Esconder botão próximo
-                btnProximo.style.transition = 'all 0.3s ease';
-                btnProximo.style.opacity = '0';
-                btnProximo.style.transform = 'translateY(-10px)';
+                // Esconder botão avançar
+                btnAvancar.style.transition = 'all 0.3s ease';
+                btnAvancar.style.opacity = '0';
+                btnAvancar.style.transform = 'translateY(-10px)';
 
                 setTimeout(() => {
-                    btnProximo.style.display = 'none';
+                    btnAvancar.style.display = 'none';
                 }, 300);
 
                 // Mostrar botão salvar e enviar

@@ -25,25 +25,31 @@ class StorePppRequest extends FormRequest
             return [
                 'nome_item' => 'required|string|max:200',
                 'quantidade' => 'required|string|max:50',
-                'categoria' => 'required|string|max:100',
                 'grau_prioridade' => 'required|string|in:Baixa,Média,Alta,Urgente',
                 'descricao' => 'required|string|max:1000',
+                'natureza_objeto' =>'required|string|max:100',
                 'justificativa_pedido' => 'required|string|max:1000',
-                'area_solicitante' => 'nullable|string|max:100',
+                'categoria' => 'required|string|max:100',
             ];
         }
         
         // Regras completas para envio (todos os cards)
         return [
             // Informações do item (Card Azul)
-            'categoria' => 'required|string|max:100',
             'nome_item' => 'required|string|max:200',
-            'descricao' => 'required|string|max:1000',
             'quantidade' => 'required|string|max:50',
-            'justificativa_pedido' => 'required|string|max:1000',
-            'natureza_objeto' => 'required|string|max:100',
             'grau_prioridade' => 'required|string|in:Baixa,Média,Alta,Urgente',
-            'area_solicitante' => 'required|string|max:100',
+            'descricao' => 'required|string|max:1000',
+            'natureza_objeto' =>'required|string|max:100',
+            'justificativa_pedido' => 'required|string|max:1000',
+            'categoria' => 'required|string|max:100',
+
+            // Contrato vigente (Card Amarelo)
+            'tem_contrato_vigente' => 'required|in:Sim,Não',
+            'num_contrato' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:20',
+            'mes_vigencia_final' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:10',
+            'contrato_prorrogavel' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
+            'renov_contrato' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
 
             // Informações financeiras (Card Verde) - REGEX corrigido para PCRE2
             'estimativa_valor' => ['required', 'regex:/^\\s*R\\$\\s?\\d{1,3}(\\.\\d{3})*(,\\d{2})?\\s*$/'],
@@ -54,15 +60,6 @@ class StorePppRequest extends FormRequest
             // Vinculação/Dependência (Card Ciano)
             'vinculacao_item' => 'required|in:Sim,Não',
             'justificativa_vinculacao' => 'required_if:vinculacao_item,Sim|nullable|string|max:600',
-            'dependencia_item' => 'required|in:Sim,Não',
-            'justificativa_dependencia' => 'required_if:dependencia_item,Sim|nullable|string|max:600',
-
-            // Contrato vigente (Card Amarelo)
-            'tem_contrato_vigente' => 'required|in:Sim,Não',
-            'num_contrato' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:20',
-            'mes_vigencia_final' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:10',
-            'contrato_prorrogavel' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
-            'renov_contrato' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
 
             // Cronograma
             'cronograma_jan' => 'nullable|in:Sim,Não',
@@ -77,9 +74,6 @@ class StorePppRequest extends FormRequest
             'cronograma_out' => 'nullable|in:Sim,Não',
             'cronograma_nov' => 'nullable|in:Sim,Não',
             'cronograma_dez' => 'nullable|in:Sim,Não',
-
-            // Outros campos opcionais
-            'previsao' => 'nullable|date',
         ];
     }
 
