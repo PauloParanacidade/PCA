@@ -18,14 +18,23 @@
             @endif
 
             {{-- Botões de ação --}}
-            @if(!isset($ppp) || !$ppp->id)
-                {{-- Botão Salvar e Enviar para Avaliação (só aparece após clicar em Avançar) --}}
-                <button type="submit" id="btn-salvar-enviar" name="acao" value="enviar_aprovacao" class="btn btn-success btn-lg mx-2" style="display: none;">
+            @php
+                $edicao = isset($ppp) && $ppp->id;
+                $isCreating = !$edicao;
+            @endphp
+            @if ($edicao)
+                {{-- Edição: mostra botão SALVAR --}}
+                <button type="submit" name="acao" value="salvar" class="btn btn-success btn-lg mx-2">
+                    <i class="fas fa-save me-2"></i>
+                    Salvar
+                </button>
+            @else
+                {{-- Criação: botão SALVAR E ENVIAR (inicialmente oculto) --}}
+                <button type="submit" id="btn-salvar-enviar" name="acao" value="enviar_aprovacao" class="btn btn-primary btn-lg mx-2" style="display: none;">
                     <i class="fas fa-paper-plane me-2"></i>
                     Salvar e Enviar para Avaliação
                 </button>
             @endif
-
         </div>
     </div>
 </div>

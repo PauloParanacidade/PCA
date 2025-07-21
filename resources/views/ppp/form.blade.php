@@ -29,6 +29,8 @@
             <input type="hidden" name="acao" value="enviar_aprovacao">
         @endif
 
+        <input type="hidden" name="modo" value="{{ $isCreating ? 'criacao' : 'edicao' }}">
+
         <div class="row mb-4 align-items-stretch">
             {{-- Lado esquerdo: Azul ocupa metade da linha --}}
             <div class="col-lg-6 d-flex">
@@ -64,17 +66,6 @@
             </div>
         </div>
 
-        {{-- Botões finais --}}
-        <div class="row">
-            <div class="col-12 text-right">
-                <button type="submit" id="btn-salvar-enviar" class="btn btn-success" style="{{ $isCreating ? 'display: none;' : '' }}">
-                    <i class="fas fa-paper-plane mr-1"></i>Salvar e Enviar
-                </button>
-                <a href="{{ route('ppp.index') }}" id="btn-cancelar" class="btn btn-secondary">
-                    <i class="fas fa-times mr-1"></i>Cancelar
-                </a>
-            </div>
-        </div>
         {{-- Incluir botões da partial --}}
         @include('ppp.partials.botoes-acao')
     </form>
