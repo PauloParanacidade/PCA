@@ -15,9 +15,10 @@ class ImpersonateController extends Controller
             abort(403, 'Apenas administradores podem usar esta funcionalidade.');
         }
 
-        if ($user->hasRole('admin')) {
-            return redirect()->back()->with('error', 'Não é possível impersonar outro administrador.');
-        }
+        // Remover ou comentar esta verificação:
+        // if ($user->hasRole('admin')) {
+        //     return redirect()->back()->with('error', 'Não é possível impersonar outro administrador.');
+        // }
 
         // Armazena o ID do usuário original
         Session::put('original_user_id', Auth::id());
@@ -62,4 +63,4 @@ class ImpersonateController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Você retornou ao seu usuário original.');
     }
-} 
+}

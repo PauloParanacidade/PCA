@@ -149,15 +149,14 @@
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             @endif
-                                            <form action="{{ route('admin.impersonate', $user) }}" method="POST"
-                                                class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-info btn-sm"
-                                                    title="Impersonar Usuário">
-                                                    <i class="fas fa-user-secret"></i>
-                                                </button>
-                                            </form>
                                         @endif
+                                        {{-- Botão de impersonação movido para fora da condição --}}
+                                        <form action="{{ route('admin.impersonate', $user) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-info btn-sm" title="Impersonar Usuário">
+                                                <i class="fas fa-user-secret"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
