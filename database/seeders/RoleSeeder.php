@@ -14,6 +14,10 @@ class RoleSeeder extends Seeder
                 'description' => 'Administrador do Sistema'
             ],
             [
+                'name' => 'secretaria',
+                'description' => 'Secretária da DIREX e Conselho'
+            ],
+            [
                 'name' => 'daf',
                 'description' => 'DAF - Diretoria Administrativa e Financeira'
             ],

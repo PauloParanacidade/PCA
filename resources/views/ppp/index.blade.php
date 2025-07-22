@@ -67,7 +67,7 @@
                                 <th width="1%">#</th>
                                 <th width="23%">Nome do Item</th>
                                 <th width="10%">Área Solicitante</th>
-                                <th width="12%">Avaliador</th>
+                                <th width="12%">Avaliador Seguinte</th>
                                 <th width="10%">Valor Estimado</th>
                                 <th width="10%">Status</th>
                                 <th width="10%">Data Criação</th>
@@ -91,7 +91,7 @@
                                             {{ $ppp->user->department ?? 'Área N/A' }}
                                         </span>
                                     </td>
-                                    <td class="align-middle"> {{-- Coluna Avaliador --}}
+                                    <td class="align-middle"> {{-- Coluna Avaliador Seguinte --}}
                                         <span class="badge badge-info">
                                             {{ $ppp->current_approver }}
                                         </span>

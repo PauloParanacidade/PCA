@@ -145,7 +145,7 @@ class PppService
             return false;
         }
         
-        // Verificar pelo campo department (sigla da área)
+        // Verificar APENAS pelo campo department (sigla da área do próprio usuário)
         $department = strtoupper($usuario->department ?? '');
         
         // Verificar se é SUPEX, DOE ou DOM
@@ -159,23 +159,6 @@ class PppService
             ]);
             return true;
         }
-        
-        // Verificar também pelo manager DN (caso o department não esteja preenchido)
-        if ($usuario->manager) {
-            if (preg_match('/OU=([^,]+)/', $usuario->manager, $matches)) {
-                $siglaAreaGestor = strtoupper(trim($matches[1]));
-                
-                if (in_array($siglaAreaGestor, $areasEspeciais)) {
-                    Log::info('✅ Usuário identificado como SUPEX/DOE/DOM via manager DN', [
-                        'user_id' => $usuario->id,
-                        'user_name' => $usuario->name,
-                        'area_gestor' => $siglaAreaGestor
-                    ]);
-                    return true;
-                }
-            }
-        }
-        
         return false;
     }
 

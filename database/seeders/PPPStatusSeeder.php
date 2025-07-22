@@ -67,6 +67,30 @@ class PPPStatusSeeder extends Seeder
                 'ativo' => true,
                 'cor' => '#dc3545', // vermelho
             ],
+            [
+                'nome' => 'Aguardando Secretária',
+                'slug' => 'aguardando_secretaria',
+                'descricao' => 'Aguardando Secretária DIREX/Conselho',
+                'ordem' => 8,
+                'ativo' => true,
+                'cor' => '#20c997', // verde-azulado
+            ],
+            [
+                'nome' => 'Aprovado DIREX',
+                'slug' => 'aprovado_direx',
+                'descricao' => 'Aprovado pela DIREX',
+                'ordem' => 9,
+                'ativo' => true,
+                'cor' => '#007bff', // azul primário
+            ],
+            [
+                'nome' => 'Aprovado Conselho',
+                'slug' => 'aprovado_conselho',
+                'descricao' => 'Aprovado pelo Conselho',
+                'ordem' => 10,
+                'ativo' => true,
+                'cor' => '#6f42c1', // roxo
+            ],
         ];
 
         foreach ($statuses as $status) {
