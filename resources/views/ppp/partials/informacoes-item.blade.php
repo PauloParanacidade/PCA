@@ -17,7 +17,7 @@
                     value="{{ old('nome_item', $ppp->nome_item ?? '') }}"
                     placeholder="Ex: Aluguel de impressoras ou Consultoria para suporte em TI">
                 @error('nome_item')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="invalid-feedbackCriar novo PPP">{{ $message }}</div>
                 @enderror
             </div>
             <div class="col-lg-8 mb-3">
