@@ -343,10 +343,19 @@
             @endphp
 
             @if($podeVerBotoes)
-                <button type="button" class="btn btn-outline-success btn-lg mb-3" data-toggle="modal" data-target="#aprovarModal">
-                    <i class="fas fa-check mr-2"></i>
-                    Aprovar
-                </button>
+                <button 
+    type="button" 
+    class="btn btn-outline-success btn-lg mb-3" 
+    data-toggle="modal" 
+    data-target="#aprovarModal"
+    id="btnValidarEncaminhar"
+    title="Após sua validação, o PPP será avaliado pelo seu chefe, no próximo nível hierárquico."
+>
+    <i class="fas fa-check mr-2"></i>
+    Validar e Encaminhar
+</button>
+
+                
                 <button type="button" class="btn btn-outline-warning btn-lg mb-3" data-toggle="modal" data-target="#solicitarCorrecaoModal">
                     <i class="fas fa-edit mr-2"></i>
                     Solicitar Correção
