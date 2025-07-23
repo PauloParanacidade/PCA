@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePppRequest;
@@ -8,18 +7,19 @@ use App\Models\PcaPpp;
 use App\Models\PppHistorico;
 use App\Models\PppStatusDinamico;
 use App\Models\User;
-// ❌ REMOVER: use App\Services\PppStatusService;
 use App\Services\PppHistoricoService;
 use App\Services\PppService;
-use App\Services\HierarquiaService; 
+use App\Services\HierarquiaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PcaExport;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PppController extends Controller
 {
-    // ❌ REMOVER: protected $statusService;
     protected $historicoService;
     protected $hierarquiaService;
     protected $pppService;
@@ -549,47 +549,7 @@ class PppController extends Controller
         }
     }
     
-    // private function criarStatusDinamico($ppp, $tipoStatus, $remetenteId = null, $destinatarioId = null, $statusCustom = null)
-    // {
-    //     // Desativar status dinâmico anterior
-    //     $ppp->statusDinamicos()->update(['ativo' => false]);
-        
-    //     if ($statusCustom) {
-    //         // Status customizado (ex: rascunho)
-    //         $statusFormatado = $statusCustom;
-    //         $remetenteSigla = null;
-    //         $destinatarioSigla = null;
-    //     } else {
-    //         // Buscar template do status
-    //         $statusTemplate = \App\Models\PppStatus::where('tipo', $tipoStatus)->first();
-            
-    //         if (!$statusTemplate) {
-    //             throw new \Exception("Template de status não encontrado: {$tipoStatus}");
-    //         }
-            
-    //         // Obter dados dos usuários
-    //         $remetente = $remetenteId ? User::find($remetenteId) : null;
-    //         $destinatario = $destinatarioId ? User::find($destinatarioId) : null;
-            
-    //         // Extrair siglas das áreas
-    //         $remetenteSigla = $remetente ? $this->extrairSiglaArea($remetente) : null;
-    //         $destinatarioSigla = $destinatario ? $this->extrairSiglaAreaGestor($destinatario) : null;
-            
-    //         // Substituir placeholders
-    //         $statusFormatado = $statusTemplate->template;
-            
-    //         if ($remetente) {
-    //             $remetenteTexto = $remetente->name . ' [' . ($remetenteSigla ?? 'N/A') . ']';
-    //             $statusFormatado = str_replace('[remetente]', $remetenteTexto, $statusFormatado);
-    //         }
-            
-    //         if ($destinatario) {
-    //             $destinatarioTexto = $destinatario->name . ' [' . ($destinatarioSigla ?? 'N/A') . ']';
-    //             $statusFormatado = str_replace('[destinatario]', $destinatarioTexto, $statusFormatado);
-    //         }
-    //     }
-    // }
-    
+       
     /**
     * Extrai a sigla da área do próprio usuário (campo department)
     */
@@ -938,6 +898,578 @@ class PppController extends Controller
         
         return false; // Todos os campos estão preenchidos, não é rascunho
     }
+
+    // ... existing code ...
+
+    /**
+     * NOVOS MÉTODOS PARA FLUXO DIREX E CONSELHO
+     */
+
+    /**
+     * Inicia reunião da DIREX (Secretária)
+     */
+    public function iniciarReuniaoDirectx(Request $request)
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            // Verificar se é secretária
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado. Apenas a secretária pode iniciar reunião da DIREX.');
+            }
+            
+            // Verificar se há PPPs aguardando DIREX
+            $pppsAguardandoDirectx = PcaPpp::where('status_id', 8) // aguardando_direx
+                ->orderBy('id')
+                ->get();
+            
+            if ($pppsAguardandoDirectx->isEmpty()) {
+                return redirect()->back()->with('error', 'Não há PPPs aguardando avaliação da DIREX.');
+            }
+            
+            // Registrar início da reunião no histórico da secretária
+            $this->historicoService->registrarReuniaoDirectxIniciada(
+                $pppsAguardandoDirectx->first(),
+                'Reunião da DIREX iniciada pela secretária'
+            );
+            
+            // Redirecionar para o primeiro PPP da lista
+            $primeiroPpp = $pppsAguardandoDirectx->first();
+            
+            return redirect()->route('ppp.show', $primeiroPpp->id)
+                ->with('success', 'Reunião da DIREX iniciada! Avaliando PPP: ' . $primeiroPpp->nome_item)
+                ->with('reuniao_direx_ativa', true);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao iniciar reunião DIREX: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao iniciar reunião da DIREX.');
+        }
+    }
+    
+    /**
+     * Navega para próximo PPP durante reunião DIREX
+     */
+    public function proximoPppDirectx($id)
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            $pppsDirectx = PcaPpp::whereIn('status_id', [8, 9, 10]) // aguardando_direx, direx_avaliando, direx_editado
+                ->orderBy('id')
+                ->pluck('id')
+                ->toArray();
+            
+            $posicaoAtual = array_search($id, $pppsDirectx);
+            
+            if ($posicaoAtual === false || $posicaoAtual >= count($pppsDirectx) - 1) {
+                return redirect()->back()->with('info', 'Este é o último PPP da reunião.');
+            }
+            
+            $proximoId = $pppsDirectx[$posicaoAtual + 1];
+            
+            return redirect()->route('ppp.show', $proximoId)
+                ->with('reuniao_direx_ativa', true);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao navegar para próximo PPP: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao navegar.');
+        }
+    }
+    
+    /**
+     * Navega para PPP anterior durante reunião DIREX
+     */
+    public function anteriorPppDirectx($id)
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            $pppsDirectx = PcaPpp::whereIn('status_id', [8, 9, 10]) // aguardando_direx, direx_avaliando, direx_editado
+                ->orderBy('id')
+                ->pluck('id')
+                ->toArray();
+            
+            $posicaoAtual = array_search($id, $pppsDirectx);
+            
+            if ($posicaoAtual === false || $posicaoAtual <= 0) {
+                return redirect()->back()->with('info', 'Este é o primeiro PPP da reunião.');
+            }
+            
+            $anteriorId = $pppsDirectx[$posicaoAtual - 1];
+            
+            return redirect()->route('ppp.show', $anteriorId)
+                ->with('reuniao_direx_ativa', true);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao navegar para PPP anterior: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao navegar.');
+        }
+    }
+    
+    /**
+     * Edita PPP durante reunião DIREX
+     */
+    public function editarDuranteDirectx($id)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            // Alterar status para direx_editado
+            $statusAnterior = $ppp->status_id;
+            $ppp->update(['status_id' => 10]); // direx_editado
+            
+            // Registrar no histórico
+            $this->historicoService->registrarDirectxEditado(
+                $ppp,
+                'PPP editado durante reunião da DIREX',
+                $statusAnterior,
+                10
+            );
+            
+            return redirect()->route('ppp.edit', $id)
+                ->with('success', 'PPP marcado como editado pela DIREX.')
+                ->with('reuniao_direx_ativa', true);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao editar PPP durante DIREX: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao editar PPP.');
+        }
+    }
+    
+    /**
+     * Inclui PPP na tabela PCA durante reunião DIREX
+     */
+    public function incluirNaPcaDirectx($id)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            // Verificar se PPP está no status correto
+            if (!in_array($ppp->status_id, [8, 9, 10])) { // aguardando_direx, direx_avaliando, direx_editado
+                return redirect()->back()->with('error', 'PPP não está disponível para inclusão na PCA.');
+            }
+            
+            $statusAnterior = $ppp->status_id;
+            
+            // Atualizar status para aguardando_conselho
+            $ppp->update([
+                'status_id' => 11, // aguardando_conselho
+                'gestor_atual_id' => $usuarioLogado->id
+            ]);
+            
+            // Registrar no histórico
+            $this->historicoService->registrarInclusaoPca(
+                $ppp,
+                'PPP incluído na tabela PCA durante reunião da DIREX',
+                $statusAnterior,
+                11
+            );
+            
+            return redirect()->back()
+                ->with('success', 'PPP incluído na tabela PCA com sucesso!')
+                ->with('reuniao_direx_ativa', true);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao incluir PPP na PCA: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao incluir PPP na tabela PCA.');
+        }
+    }
+    
+    /**
+     * Encerra reunião da DIREX
+     */
+    public function encerrarReuniaoDirectx()
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            // Verificar se ainda há PPPs pendentes
+            $pppsAguardandoDirectx = PcaPpp::where('status_id', 8)->count(); // aguardando_direx
+            
+            if ($pppsAguardandoDirectx > 0) {
+                return redirect()->back()->with('warning', 'Ainda há PPPs aguardando avaliação da DIREX.');
+            }
+            
+            // Registrar encerramento no histórico
+            $ultimoPpp = PcaPpp::whereIn('status_id', [9, 10, 11])
+                ->orderBy('updated_at', 'desc')
+                ->first();
+            
+            if ($ultimoPpp) {
+                $this->historicoService->registrarReuniaoDirectxEncerrada(
+                    $ultimoPpp,
+                    'Reunião da DIREX encerrada pela secretária'
+                );
+            }
+            
+            return redirect()->route('ppp.index')
+                ->with('success', 'Reunião da DIREX encerrada com sucesso!')
+                ->with('reuniao_direx_encerrada', true);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao encerrar reunião DIREX: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao encerrar reunião.');
+        }
+    }
+    
+    /**
+     * Gera relatório Excel dos PPPs aprovados
+     */
+    public function gerarExcel()
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            // Buscar PPPs aguardando conselho
+            $ppps = PcaPpp::where('status_id', 11) // aguardando_conselho
+                ->with(['user', 'status'])
+                ->orderBy('id')
+                ->get();
+            
+            if ($ppps->isEmpty()) {
+                return redirect()->back()->with('error', 'Não há PPPs para gerar relatório Excel.');
+            }
+            
+            // Registrar geração no histórico
+            $this->historicoService->registrarExcelGerado(
+                $usuarioLogado->id,
+                'Relatório Excel gerado pela secretária'
+            );
+            
+            // Gerar Excel usando Maatwebsite\Excel
+            $fileName = 'PCA_' . date('Y-m-d_H-i-s') . '.xlsx';
+            
+            return Excel::download(new PcaExport($ppps), $fileName);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao gerar Excel: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao gerar relatório Excel.');
+        }
+    }
+    
+    /**
+     * Gera relatório PDF dos PPPs aprovados
+     */
+    public function gerarPdf()
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            // Buscar PPPs aguardando conselho
+            $ppps = PcaPpp::where('status_id', 11) // aguardando_conselho
+                ->with(['user', 'status'])
+                ->orderBy('id')
+                ->get();
+            
+            if ($ppps->isEmpty()) {
+                return redirect()->back()->with('error', 'Não há PPPs para gerar relatório PDF.');
+            }
+            
+            // Registrar geração no histórico
+            $this->historicoService->registrarPdfGerado(
+                $usuarioLogado->id,
+                'Relatório PDF gerado pela secretária'
+            );
+            
+            // Gerar PDF usando DomPDF
+            $pdf = PDF::loadView('ppp.relatorios.pca-pdf', compact('ppps'));
+            $fileName = 'PCA_' . date('Y-m-d_H-i-s') . '.pdf';
+            
+            return $pdf->download($fileName);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao gerar PDF: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao gerar relatório PDF.');
+        }
+    }
+    
+    /**
+     * Processa aprovação ou reprovação do Conselho
+     */
+    public function processarConselho(Request $request)
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            $request->validate([
+                'decisao' => 'required|in:aprovar,reprovar',
+                'comentario' => 'nullable|string|max:1000'
+            ]);
+            
+            $decisao = $request->input('decisao');
+            $comentario = $request->input('comentario', 'Decisão do Conselho registrada pela secretária');
+            
+            // Buscar todos os PPPs aguardando conselho
+            $ppps = PcaPpp::where('status_id', 11)->get(); // aguardando_conselho
+            
+            if ($ppps->isEmpty()) {
+                return redirect()->back()->with('error', 'Não há PPPs aguardando decisão do Conselho.');
+            }
+            
+            $novoStatus = ($decisao === 'aprovar') ? 12 : 13; // conselho_aprovado : conselho_reprovado
+            $acao = ($decisao === 'aprovar') ? 'conselho_aprovado' : 'conselho_reprovado';
+            
+            // Atualizar todos os PPPs
+            foreach ($ppps as $ppp) {
+                $ppp->update([
+                    'status_id' => $novoStatus,
+                    'gestor_atual_id' => $usuarioLogado->id
+                ]);
+                
+                // ✅ CORREÇÃO: Registrar no histórico individualmente
+                if ($decisao === 'aprovar') {
+                    $this->historicoService->registrarAcao(
+                        $ppp,
+                        'conselho_aprovado',
+                        $comentario,
+                        11, // status anterior
+                        $novoStatus, // status atual
+                        $usuarioLogado->id
+                    );
+                } else {
+                    $this->historicoService->registrarAcao(
+                        $ppp,
+                        'conselho_reprovado',
+                        $comentario,
+                        11, // status anterior
+                        $novoStatus, // status atual
+                        $usuarioLogado->id
+                    );
+                }
+            }
+            
+            $mensagem = ($decisao === 'aprovar') 
+                ? 'Conselho aprovou todos os PPPs com sucesso!' 
+                : 'Conselho reprovou todos os PPPs.';
+            
+            return redirect()->route('ppp.index')
+                ->with('success', $mensagem)
+                ->with('conselho_processado', true);
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar decisão do Conselho: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao processar decisão do Conselho.');
+        }
+    }
+    
+    /**
+     * Obtém histórico específico da secretária
+     */
+    public function historicoSecretaria()
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            // Buscar histórico de ações da secretária
+            $historicos = PppHistorico::whereIn('acao', [
+                'reuniao_direx_iniciada',
+                'reuniao_direx_encerrada',
+                'excel_gerado',
+                'pdf_gerado',
+                'conselho_aprovado',
+                'conselho_reprovado'
+            ])
+            ->with(['ppp', 'usuario'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+            
+            return view('ppp.partials.historico-secretaria-modal', compact('historicos'));
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao carregar histórico da secretária: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao carregar histórico'], 500);
+        }
+    }
+    
+    /**
+     * Verifica se há reunião DIREX ativa
+     */
+    public function verificarReuniaoDirectxAtiva()
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return response()->json(['ativa' => false]);
+            }
+            
+            // Verificar se há PPPs em avaliação pela DIREX
+            $temReuniaoAtiva = $this->historicoService->temReuniaoDirectxAtiva();
+            
+            return response()->json(['ativa' => $temReuniaoAtiva]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao verificar reunião DIREX: ' . $e->getMessage());
+            return response()->json(['ativa' => false]);
+        }
+    }
+    
+    /**
+     * Obtém PPPs aguardando DIREX para a secretária
+     */
+    public function obterPppsAguardandoDirectx()
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return response()->json(['error' => 'Acesso negado'], 403);
+            }
+            
+            $ppps = $this->historicoService->obterPppsAguardandoDirectx();
+            
+            return response()->json([
+                'success' => true,
+                'ppps' => $ppps,
+                'total' => $ppps->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao obter PPPs aguardando DIREX: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro interno'], 500);
+        }
+    }
+    
+    /**
+     * Obtém PPPs aguardando Conselho para a secretária
+     */
+    public function obterPppsAguardandoConselho()
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return response()->json(['error' => 'Acesso negado'], 403);
+            }
+            
+            $ppps = $this->historicoService->obterPppsAguardandoConselho();
+            
+            return response()->json([
+                'success' => true,
+                'ppps' => $ppps,
+                'total' => $ppps->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao obter PPPs aguardando Conselho: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro interno'], 500);
+        }
+    }
+    
+    /**
+     * Pausar reunião DIREX
+     */
+    public function pausarReuniaoDirectx(Request $request)
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado.'], 403);
+            }
+            
+            // Salvar estado da reunião na sessão
+            session([
+                'reuniao_direx_pausada' => true,
+                'ppp_atual_id' => $request->ppp_atual_id,
+                'reuniao_direx_ativa' => false
+            ]);
+            
+            // Registrar no histórico
+            $this->historicoService->registrarReuniaoDirectxPausada($usuarioLogado->id);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Reunião pausada com sucesso.'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao pausar reunião DIREX: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro interno.'], 500);
+        }
+    }
+    
+    /**
+     * Atualizar status do PPP durante DIREX
+     */
+    public function atualizarStatusDirectx(Request $request)
+    {
+        try {
+            $usuarioLogado = Auth::user();
+            
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado.'], 403);
+            }
+            
+            $request->validate([
+                'ppp_id' => 'required|exists:pca_ppps,id',
+                'status' => 'required|integer|min:1|max:13'
+            ]);
+            
+            $ppp = PcaPpp::findOrFail($request->ppp_id);
+            $statusAnterior = $ppp->status_id;
+            
+            $ppp->update(['status_id' => $request->status]);
+            
+            // Registrar no histórico
+            $this->historicoService->registrarMudancaStatus(
+                $ppp,
+                'Status atualizado durante reunião DIREX',
+                $statusAnterior,
+                $request->status,
+                $usuarioLogado->id
+            );
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Status atualizado com sucesso.',
+                'novo_status' => $request->status
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar status DIREX: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro interno.'], 500);
+        }
+    }
+
 }
 
 

@@ -159,6 +159,71 @@
     </div>
 </div>
 
+<!-- Modal de Confirmação para Iniciar Reunião DIREX -->
+<div class="modal fade" id="modalConfirmarDirectx" tabindex="-1" role="dialog" aria-labelledby="modalConfirmarDirectxLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalConfirmarDirectxLabel">
+                    <i class="fas fa-users mr-2"></i>Confirmar Início da Reunião DIREX
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <strong>Atenção:</strong> Já ordenou os PPPs no modo desejado? (por prioridade, Valor Estimado, etc.)
+                </div>
+                <p>Se prosseguir, a reunião da DIREX irá seguir a sequência atual, como está. Se desejar reordenar, clique em <strong>Voltar</strong>.</p>
+                <p class="text-danger"><strong>Importante:</strong> Esse ordenamento não poderá ser mais alterado após o início da reunião na DIREX.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-arrow-left mr-1"></i>Voltar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmarInicioReuniaoDirectx()">
+                    <i class="fas fa-play mr-1"></i>Prosseguir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Aprovação do Conselho -->
+<div class="modal fade" id="modalConselho" tabindex="-1" role="dialog" aria-labelledby="modalConselhoLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="modalConselhoLabel">
+                    <i class="fas fa-gavel mr-2"></i>Aprovação do Conselho
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-question-circle fa-3x text-warning mb-3"></i>
+                    <h5>Conselho aprovou o PCA do Paranacidade?</h5>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">
+                    <i class="fas fa-arrow-left mr-1"></i>Voltar
+                </button>
+                <button type="button" class="btn btn-success mr-2" onclick="processarDecisaoConselho(true)">
+                    <i class="fas fa-check mr-1"></i>Sim
+                </button>
+                <button type="button" class="btn btn-danger" onclick="processarDecisaoConselho(false)">
+                    <i class="fas fa-times mr-1"></i>Não
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modais de Histórico -->
 <!-- Modal único reutilizável para histórico -->
 <div class="modal fade" id="historicoModal" tabindex="-1" role="dialog" aria-labelledby="historicoModalLabel" aria-hidden="true">
@@ -422,70 +487,107 @@
         margin-bottom: 5px;
         color: #6c757d;
     }
-    <!-- CSS para timeline do histórico -->
-<style>
-.timeline {
-    position: relative;
-    padding-left: 30px;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 15px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: #dee2e6;
-}
-
-.timeline-item {
-    position: relative;
-    margin-bottom: 20px;
-}
-
-.timeline-marker {
-    position: absolute;
-    left: -22px;
-    top: 0;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 2px #dee2e6;
-}
-
-.timeline-content {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 4px solid #007bff;
-}
-
-.timeline-title {
-    margin: 0 0 8px 0;
-    font-weight: 600;
-    color: #495057;
-}
-
-.timeline-text {
-    margin: 0 0 8px 0;
-    color: #6c757d;
-}
-
-.bg-orange {
-    background-color: #fd7e14 !important;
-}
-
-.bg-purple {
-    background-color: #6f42c1 !important;
-}
     
+    /* CSS para timeline do histórico */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -22px;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+    .timeline-title {
+        margin: 0 0 8px 0;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .timeline-text {
+        margin: 0 0 8px 0;
+        color: #6c757d;
+    }
+
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+
+    .bg-purple {
+        background-color: #6f42c1 !important;
+    }
+    
+    /* Estilos específicos para botões da secretária */
+    .btn-lg {
+        padding: 12px 20px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .btn-lg:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    /* Tabela desabilitada durante reunião */
+    .tabela-desabilitada {
+        pointer-events: none;
+        opacity: 0.6;
+        position: relative;
+    }
+    
+    .tabela-desabilitada::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.7);
+        z-index: 10;
+    }
 </style>
 @endsection
 
@@ -499,102 +601,299 @@
             id: null,
             nome: null
         };
+        
+        let estadoReuniao = {
+            ativa: false,
+            pppAtual: null,
+            excelGerado: false,
+            pdfGerado: false
+        };
 
         // ===================================
-        // FUNÇÕES DE DEBUG E TESTE
+        // FUNÇÕES DA SECRETÁRIA - DIREX E CONSELHO
         // ===================================
         
         /**
-         * Função para testar o modal de histórico manualmente
+         * Iniciar ou retomar reunião DIREX
          */
-        window.testarModal = function() {
-            console.log('🧪 === TESTE MANUAL DO MODAL ===');
-            console.log('🔍 Verificando elementos no DOM...');
+        function iniciarOuRetomarReuniaoDirectx() {
+            console.log('🎯 Iniciando/retomando reunião DIREX');
             
-            const modal = $('#historicoModal');
-            console.log('Modal existe:', modal.length > 0);
-            
-            if (modal.length > 0) {
-                console.log('✅ Modal encontrado, tentando abrir...');
-                modal.modal('show');
-                console.log('✅ Comando modal.show() executado');
-            } else {
-                console.log('❌ Modal não encontrado no DOM');
-                console.log('🔧 Tentando criar modal dinamicamente...');
-                
-                const modalHtml = `
-                    <div class="modal fade" id="historicoModal" tabindex="-1" role="dialog">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header bg-info text-white">
-                                    <h5 class="modal-title">Teste do Modal</h5>
-                                    <button type="button" class="close text-white" data-dismiss="modal">
-                                        <span>&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Este é um teste do modal de histórico.</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                $('body').append(modalHtml);
-                console.log('✅ Modal criado, tentando abrir...');
-                $('#historicoModal').modal('show');
-            }
-        };
-        
-        /**
-         * Função para testar a requisição AJAX diretamente
-         */
-        window.testarAjax = function(pppId) {
-            console.log('🧪 === TESTE DA REQUISIÇÃO AJAX ===');
-            const url = `/ppp/${pppId}/historico`;
-            console.log('🌐 Testando URL:', url);
-            
+            // Verificar se há reunião ativa
             $.ajax({
-                url: url,
+                url: '{{ route("ppp.direx.verificar-reuniao-ativa") }}',
                 type: 'GET',
                 success: function(response) {
-                    console.log('✅ Requisição AJAX bem-sucedida');
-                    console.log('📄 Resposta:', response);
+                    if (response.reuniao_ativa) {
+                        // Retomar reunião
+                        retomarReuniaoDirectx(response.ppp_atual);
+                    } else {
+                        // Iniciar nova reunião
+                        $('#modalConfirmarDirectx').modal('show');
+                    }
                 },
-                error: function(xhr, status, error) {
-                    console.error('❌ Erro na requisição AJAX:', {
-                        status: xhr.status,
-                        statusText: xhr.statusText,
-                        error: error,
-                        response: xhr.responseText
-                    });
+                error: function(xhr) {
+                    console.error('Erro ao verificar reunião:', xhr);
+                    mostrarAlerta('Erro ao verificar status da reunião.', 'danger');
                 }
             });
-        };
+        }
         
         /**
-         * Função para verificar dependências
+         * Confirmar início da reunião DIREX
          */
-        window.verificarDependencias = function() {
-            console.log('🧪 === VERIFICAÇÃO DE DEPENDÊNCIAS ===');
-            console.log('jQuery disponível:', typeof $ !== 'undefined');
-            console.log('Bootstrap modal disponível:', typeof $.fn.modal !== 'undefined');
-            console.log('FormButtons disponível:', typeof FormButtons !== 'undefined');
-            console.log('Modal no DOM:', $('#historicoModal').length > 0);
+        function confirmarInicioReuniaoDirectx() {
+            $('#modalConfirmarDirectx').modal('hide');
             
-            if (typeof FormButtons !== 'undefined') {
-                console.log('carregarHistoricoPPP disponível:', typeof FormButtons.carregarHistoricoPPP === 'function');
+            $.ajax({
+                url: '{{ route("ppp.direx.iniciar-reuniao") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        mostrarAlerta(response.message, 'success');
+                        atualizarEstadoReuniao(true);
+                        
+                        // Redirecionar para o primeiro PPP
+                        if (response.primeiro_ppp_id) {
+                            window.location.href = `{{ route('ppp.show', ':id') }}`.replace(':id', response.primeiro_ppp_id);
+                        }
+                    } else {
+                        mostrarAlerta(response.message, 'warning');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Erro ao iniciar reunião:', xhr);
+                    mostrarAlerta('Erro ao iniciar reunião da DIREX.', 'danger');
+                }
+            });
+        }
+        
+        /**
+         * Retomar reunião DIREX
+         */
+        function retomarReuniaoDirectx(pppAtual) {
+            console.log('🔄 Retomando reunião DIREX no PPP:', pppAtual);
+            atualizarEstadoReuniao(true, pppAtual);
+            
+            if (pppAtual) {
+                window.location.href = `{{ route('ppp.show', ':id') }}`.replace(':id', pppAtual);
+            } else {
+                mostrarAlerta('Reunião retomada. Navegue pelos PPPs usando os botões de navegação.', 'info');
             }
+        }
+        
+        /**
+         * Gerar relatório Excel
+         */
+        function gerarRelatorioExcel() {
+            console.log('📊 Gerando relatório Excel');
             
-            // Verificar se há erros no console
-            console.log('🔍 Para verificar erros, abra a aba Console nas DevTools');
-        };
+            $.ajax({
+                url: '{{ route("ppp.relatorios.gerar-excel") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        mostrarAlerta(response.message, 'success');
+                        estadoReuniao.excelGerado = true;
+                        atualizarBotoesSecretaria();
+                        
+                        // Download do arquivo se fornecido
+                        if (response.download_url) {
+                            window.open(response.download_url, '_blank');
+                        }
+                    } else {
+                        mostrarAlerta(response.message, 'warning');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Erro ao gerar Excel:', xhr);
+                    mostrarAlerta('Erro ao gerar relatório Excel.', 'danger');
+                }
+            });
+        }
+        
+        /**
+         * Gerar relatório PDF
+         */
+        function gerarRelatorioPdf() {
+            console.log('📄 Gerando relatório PDF');
+            
+            $.ajax({
+                url: '{{ route("ppp.relatorios.gerar-pdf") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        mostrarAlerta(response.message, 'success');
+                        estadoReuniao.pdfGerado = true;
+                        atualizarBotoesSecretaria();
+                        
+                        // Download do arquivo se fornecido
+                        if (response.download_url) {
+                            window.open(response.download_url, '_blank');
+                        }
+                    } else {
+                        mostrarAlerta(response.message, 'warning');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Erro ao gerar PDF:', xhr);
+                    mostrarAlerta('Erro ao gerar relatório PDF.', 'danger');
+                }
+            });
+        }
+        
+        /**
+         * Abrir modal de aprovação do Conselho
+         */
+        function abrirModalConselho() {
+            $('#modalConselho').modal('show');
+        }
+        
+        /**
+         * Processar decisão do Conselho
+         */
+        function processarDecisaoConselho(aprovado) {
+            $('#modalConselho').modal('hide');
+            
+            const acao = aprovado ? 'aprovado' : 'reprovado';
+            console.log(`🏛️ Processando decisão do Conselho: ${acao}`);
+            
+            $.ajax({
+                url: '{{ route("ppp.conselho.processar") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    aprovado: aprovado
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const tipoAlerta = aprovado ? 'success' : 'warning';
+                        mostrarAlerta(response.message, tipoAlerta);
+                        
+                        // Desabilitar botão Conselho
+                        $('#btnConselho').prop('disabled', true);
+                        
+                        // Atualizar página após 2 segundos
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        mostrarAlerta(response.message, 'warning');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Erro ao processar decisão do Conselho:', xhr);
+                    mostrarAlerta('Erro ao processar decisão do Conselho.', 'danger');
+                }
+            });
+        }
+        
+        /**
+         * Atualizar estado da reunião
+         */
+        function atualizarEstadoReuniao(ativa, pppAtual = null) {
+            estadoReuniao.ativa = ativa;
+            estadoReuniao.pppAtual = pppAtual;
+            
+            // Atualizar interface
+            atualizarBotoesSecretaria();
+            atualizarStatusReuniao();
+            
+            // Desabilitar/habilitar tabela
+            if (ativa) {
+                $('#tabelaPpps').addClass('tabela-desabilitada');
+            } else {
+                $('#tabelaPpps').removeClass('tabela-desabilitada');
+            }
+        }
+        
+        /**
+         * Atualizar botões da secretária
+         */
+        function atualizarBotoesSecretaria() {
+            const btnDirectx = $('#btnDirectx');
+            const btnExcel = $('#btnGerarExcel');
+            const btnPdf = $('#btnGerarPdf');
+            const btnConselho = $('#btnConselho');
+            
+            if (estadoReuniao.ativa) {
+                btnDirectx.html('<i class="fas fa-pause mr-2"></i><strong>DIREX</strong><br><small>Reunião em Andamento</small>');
+                btnExcel.prop('disabled', true);
+                btnPdf.prop('disabled', true);
+                btnConselho.prop('disabled', true);
+            } else {
+                btnDirectx.html('<i class="fas fa-users mr-2"></i><strong>DIREX</strong><br><small>Iniciar/Retomar Reunião</small>');
+                
+                // Habilitar botões de relatório se reunião foi encerrada
+                const reuniaoEncerrada = !estadoReuniao.ativa && (estadoReuniao.excelGerado || estadoReuniao.pdfGerado);
+                btnExcel.prop('disabled', estadoReuniao.excelGerado);
+                btnPdf.prop('disabled', estadoReuniao.pdfGerado);
+                
+                // Habilitar Conselho se ambos relatórios foram gerados
+                btnConselho.prop('disabled', !(estadoReuniao.excelGerado && estadoReuniao.pdfGerado));
+            }
+        }
+        
+        /**
+         * Atualizar status da reunião
+         */
+        function atualizarStatusReuniao() {
+            const alertStatus = $('#alertStatusReuniao');
+            const textoStatus = $('#textoStatusReuniao');
+            
+            if (estadoReuniao.ativa) {
+                textoStatus.text('Reunião DIREX em andamento. Tabela desabilitada para navegação individual.');
+                alertStatus.removeClass('alert-info alert-success').addClass('alert-warning').show();
+            } else if (estadoReuniao.excelGerado || estadoReuniao.pdfGerado) {
+                textoStatus.text('Reunião DIREX encerrada. Relatórios disponíveis para geração.');
+                alertStatus.removeClass('alert-warning alert-info').addClass('alert-success').show();
+            } else {
+                alertStatus.hide();
+            }
+        }
+        
+        /**
+         * Mostrar alerta
+         */
+        function mostrarAlerta(mensagem, tipo = 'info') {
+            const alertClass = `alert-${tipo}`;
+            const iconClass = {
+                'success': 'fas fa-check-circle',
+                'danger': 'fas fa-exclamation-circle',
+                'warning': 'fas fa-exclamation-triangle',
+                'info': 'fas fa-info-circle'
+            }[tipo] || 'fas fa-info-circle';
+            
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="${iconClass} mr-2"></i>${mensagem}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            
+            // Remover alertas existentes e adicionar novo
+            $('.container-fluid .alert').remove();
+            $('.container-fluid').prepend(alertHtml);
+            
+            // Auto-hide após 5 segundos
+            setTimeout(() => {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        }
 
         // ===================================
-        // FUNÇÕES DO SISTEMA
+        // FUNÇÕES ORIGINAIS DO SISTEMA
         // ===================================
         
         function confirmarExclusao(id, nomeItem) {
@@ -611,7 +910,7 @@
             $('#comentarioExclusaoModal').modal('show');
         }
 
-        function prosseguirParaConfirmacao() {
+        function validarComentarioEProsseguir() {
             const comentario = document.getElementById('comentarioExclusao').value.trim();
             
             if (!comentario) {
@@ -624,52 +923,15 @@
             
             // Aguardar fechamento e abrir segunda modal
             $('#comentarioExclusaoModal').on('hidden.bs.modal', function() {
-                document.getElementById('nomeItemExclusaoFinal').textContent = pppParaExcluir.nome;
-                $('#confirmacaoExclusaoModal').modal('show');
+                document.getElementById('nomeItemConfirmacaoFinal').textContent = pppParaExcluir.nome;
+                document.getElementById('comentarioRegistrado').textContent = comentario;
+                document.getElementById('comentarioExclusaoHidden').value = comentario;
+                document.getElementById('formExclusaoFinal').action = `/ppp/${pppParaExcluir.id}`;
+                $('#confirmacaoFinalExclusaoModal').modal('show');
                 
                 // Remover listener para evitar múltiplas execuções
                 $(this).off('hidden.bs.modal');
             });
-        }
-
-        function excluirPppDefinitivamente() {
-            const comentario = document.getElementById('comentarioExclusao').value.trim();
-            
-            if (!pppParaExcluir.id || !comentario) {
-                console.error('Dados insuficientes para exclusão');
-                return;
-            }
-            
-            // Criar formulário para envio
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/ppp/${pppParaExcluir.id}`;
-            
-            // Token CSRF
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-            
-            // Method spoofing para DELETE
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'DELETE';
-            form.appendChild(methodInput);
-            
-            // Comentário
-            const comentarioInput = document.createElement('input');
-            comentarioInput.type = 'hidden';
-            comentarioInput.name = 'comentario_exclusao';
-            comentarioInput.value = comentario;
-            form.appendChild(comentarioInput);
-            
-            // Adicionar ao DOM e submeter
-            document.body.appendChild(form);
-            form.submit();
         }
 
         // ===================================
@@ -697,17 +959,42 @@
             
             // Clique em qualquer parte da linha do PPP para visualizar
             $('.ppp-row').click(function() {
+                // Verificar se tabela está desabilitada
+                if ($('#tabelaPpps').hasClass('tabela-desabilitada')) {
+                    return false;
+                }
+                
                 var pppId = $(this).data('ppp-id');
                 console.log('🔗 Redirecionando para PPP:', pppId);
                 window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
             });
             
+            // Inicializar estado da secretária se aplicável
+            @if(Auth::user()->hasRole('secretaria'))
+                console.log('👩‍💼 Usuário é secretária - inicializando controles especiais');
+                
+                // Verificar estado inicial da reunião
+                $.ajax({
+                    url: '{{ route("ppp.direx.verificar-reuniao-ativa") }}',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.reuniao_ativa) {
+                            atualizarEstadoReuniao(true, response.ppp_atual);
+                        }
+                        
+                        // Verificar se relatórios já foram gerados
+                        estadoReuniao.excelGerado = response.excel_gerado || false;
+                        estadoReuniao.pdfGerado = response.pdf_gerado || false;
+                        atualizarBotoesSecretaria();
+                    },
+                    error: function(xhr) {
+                        console.warn('Não foi possível verificar estado inicial da reunião');
+                    }
+                });
+            @endif
+            
             // Log de inicialização completa
             console.log('✅ Inicialização da página concluída');
-            console.log('💡 Comandos de teste disponíveis:');
-            console.log('   - testarModal() - Testa abertura do modal');
-            console.log('   - testarAjax(pppId) - Testa requisição AJAX');
-            console.log('   - verificarDependencias() - Verifica bibliotecas');
         });
     </script>
 @endsection

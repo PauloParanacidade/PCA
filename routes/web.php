@@ -50,6 +50,39 @@ Route::middleware(['auth'])->group(function () {
     Route::post('ppp/{ppp}/incluir-pca', [PppController::class, 'incluirNaPca'])->name('ppp.incluir-pca');
 
     Route::get('/ppp/{id}/historico', [PppController::class, 'historico'])->name('ppp.history');
+    
+    // === NOVAS ROTAS PARA FLUXO DIREX E CONSELHO ===
+    
+    // Reunião DIREX
+    Route::post('/ppp/direx/iniciar-reuniao', [PppController::class, 'iniciarReuniaoDirectx'])->name('ppp.direx.iniciar-reuniao');
+    Route::get('/ppp/direx/proximo/{ppp?}', [PppController::class, 'proximoPppDirectx'])->name('ppp.direx.proximo');
+    Route::get('/ppp/direx/anterior/{ppp?}', [PppController::class, 'anteriorPppDirectx'])->name('ppp.direx.anterior');
+    Route::post('/ppp/direx/encerrar-reuniao', [PppController::class, 'encerrarReuniaoDirectx'])->name('ppp.direx.encerrar-reuniao');
+    
+    // Navegação durante reunião DIREX
+    Route::get('/ppp/{ppp}/direx/navegar-proximo', [PppController::class, 'navegarProximoDirectx'])->name('ppp.direx.navegar-proximo');
+    Route::get('/ppp/{ppp}/direx/navegar-anterior', [PppController::class, 'navegarAnteriorDirectx'])->name('ppp.direx.navegar-anterior');
+    
+    // Ações durante reunião DIREX
+    Route::post('/ppp/{ppp}/direx/editar', [PppController::class, 'editarDuranteDirectx'])->name('ppp.direx.editar');
+    Route::post('/ppp/{ppp}/direx/incluir-pca', [PppController::class, 'incluirNaPcaDirectx'])->name('ppp.direx.incluir-pca');
+    Route::post('/ppp/direx/pausar', [PppController::class, 'pausarReuniaoDirectx'])->name('ppp.direx.pausar');
+    Route::post('/ppp/direx/atualizar-status', [PppController::class, 'atualizarStatusDirectx'])->name('ppp.direx.atualizar-status');
+    
+    // Geração de relatórios
+    Route::post('/ppp/relatorios/gerar-excel', [PppController::class, 'gerarExcel'])->name('ppp.relatorios.gerar-excel');
+    Route::post('/ppp/relatorios/gerar-pdf', [PppController::class, 'gerarPdf'])->name('ppp.relatorios.gerar-pdf');
+    
+    // Aprovação do Conselho
+    Route::post('/ppp/conselho/processar', [PppController::class, 'processarConselho'])->name('ppp.conselho.processar');
+    
+    // Histórico da secretária
+    Route::get('/ppp/secretaria/historico', [PppController::class, 'historicoSecretaria'])->name('ppp.secretaria.historico');
+    
+    // Métodos auxiliares para verificação de estado
+    Route::get('/ppp/direx/verificar-reuniao-ativa', [PppController::class, 'verificarReuniaoDirectxAtiva'])->name('ppp.direx.verificar-reuniao-ativa');
+    Route::get('/ppp/direx/aguardando', [PppController::class, 'obterPppsAguardandoDirectx'])->name('ppp.direx.aguardando');
+    Route::get('/ppp/conselho/aguardando', [PppController::class, 'obterPppsAguardandoConselho'])->name('ppp.conselho.aguardando');
 });
 
 // Rota para depuração (ambiente local)

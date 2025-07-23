@@ -42,8 +42,10 @@ return new class extends Migration
                   ->constrained('users')
                   ->comment('Usuário que realizou a ação');
             
-            // Tipo de ação realizada (ENUM atualizado)
+            // Tipo de ação realizada (ENUM ATUALIZADO com fluxo DIREX/Conselho)
+            // No campo acao, certifique-se de que inclui:
             $table->enum('acao', [
+                // Ações básicas do PPP
                 'rascunho_criado',
                 'ppp_enviado', 
                 'aprovacao_intermediaria',
@@ -53,8 +55,20 @@ return new class extends Migration
                 'correcao_enviada',
                 'reprovacao',
                 'exclusao',
-                'em_avaliacao'
-            ])->comment('Tipo de ação realizada no PPP');
+                'em_avaliacao',
+                
+                // Ações do fluxo DIREX e Conselho
+                'incluido_pca',
+                'reuniao_direx_iniciada',
+                'direx_avaliando',
+                'direx_editado',
+                'reuniao_direx_pausada',
+                'reuniao_direx_encerrada',
+                'excel_gerado',
+                'pdf_gerado',
+                'conselho_aprovado',
+                'conselho_reprovado'
+            ])->nullable();
             
             // Dados adicionais em JSON (opcional)
             $table->json('dados_adicionais')

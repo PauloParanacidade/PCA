@@ -182,7 +182,6 @@
                                     </div>
                                 </div>
                                 <div class="row mb-2">
-                                                                    <div class="row mb-2">
                                     <div class="col-md-6">
                                         <div class="info-group">
                                             <label class="info-label">Prorrogável</label>
@@ -332,20 +331,76 @@
                         @php
                             $usuarioLogado = auth()->user();
                             $ehSecretaria = $usuarioLogado->hasRole('secretaria');
-                            $ehCriadorDoPpp = $ppp->user_id === $usuarioLogado->id;
-                            $ehGestorAtual = $ppp->gestor_atual_id === $usuarioLogado->id;
-                            $temPerfilDAF = $usuarioLogado->hasRole('daf');
+                            $reuniaoDirectxAtiva = session('reuniao_direx_ativa', false);
+                            $modoReuniaoDirectx = $ehSecretaria && $reuniaoDirectxAtiva;
 
-                            // Lógica para secretária
-                            if ($ehSecretaria) {
+                            // Definir permissões de visualização de botões
+                            $podeVerBotoes = false;
+                            $podeEditar = false;
+
+                            // Lógica para determinar se pode ver botões de ação
+                            if ($usuarioLogado->hasRole('admin')) {
                                 $podeVerBotoes = true;
-                                $podeEditar = false; // Secretária não pode editar
-                            } else {
-                                // Lógica original para outros usuários
-                                $podeVerBotoes = ($ehGestorAtual || $temPerfilDAF) && !($ehCriadorDoPpp && !$ehGestorAtual && !$temPerfilDAF);
                                 $podeEditar = true;
+                            } elseif ($ehSecretaria) {
+                                // Secretária pode ver botões para PPPs aguardando DIREX ou em reunião DIREX
+                                $podeVerBotoes = in_array($ppp->status_id, [8, 9, 10]); // aguardando_direx, direx_avaliando, direx_editado
+                                $podeEditar = $modoReuniaoDirectx && $ppp->status_id == 9; // Só pode editar se estiver avaliando na reunião
+                            } elseif ($usuarioLogado->hasRole(['daf', 'gestor'])) {
+                                // DAF e gestores podem ver botões para PPPs aguardando aprovação ou em avaliação
+                                $podeVerBotoes = in_array($ppp->status_id, [2, 3]) && (
+                                    $ppp->user_id == $usuarioLogado->id || // É o criador
+                                    $usuarioLogado->hasRole('daf') || // É DAF
+                                    $usuarioLogado->manager == $ppp->user->manager // É gestor do mesmo setor
+                                );
+                                $podeEditar = $ppp->user_id == $usuarioLogado->id && in_array($ppp->status_id, [1, 4, 5]); // rascunho, aguardando_correcao, em_correcao
+                            } else {
+                                // Usuário comum só pode ver botões dos próprios PPPs
+                                $podeVerBotoes = $ppp->user_id == $usuarioLogado->id && in_array($ppp->status_id, [2, 3]);
+                                $podeEditar = $ppp->user_id == $usuarioLogado->id && in_array($ppp->status_id, [1, 4, 5]);
                             }
                         @endphp
+                        
+                        @if($modoReuniaoDirectx)
+                            <!-- Indicador de Reunião DIREX Ativa - MELHORADO -->
+                            <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <div class="reunion-indicator mr-3">
+                                        <i class="fas fa-users fa-2x text-warning"></i>
+                                        <div class="pulse-ring"></div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="alert-heading mb-1">
+                                            <i class="fas fa-circle text-danger blink mr-1"></i>
+                                            Reunião DIREX em Andamento
+                                            <span class="badge badge-warning ml-2">ATIVA</span>
+                                        </h5>
+                                        <p class="mb-1">Modo de navegação sequencial ativo. Use os botões Anterior/Próximo para navegar entre os PPPs.</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            Iniciada em {{ session('reuniao_direx_inicio', now())->format('d/m/Y H:i') }}
+                                        </small>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="progress-info">
+                                            <span class="badge badge-light badge-lg mb-1">{{ $navegacao['atual'] ?? '?' }}/{{ $navegacao['total'] ?? '?' }}</span>
+                                            <div class="progress" style="width: 120px; height: 10px;">
+                                                <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" 
+                                                     role="progressbar" 
+                                                     style="width: {{ $navegacao ? ($navegacao['atual'] / $navegacao['total']) * 100 : 0 }}%"
+                                                     aria-valuenow="{{ $navegacao['atual'] ?? 0 }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="{{ $navegacao['total'] ?? 100 }}">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted d-block mt-1">
+                                                {{ $navegacao ? round(($navegacao['atual'] / $navegacao['total']) * 100) : 0 }}% concluído
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
 
                         @if($podeVerBotoes)
                             <button 
@@ -384,40 +439,153 @@
                             </button>
                         @endif
 
-                        <!-- Botões de Navegação para Secretária -->
-                        @if($ehSecretaria && isset($navegacao))
-                            <div class="mb-3">
-                                <div class="row">
-                                    <div class="col-6">
-                                        @if($navegacao['anterior'])
-                                            <a href="{{ route('ppp.show', $navegacao['anterior']) }}" class="btn btn-outline-secondary btn-block">
-                                                <i class="fas fa-chevron-left mr-1"></i>
-                                                Anterior
-                                            </a>
-                                        @else
-                                            <button type="button" class="btn btn-outline-secondary btn-block" disabled>
-                                                <i class="fas fa-chevron-left mr-1"></i>
-                                                Anterior
-                                            </button>
-                                        @endif
+                        @if($modoReuniaoDirectx)
+                            <!-- Ações da Reunião DIREX - REORGANIZADAS -->
+                            <div class="card card-outline card-warning shadow-sm mb-3">
+                                <div class="card-header bg-warning py-2">
+                                    <h3 class="card-title text-white mb-0">
+                                        <i class="fas fa-gavel mr-2"></i>
+                                        Ações da Reunião DIREX
+                                    </h3>
+                                    <div class="card-tools">
+                                        <span class="badge badge-light">PPP #{{ $ppp->id }}</span>
                                     </div>
-                                    <div class="col-6">
-                                        @if($navegacao['proximo'])
-                                            <a href="{{ route('ppp.show', $navegacao['proximo']) }}" class="btn btn-outline-secondary btn-block">
-                                                Próximo
-                                                <i class="fas fa-chevron-right ml-1"></i>
-                                            </a>
-                                        @else
-                                            <button type="button" class="btn btn-outline-secondary btn-block" disabled>
-                                                Próximo
-                                                <i class="fas fa-chevron-right ml-1"></i>
+                                </div>
+                                <div class="card-body py-3">
+                                    <!-- Ações Principais -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-success btn-lg btn-block mb-2 action-btn" 
+                                                    onclick="incluirNaPcaDirectx({{ $ppp->id }})">
+                                                <i class="fas fa-check-circle mr-2"></i>
+                                                <span class="d-none d-md-inline">Incluir na </span>Tabela PCA
                                             </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-danger btn-lg btn-block mb-2 action-btn" 
+                                                    data-toggle="modal" data-target="#reprovarModal">
+                                                <i class="fas fa-times-circle mr-2"></i>
+                                                Reprovar PPP
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Ações Secundárias -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-info btn-lg btn-block action-btn" 
+                                                    onclick="editarDuranteDirectx({{ $ppp->id }})">
+                                                <i class="fas fa-edit mr-2"></i>
+                                                Editar PPP
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-secondary btn-lg btn-block action-btn" 
+                                                    onclick="sairDaReuniaoDirectx()">
+                                                <i class="fas fa-pause mr-2"></i>
+                                                Pausar Reunião
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Status do PPP Atual -->
+                                    <div class="mt-3 pt-3 border-top">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                Status: <span class="badge badge-{{ $ppp->status->cor ?? 'secondary' }}">{{ $ppp->status->nome ?? 'N/A' }}</span>
+                                            </small>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user mr-1"></i>
+                                                Criado por: {{ $ppp->user->name ?? 'N/A' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Navegação DIREX - APRIMORADA -->
+                        @if($ehSecretaria && isset($navegacao))
+                            <div class="card card-outline card-primary shadow-sm">
+                                <div class="card-header bg-primary py-2">
+                                    <h3 class="card-title text-white mb-0">
+                                        <i class="fas fa-arrows-alt-h mr-2"></i>
+                                        Navegação {{ $modoReuniaoDirectx ? 'DIREX' : 'PPPs' }}
+                                    </h3>
+                                    <div class="card-tools">
+                                        @if($modoReuniaoDirectx)
+                                            <span class="badge badge-warning">Modo DIREX</span>
                                         @endif
                                     </div>
                                 </div>
-                                <small class="text-muted d-block text-center mt-1">
-                                    PPP {{ $navegacao['atual'] }} de {{ $navegacao['total'] }}
-                                </small>
+                                <div class="card-body py-3">
+                                    <!-- Informações de Navegação -->
+                                    <div class="navigation-info mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">
+                                                <i class="fas fa-list mr-1"></i>
+                                                PPP {{ $navegacao['atual'] }} de {{ $navegacao['total'] }}
+                                            </span>
+                                            <div class="navigation-progress">
+                                                <div class="progress" style="width: 100px; height: 6px;">
+                                                    <div class="progress-bar bg-primary" 
+                                                         style="width: {{ ($navegacao['atual'] / $navegacao['total']) * 100 }}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Botões de Navegação -->
+                                    <div class="row">
+                                        <div class="col-6">
+                                            @if($navegacao['anterior'])
+                                                <button type="button" class="btn btn-outline-secondary btn-lg btn-block nav-btn" 
+                                                        onclick="navegarPppDirectx('anterior', {{ $navegacao['anterior'] }})">
+                                                    <i class="fas fa-chevron-left mr-1"></i>
+                                                    <span class="d-none d-md-inline">Anterior</span>
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-outline-secondary btn-lg btn-block" disabled>
+                                                    <i class="fas fa-chevron-left mr-1"></i>
+                                                    <span class="d-none d-md-inline">Anterior</span>
+                                                </button>
+                                            @endif
+                                        </div>
+                                        <div class="col-6">
+                                            @if($navegacao['proximo'])
+                                                <button type="button" class="btn btn-outline-secondary btn-lg btn-block nav-btn" 
+                                                        onclick="navegarPppDirectx('proximo', {{ $navegacao['proximo'] }})">
+                                                    <span class="d-none d-md-inline">Próximo</span>
+                                                    <i class="fas fa-chevron-right ml-1"></i>
+                                                </button>
+                                            @else
+                                                @if($modoReuniaoDirectx)
+                                                    <button type="button" class="btn btn-success btn-lg btn-block" 
+                                                            onclick="encerrarReuniaoDirectx()">
+                                                        <i class="fas fa-flag-checkered mr-1"></i>
+                                                        <span class="d-none d-md-inline">Encerrar</span> Reunião
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-outline-secondary btn-lg btn-block" disabled>
+                                                        <span class="d-none d-md-inline">Próximo</span>
+                                                        <i class="fas fa-chevron-right ml-1"></i>
+                                                    </button>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Atalhos de Teclado -->
+                                    @if($modoReuniaoDirectx)
+                                        <div class="mt-3 pt-3 border-top">
+                                            <small class="text-muted d-block text-center">
+                                                <i class="fas fa-keyboard mr-1"></i>
+                                                Atalhos: <kbd>←</kbd> Anterior | <kbd>→</kbd> Próximo | <kbd>Esc</kbd> Pausar
+                                            </small>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         @endif
 
@@ -682,7 +850,314 @@
 @section('js')
     @vite('resources/js/ppp-form.js')
     <script>
-        // ... existing code ...
+        <script>
+            $(document).ready(function() {
+                // Verificar se estamos em modo reunião DIREX
+                const modoReuniaoDirectx = {{ $modoReuniaoDirectx ? 'true' : 'false' }};
+                
+                if (modoReuniaoDirectx) {
+                    console.log('🎯 Modo Reunião DIREX ativo');
+                    
+                    // Atualizar status do PPP para 'direx_avaliando'
+                    atualizarStatusPppDirectx({{ $ppp->id }}, 'direx_avaliando');
+                    
+                    // Adicionar efeito de piscar no indicador
+                    setInterval(function() {
+                        $('.blink').fadeOut(500).fadeIn(500);
+                    }, 1000);
+                }
+            });
+            
+            // Adicionar atalhos de teclado para navegação DIREX
+            @if($modoReuniaoDirectx)
+                document.addEventListener('keydown', function(e) {
+                    // Verificar se não está em um input/textarea
+                    if (e.target.tagName.toLowerCase() === 'input' || 
+                        e.target.tagName.toLowerCase() === 'textarea') {
+                        return;
+                    }
+                    
+                    switch(e.key) {
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            @if($navegacao['anterior'])
+                                navegarPppDirectx('anterior', {{ $navegacao['anterior'] }});
+                            @endif
+                            break;
+                            
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            @if($navegacao['proximo'])
+                                navegarPppDirectx('proximo', {{ $navegacao['proximo'] }});
+                            @else
+                                encerrarReuniaoDirectx();
+                            @endif
+                            break;
+                            
+                        case 'Escape':
+                            e.preventDefault();
+                            sairDaReuniaoDirectx();
+                            break;
+                    }
+                });
+            @endif
+        
+        /**
+         * Navegar entre PPPs durante reunião DIREX
+         */
+        function navegarPppDirectx(direcao, pppId) {
+            console.log(`🔄 Navegando ${direcao} para PPP:`, pppId);
+            
+            // Construir a URL baseada na direção
+            let url;
+            if (direcao === 'proximo') {
+                url = '{{ route("ppp.direx.proximo", ":id") }}'.replace(':id', {{ $ppp->id }});
+            } else if (direcao === 'anterior') {
+                url = '{{ route("ppp.direx.anterior", ":id") }}'.replace(':id', {{ $ppp->id }});
+            } else {
+                console.error('Direção inválida:', direcao);
+                return;
+            }
+            
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    if (response.success && response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                    } else {
+                        mostrarAlerta(response.message || 'Erro ao navegar.', 'warning');
+                    }
+                },
+                error: function() {
+                    mostrarAlerta('Erro ao navegar entre PPPs.', 'danger');
+                }
+            });
+        }
+        
+        /**
+         * Incluir PPP na tabela PCA durante reunião DIREX
+         */
+        function incluirNaPcaDirectx(pppId) {
+            if (!confirm('Confirma a inclusão deste PPP na tabela PCA?')) {
+                return;
+            }
+            
+            mostrarLoading('Incluindo na PCA...');
+            
+            $.ajax({
+                url: `{{ route('ppp.direx.incluir-pca', ':id') }}`.replace(':id', pppId),
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        mostrarAlerta(response.message, 'success');
+                        
+                        // Navegar para próximo PPP automaticamente
+                        if (response.proximo_ppp_id) {
+                            setTimeout(() => {
+                                navegarPppDirectx('proximo', response.proximo_ppp_id);
+                            }, 1500);
+                        } else {
+                            // Último PPP - mostrar opção de encerrar reunião
+                            setTimeout(() => {
+                                if (confirm('Este era o último PPP. Deseja encerrar a reunião DIREX?')) {
+                                    encerrarReuniaoDirectx();
+                                }
+                            }, 2000);
+                        }
+                    } else {
+                        mostrarAlerta(response.message, 'warning');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Erro ao incluir na PCA:', xhr);
+                    mostrarAlerta('Erro ao incluir PPP na tabela PCA.', 'danger');
+                },
+                complete: function() {
+                    ocultarLoading();
+                }
+            });
+        }
+        
+        /**
+         * Editar PPP durante reunião DIREX
+         */
+        function editarDuranteDirectx(pppId) {
+            // Redirecionar para edição com parâmetro especial
+            window.location.href = `{{ route('ppp.edit', ':id') }}`.replace(':id', pppId) + '?modo=direx';
+        }
+        
+        /**
+         * Sair/Pausar reunião DIREX
+         */
+        function sairDaReuniaoDirectx() {
+            if (!confirm('Deseja pausar a reunião DIREX? Você poderá retomar posteriormente.')) {
+                return;
+            }
+            
+            mostrarLoading('Pausando reunião...');
+            
+            $.ajax({
+                url: '/ppp/direx/pausar', // URL temporária ou implementar rota
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    ppp_atual_id: {{ $ppp->id }}
+                },
+                success: function(response) {
+                    if (response.success) {
+                        mostrarAlerta('Reunião pausada com sucesso.', 'info');
+                        // Redirecionar para index
+                        setTimeout(() => {
+                            window.location.href = '{{ route("ppp.index") }}';
+                        }, 1500);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Erro ao pausar reunião:', xhr);
+                    mostrarAlerta('Erro ao pausar reunião.', 'danger');
+                },
+                complete: function() {
+                    ocultarLoading();
+                }
+            });
+        }
+        
+        /**
+         * Encerrar reunião DIREX
+         */
+        function encerrarReuniaoDirectx() {
+            if (!confirm('Confirma o encerramento da reunião DIREX? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            mostrarLoading('Encerrando reunião...');
+            
+            $.ajax({
+                url: `{{ route('ppp.direx.encerrar-reuniao') }}`,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        mostrarAlerta('Reunião DIREX encerrada com sucesso!', 'success');
+                        // Redirecionar para index
+                        setTimeout(() => {
+                            window.location.href = '{{ route("ppp.index") }}';
+                        }, 2000);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Erro ao encerrar reunião:', xhr);
+                    mostrarAlerta('Erro ao encerrar reunião.', 'danger');
+                },
+                complete: function() {
+                    ocultarLoading();
+                }
+            });
+        }
+        
+        /**
+         * Atualizar status do PPP durante DIREX
+         */
+        function atualizarStatusPppDirectx(pppId, novoStatus) {
+            $.ajax({
+                url: '/ppp/direx/atualizar-status', // URL temporária ou implementar rota
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    ppp_id: pppId,
+                    status: novoStatus
+                },
+                success: function(response) {
+                    console.log('✅ Status atualizado:', response);
+                },
+                error: function(xhr) {
+                    console.error('❌ Erro ao atualizar status:', xhr);
+                }
+            });
+        }
+        
+        /**
+         * Funções auxiliares
+         */
+        function mostrarLoading(texto = 'Carregando...') {
+            // Implementar overlay de loading
+            $('body').append(`
+                <div id="loadingOverlay" class="loading-overlay">
+                    <div class="loading-content">
+                        <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+                        <p class="mb-0">${texto}</p>
+                    </div>
+                </div>
+            `);
+        }
+        
+        function ocultarLoading() {
+            $('#loadingOverlay').remove();
+        }
+        
+        function mostrarAlerta(mensagem, tipo = 'info') {
+            const alertClass = `alert-${tipo}`;
+            const iconClass = {
+                'success': 'fa-check-circle',
+                'danger': 'fa-exclamation-triangle',
+                'warning': 'fa-exclamation-circle',
+                'info': 'fa-info-circle'
+            }[tipo] || 'fa-info-circle';
+            const alerta = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass} mr-2"></i>
+                    ${mensagem}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `;
+            $('.content-header').after(alerta);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
+        </script>
+
+        <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        </style>
     </script>
 @endsection
 
@@ -897,6 +1372,93 @@
     .row.mb-3 .col-lg-6:nth-child(even) {
         padding-left: 15px;
         padding-right: 15px;
+    }
+}
+
+/* ---------- ESTILOS PARA REUNIÃO DIREX ---------- */
+/* Indicador de reunião com animação */
+.reunion-indicator {
+    position: relative;
+    display: inline-block;
+}
+
+.pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border: 3px solid #ffc107;
+    border-radius: 50%;
+    animation: pulse-ring 2s infinite;
+    opacity: 0;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Botões de ação com hover melhorado */
+.action-btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+/* Botões de navegação */
+.nav-btn {
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+/* Informações de progresso */
+.progress-info {
+    text-align: center;
+}
+
+.navigation-info {
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e9ecef;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+    .action-btn {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .nav-btn {
+        font-size: 0.9rem;
+    }
+    
+    .reunion-indicator .pulse-ring {
+        width: 45px;
+        height: 45px;
     }
 }
 </style>

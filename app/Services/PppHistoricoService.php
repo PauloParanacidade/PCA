@@ -99,7 +99,7 @@ class PppHistoricoService
 
     /**
      * Registra aprovação final (última aprovação - DAF)
-     * PPP vai para tabela PCA com ID incremental
+     * PPP vai para aguardando_direx
      */
     public function registrarAprovacaoFinal(PcaPpp $ppp, ?string $comentario = null): PppHistorico
     {
@@ -108,7 +108,7 @@ class PppHistoricoService
             'aprovacao_final',
             $comentario, // Apenas se gestor digitou comentário opcional
             2, // Status anterior: aguardando_aprovacao
-            6  // Status atual: aprovado_final
+            8  // Status atual: aguardando_direx (ATUALIZADO)
         );
     }
 
@@ -205,6 +205,196 @@ class PppHistoricoService
         );
     }
 
+    // ===== NOVOS MÉTODOS PARA FLUXO DIREX E CONSELHO =====
+
+    /**
+     * Registra quando secretária inclui PPP na tabela PCA
+     * Ação realizada durante reunião DIREX
+     */
+    public function registrarInclusaoPca(PcaPpp $ppp, ?string $comentario = null, ?int $userId = null): PppHistorico
+    {
+        return $this->registrarAcao(
+            $ppp,
+            'incluido_pca',
+            $comentario ?? 'PPP incluído na tabela PCA durante reunião DIREX',
+            9, // Status anterior: direx_avaliando
+            11, // Status atual: aguardando_conselho
+            $userId
+        );
+    }
+
+    /**
+     * Registra início da reunião DIREX pela secretária
+     * Ação global que afeta o sistema, não um PPP específico
+     */
+    public function registrarReuniaoDirectxIniciada(?int $userId = null): void
+    {
+        Log::info('Reunião DIREX iniciada', [
+            'user_id' => $userId ?? Auth::id(),
+            'timestamp' => now()
+        ]);
+        
+        // Registra no histórico global da secretária
+        // Este método pode ser expandido para criar um registro específico
+        // em uma tabela de histórico da secretária se necessário
+    }
+
+    /**
+     * Registra quando PPP entra em avaliação durante reunião DIREX
+     * Ação automática quando secretária visualiza PPP na reunião
+     */
+    public function registrarDirectxAvaliando(PcaPpp $ppp, ?int $userId = null): PppHistorico
+    {
+        return $this->registrarAcao(
+            $ppp,
+            'direx_avaliando',
+            null, // Ação automática - sem justificativa
+            8, // Status anterior: aguardando_direx
+            9, // Status atual: direx_avaliando
+            $userId
+        );
+    }
+
+    /**
+     * Registra quando PPP é editado durante reunião DIREX
+     * Ação realizada pela secretária com possível comentário
+     */
+    public function registrarDirectxEditado(PcaPpp $ppp, ?string $comentario = null, ?int $userId = null): PppHistorico
+    {
+        return $this->registrarAcao(
+            $ppp,
+            'direx_editado',
+            $comentario ?? 'PPP editado durante reunião DIREX',
+            9, // Status anterior: direx_avaliando
+            10, // Status atual: direx_editado
+            $userId
+        );
+    }
+
+    /**
+     * Registra encerramento da reunião DIREX
+     * Ação global realizada pela secretária
+     */
+    public function registrarReuniaoDirectxEncerrada(?int $userId = null): void
+    {
+        Log::info('Reunião DIREX encerrada', [
+            'user_id' => $userId ?? Auth::id(),
+            'timestamp' => now()
+        ]);
+        
+        // Registra no histórico global da secretária
+        // Este método pode ser expandido para criar um registro específico
+        // em uma tabela de histórico da secretária se necessário
+    }
+
+    /**
+     * Registra geração de Excel
+     */
+    public function registrarExcelGerado($userId, $comentario = null)
+    {
+        Log::info('Excel gerado', [
+            'user_id' => $userId,
+            'timestamp' => now()
+        ]);
+
+        return PppHistorico::create([
+            'ppp_id' => null,
+            'status_anterior' => null,
+            'status_atual' => null,
+            'justificativa' => $comentario ?? 'Relatório Excel gerado pela secretária',
+            'user_id' => $userId,
+            'acao' => 'excel_gerado',
+            'dados_adicionais' => json_encode([
+                'timestamp' => now()->toISOString(),
+                'tipo' => 'relatorio_excel'
+            ])
+        ]);
+    }
+
+    /**
+     * Registra geração de PDF
+     */
+    public function registrarPdfGerado($userId, $comentario = null)
+    {
+        Log::info('PDF gerado', [
+            'user_id' => $userId,
+            'timestamp' => now()
+        ]);
+
+        return PppHistorico::create([
+            'ppp_id' => null,
+            'status_anterior' => null,
+            'status_atual' => null,
+            'justificativa' => $comentario ?? 'Relatório PDF gerado pela secretária',
+            'user_id' => $userId,
+            'acao' => 'pdf_gerado',
+            'dados_adicionais' => json_encode([
+                'timestamp' => now()->toISOString(),
+                'tipo' => 'relatorio_pdf'
+            ])
+        ]);
+    }
+
+    /**
+     * Registra aprovação do Conselho
+     * Aplica a todos os PPPs com status aguardando_conselho
+     */
+    public function registrarConselhoAprovado(array $pppIds, ?string $comentario = null, ?int $userId = null): void
+    {
+        foreach ($pppIds as $pppId) {
+            $ppp = PcaPpp::find($pppId);
+            if ($ppp && $ppp->status_id == 11) { // aguardando_conselho
+                $this->registrarAcao(
+                    $ppp,
+                    'conselho_aprovado',
+                    $comentario ?? 'PPP aprovado pelo Conselho',
+                    11, // Status anterior: aguardando_conselho
+                    12, // Status atual: conselho_aprovado
+                    $userId
+                );
+                
+                // Atualiza o status do PPP
+                $ppp->update(['status_id' => 12]);
+            }
+        }
+        
+        Log::info('Conselho aprovou PPPs', [
+            'ppp_ids' => $pppIds,
+            'user_id' => $userId ?? Auth::id(),
+            'timestamp' => now()
+        ]);
+    }
+
+    /**
+     * Registra reprovação do Conselho
+     * Aplica a todos os PPPs com status aguardando_conselho
+     */
+    public function registrarConselhoReprovado(array $pppIds, ?string $comentario = null, ?int $userId = null): void
+    {
+        foreach ($pppIds as $pppId) {
+            $ppp = PcaPpp::find($pppId);
+            if ($ppp && $ppp->status_id == 11) { // aguardando_conselho
+                $this->registrarAcao(
+                    $ppp,
+                    'conselho_reprovado',
+                    $comentario ?? 'PPP reprovado pelo Conselho',
+                    11, // Status anterior: aguardando_conselho
+                    13, // Status atual: conselho_reprovado
+                    $userId
+                );
+                
+                // Atualiza o status do PPP
+                $ppp->update(['status_id' => 13]);
+            }
+        }
+        
+        Log::info('Conselho reprovou PPPs', [
+            'ppp_ids' => $pppIds,
+            'user_id' => $userId ?? Auth::id(),
+            'timestamp' => now()
+        ]);
+    }
+
     // ===== MÉTODOS LEGADOS (para compatibilidade) =====
     // Estes métodos mantêm compatibilidade com código existente
     // mas internamente usam os novos métodos
@@ -231,7 +421,7 @@ class PppHistoricoService
     public function registrarAprovacao(PcaPpp $ppp, ?string $comentario = null, ?int $statusAnterior = null): PppHistorico
     {
         // Determinar se é aprovação final baseado no status atual
-        if ($ppp->status_id == 6) { // aprovado_final
+        if ($ppp->status_id == 8) { // aguardando_direx
             return $this->registrarAprovacaoFinal($ppp, $comentario);
         } else {
             return $this->registrarAprovacaoIntermediaria($ppp, $comentario);
@@ -246,19 +436,7 @@ class PppHistoricoService
         return $this->registrarCorrecaoSolicitada($ppp, $comentario);
     }
 
-    /**
-     * Registra quando secretária inclui PPP na tabela PCA
-     */
-    public function registrarInclusaoPca(PcaPpp $ppp, ?string $comentario = null): PppHistorico
-    {
-        return $this->registrarAcao(
-            $ppp,
-            'incluido_pca',
-            $comentario ?? 'PPP incluído na tabela PCA pela secretária',
-            6, // Status anterior: aprovado_final
-            8  // Status atual: aprovado_direx
-        );
-    }
+    // ===== MÉTODOS DE CONSULTA =====
 
     /**
      * Obtém histórico completo do PPP ordenado cronologicamente
@@ -310,5 +488,64 @@ class PppHistoricoService
         return PppHistorico::where('ppp_id', $ppp->id)
             ->where('acao', 'reprovacao')
             ->exists();
+    }
+
+    /**
+     * Obtém PPPs que estão aguardando DIREX
+     */
+    public function obterPppsAguardandoDirectx(): \Illuminate\Database\Eloquent\Collection
+    {
+        return PcaPpp::where('status_id', 8) // aguardando_direx
+            ->with(['usuario', 'status'])
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * Obtém PPPs que estão aguardando Conselho
+     */
+    public function obterPppsAguardandoConselho(): \Illuminate\Database\Eloquent\Collection
+    {
+        return PcaPpp::where('status_id', 11) // aguardando_conselho
+            ->with(['usuario', 'status'])
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * Verifica se há reunião DIREX ativa
+     * (implementação básica - pode ser expandida com tabela específica)
+     */
+    public function temReuniaoDirectxAtiva(): bool
+    {
+        // Por enquanto, verifica se há PPPs com status direx_avaliando
+        return PcaPpp::where('status_id', 9)->exists(); // direx_avaliando
+    }
+
+    /**
+     * Registra pausa da reunião DIREX
+     */
+    public function registrarReuniaoDirectxPausada($userId, $comentario = null)
+    {
+        // Log da ação
+        Log::info('Reunião DIREX pausada', [
+            'user_id' => $userId,
+            'comentario' => $comentario,
+            'timestamp' => now()
+        ]);
+
+        // Registrar no histórico geral (sem PPP específico)
+        return PppHistorico::create([
+            'ppp_id' => null, // Ação global
+            'status_anterior' => null,
+            'status_atual' => null,
+            'justificativa' => $comentario ?? 'Reunião DIREX pausada pela secretária',
+            'user_id' => $userId,
+            'acao' => 'reuniao_direx_pausada',
+            'dados_adicionais' => json_encode([
+                'timestamp' => now()->toISOString(),
+                'tipo' => 'pausa_reuniao_direx'
+            ])
+        ]);
     }
 }
