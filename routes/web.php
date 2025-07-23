@@ -45,6 +45,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ppp/{ppp}/reprovar', [PppController::class, 'reprovar'])->name('ppp.reprovar');
     Route::post('ppp/{ppp}/solicitar-correcao', [PppController::class, 'solicitarCorrecao'])->name('ppp.solicitar-correcao');
     Route::post('ppp/{ppp}/enviar-aprovacao', [PppController::class, 'enviarParaAprovacao'])->name('ppp.enviar-aprovacao');
+    
+    // Nova rota para secretária incluir na PCA
+    Route::post('ppp/{ppp}/incluir-pca', [PppController::class, 'incluirNaPca'])->name('ppp.incluir-pca');
+
     Route::get('/ppp/{id}/historico', [PppController::class, 'historico'])->name('ppp.history');
 });
 

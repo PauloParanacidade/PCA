@@ -49,7 +49,7 @@ class StorePppRequest extends FormRequest
             'num_contrato' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:20',
             'mes_vigencia_final' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:10',
             'contrato_prorrogavel' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
-            'renov_contrato' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
+            'renov_contrato' => 'required_if:contrato_prorrogavel,Sim|nullable|in:Sim,Não',
 
             // Informações financeiras (Card Verde) - REGEX corrigido para PCRE2
             'estimativa_valor' => ['required', 'regex:/^\\s*R\\$\\s?\\d{1,3}(\\.\\d{3})*(,\\d{2})?\\s*$/'],

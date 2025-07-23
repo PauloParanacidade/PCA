@@ -247,6 +247,20 @@ class PppHistoricoService
     }
 
     /**
+     * Registra quando secretária inclui PPP na tabela PCA
+     */
+    public function registrarInclusaoPca(PcaPpp $ppp, ?string $comentario = null): PppHistorico
+    {
+        return $this->registrarAcao(
+            $ppp,
+            'incluido_pca',
+            $comentario ?? 'PPP incluído na tabela PCA pela secretária',
+            6, // Status anterior: aprovado_final
+            8  // Status atual: aprovado_direx
+        );
+    }
+
+    /**
      * Obtém histórico completo do PPP ordenado cronologicamente
      */
     public function obterHistoricoCompleto(PcaPpp $ppp)

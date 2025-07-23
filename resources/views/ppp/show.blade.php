@@ -315,69 +315,119 @@
         <!-- Sidebar com Ações -->
         <div class="col-lg-3">
             <!-- Card de Ações (ROXO) -->
-    <div class="card card-outline card-purple shadow-sm">
-    <div class="card-header bg-purple py-2">
-        <h3 class="card-title text-white mb-0">
-            <i class="fas fa-cogs mr-2"></i>
-            Ações
-        </h3>
-    </div>
-    <div class="card-body py-3">
-        <div class="d-flex flex-column">
-            <button type="button" class="btn btn-outline-info btn-lg mb-3" data-toggle="modal" data-target="#historicoModal">
-                <i class="fas fa-history mr-2"></i>
-                Histórico
-            </button>
+            <div class="card card-outline card-purple shadow-sm">
+                <div class="card-header bg-purple py-2">
+                    <h3 class="card-title text-white mb-0">
+                        <i class="fas fa-cogs mr-2"></i>
+                        Ações
+                    </h3>
+                </div>
+                <div class="card-body py-3">
+                    <div class="d-flex flex-column">
+                        <button type="button" class="btn btn-outline-info btn-lg mb-3" data-toggle="modal" data-target="#historicoModal">
+                            <i class="fas fa-history mr-2"></i>
+                            Histórico
+                        </button>
 
-            @php
-                $usuarioLogado = auth()->user();
-                $ehCriadorDoPpp = $ppp->user_id === $usuarioLogado->id;
-                $ehGestorAtual = $ppp->gestor_atual_id === $usuarioLogado->id;
-                $temPerfilDAF = $usuarioLogado->hasRole('daf');
+                        @php
+                            $usuarioLogado = auth()->user();
+                            $ehSecretaria = $usuarioLogado->hasRole('secretaria');
+                            $ehCriadorDoPpp = $ppp->user_id === $usuarioLogado->id;
+                            $ehGestorAtual = $ppp->gestor_atual_id === $usuarioLogado->id;
+                            $temPerfilDAF = $usuarioLogado->hasRole('daf');
 
-                // Nova lógica: mostrar botões se:
-                // 1. É o gestor atual (independente de ser criador ou não)
-                // 2. OU tem perfil DAF (mesmo se for criador)
-                // 3. E NÃO é apenas o criador sem ser gestor ou DAF
-                $podeVerBotoes = ($ehGestorAtual || $temPerfilDAF) && !($ehCriadorDoPpp && !$ehGestorAtual && !$temPerfilDAF);
-            @endphp
+                            // Lógica para secretária
+                            if ($ehSecretaria) {
+                                $podeVerBotoes = true;
+                                $podeEditar = false; // Secretária não pode editar
+                            } else {
+                                // Lógica original para outros usuários
+                                $podeVerBotoes = ($ehGestorAtual || $temPerfilDAF) && !($ehCriadorDoPpp && !$ehGestorAtual && !$temPerfilDAF);
+                                $podeEditar = true;
+                            }
+                        @endphp
 
-            @if($podeVerBotoes)
-                <button 
-    type="button" 
-    class="btn btn-outline-success btn-lg mb-3" 
-    data-toggle="modal" 
-    data-target="#aprovarModal"
-    id="btnValidarEncaminhar"
-    title="Após sua validação, o PPP será avaliado pelo seu chefe, no próximo nível hierárquico."
->
-    <i class="fas fa-check mr-2"></i>
-    Validar e Encaminhar
-</button>
+                        @if($podeVerBotoes)
+                            <button 
+                                type="button" 
+                                class="btn btn-outline-success btn-lg mb-3" 
+                                data-toggle="modal" 
+                                data-target="#aprovarModal"
+                                id="btnValidarEncaminhar"
+                                title="{{ $ehSecretaria ? 'Incluir este PPP na tabela PCA' : 'Após sua validação, o PPP será avaliado pelo seu chefe, no próximo nível hierárquico.' }}"
+                            >
+                                <i class="fas fa-check mr-2"></i>
+                                {{ $ehSecretaria ? 'Incluir na tabela PCA' : 'Validar e Encaminhar' }}
+                            </button>
 
-                
-                <button type="button" class="btn btn-outline-warning btn-lg mb-3" data-toggle="modal" data-target="#solicitarCorrecaoModal">
-                    <i class="fas fa-edit mr-2"></i>
-                    Solicitar Correção
-                </button>
-                <button type="button" class="btn btn-outline-danger btn-lg mb-3" data-toggle="modal" data-target="#reprovarModal">
-                    <i class="fas fa-times mr-2"></i>
-                    Reprovar
-                </button>
-            @endif
+                            @if(!$ehSecretaria)
+                                <button type="button" class="btn btn-outline-warning btn-lg mb-3" data-toggle="modal" data-target="#solicitarCorrecaoModal">
+                                    <i class="fas fa-edit mr-2"></i>
+                                    Solicitar Correção
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-lg mb-3" data-toggle="modal" data-target="#reprovarModal">
+                                    <i class="fas fa-times mr-2"></i>
+                                    Reprovar
+                                </button>
+                            @endif
+                        @endif
 
-            <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-outline-primary btn-lg mb-3">
-                <i class="fas fa-edit mr-2"></i>
-                Editar
-            </a>
+                        @if($podeEditar)
+                            <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-outline-primary btn-lg mb-3">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar
+                            </a>
+                        @else
+                            <button type="button" class="btn btn-outline-secondary btn-lg mb-3" disabled title="Edição não permitida">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar
+                            </button>
+                        @endif
 
-            <a href="{{ route('ppp.index') }}" class="btn btn-outline-secondary btn-lg">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Retornar
-            </a>
-        </div>
-    </div>
-</div>
+                        <!-- Botões de Navegação para Secretária -->
+                        @if($ehSecretaria && isset($navegacao))
+                            <div class="mb-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        @if($navegacao['anterior'])
+                                            <a href="{{ route('ppp.show', $navegacao['anterior']) }}" class="btn btn-outline-secondary btn-block">
+                                                <i class="fas fa-chevron-left mr-1"></i>
+                                                Anterior
+                                            </a>
+                                        @else
+                                            <button type="button" class="btn btn-outline-secondary btn-block" disabled>
+                                                <i class="fas fa-chevron-left mr-1"></i>
+                                                Anterior
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <div class="col-6">
+                                        @if($navegacao['proximo'])
+                                            <a href="{{ route('ppp.show', $navegacao['proximo']) }}" class="btn btn-outline-secondary btn-block">
+                                                Próximo
+                                                <i class="fas fa-chevron-right ml-1"></i>
+                                            </a>
+                                        @else
+                                            <button type="button" class="btn btn-outline-secondary btn-block" disabled>
+                                                Próximo
+                                                <i class="fas fa-chevron-right ml-1"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block text-center mt-1">
+                                    PPP {{ $navegacao['atual'] }} de {{ $navegacao['total'] }}
+                                </small>
+                            </div>
+                        @endif
+
+                        <a href="{{ route('ppp.index') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Retornar
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -388,25 +438,31 @@
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="aprovarModalLabel">
-                    <i class="fas fa-check-circle mr-2"></i>Aprovar PPP
+                    <i class="fas fa-check-circle mr-2"></i>
+                    {{ $ehSecretaria ? 'Incluir na tabela PCA' : 'Aprovar PPP' }}
                 </h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form action="{{ route('ppp.aprovar', $ppp->id) }}" method="POST">
+            <form action="{{ $ehSecretaria ? route('ppp.incluir-pca', $ppp->id) : route('ppp.aprovar', $ppp->id) }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle mr-2"></i>
-                        Você está prestes a aprovar o PPP <strong>{{ $ppp->nome_item }}</strong>.
-                        O PPP será encaminhado para o próximo nível da hierarquia.
+                        @if($ehSecretaria)
+                            Você está prestes a incluir o PPP <strong>{{ $ppp->nome_item }}</strong> na tabela PCA.
+                            Este PPP será marcado como aprovado final e incluído no Plano de Contratações Anual.
+                        @else
+                            Você está prestes a aprovar o PPP <strong>{{ $ppp->nome_item }}</strong>.
+                            O PPP será encaminhado para o próximo nível da hierarquia.
+                        @endif
                     </div>
 
                     <div class="form-group">
                         <label for="comentario">Comentário (opcional)</label>
                         <textarea class="form-control" id="comentario" name="comentario" rows="3"
-                                placeholder="Adicione um comentário sobre a aprovação (opcional)..."></textarea>
+                                placeholder="{{ $ehSecretaria ? 'Adicione um comentário sobre a inclusão na tabela PCA (opcional)...' : 'Adicione um comentário sobre a aprovação (opcional)...' }}"></textarea>
                         <small class="form-text text-muted">
                             Este comentário será registrado no histórico do PPP.
                         </small>
@@ -417,7 +473,8 @@
                         <i class="fas fa-times mr-1"></i>Cancelar
                     </button>
                     <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check mr-1"></i>Confirmar Aprovação
+                        <i class="fas fa-check mr-1"></i>
+                        {{ $ehSecretaria ? 'Confirmar Inclusão na PCA' : 'Confirmar Aprovação' }}
                     </button>
                 </div>
             </form>
@@ -645,45 +702,100 @@
     border-color: #fd7e14 !important;
 }
 
-/* ---------- COMPONENTES DE EXIBIÇÃO ---------- */
+/* ---------- COMPONENTES DE EXIBIÇÃO - MELHORADOS ---------- */
 .info-group {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.6rem; /* Reduzido de 0.75rem */
 }
 .info-label {
-    font-size: 0.8rem;
+    font-size: 0.85rem; /* Aumentado de 0.8rem */
     font-weight: 600;
     color: #6c757d;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.3rem; /* Aumentado de 0.25rem */
     display: block;
 }
 .info-value {
-    font-size: 0.95rem;
+    font-size: 1.1rem; /* Aumentado de 0.95rem */
     font-weight: 500;
     color: #495057;
     line-height: 1.4;
 }
 .info-value-text {
-    font-size: 0.9rem;
+    font-size: 1rem; /* Aumentado de 0.9rem */
     color: #6c757d;
     line-height: 1.5;
-    max-height: 4.5rem;
+    max-height: 5rem; /* Aumentado de 4.5rem */
     overflow-y: auto;
+    padding: 0.4rem 0.6rem !important; /* Reduzido de 0.5rem 0.75rem */
+}
+
+/* ---------- CARDS COM ALTURA FLEXÍVEL ---------- */
+.card.h-100 {
+    height: auto !important; /* Permite crescimento vertical */
+    min-height: 100%; /* Mantém altura mínima igual */
+}
+
+.card-body {
+    padding: 0.75rem 1rem; /* Reduzido de py-3 (1rem) */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Garantir que cards fiquem alinhados horizontalmente */
+.row.mb-3 {
+    display: flex;
+    align-items: stretch; /* Estica cards para mesma altura base */
+}
+
+.col-lg-6 {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- BADGES MAIORES ---------- */
+.badge-lg {
+    font-size: 0.9rem !important; /* Aumentado de padrão */
     padding: 0.5rem 0.75rem !important;
 }
 
-/* ---------- RESPONSIVIDADE ---------- */
+/* ---------- RESPONSIVIDADE MELHORADA ---------- */
 @media (max-width: 768px) {
     .info-value {
-        font-size: 0.85rem;
+        font-size: 1rem; /* Aumentado de 0.85rem */
     }
     .info-value-text {
-        font-size: 0.8rem;
-        max-height: 3rem;
+        font-size: 0.9rem; /* Aumentado de 0.8rem */
+        max-height: 4rem; /* Aumentado de 3rem */
     }
     .badge-lg {
-        font-size: 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+    .card-body {
+        padding: 0.6rem 0.8rem; /* Ajustado para mobile */
+    }
+}
+
+@media (max-width: 576px) {
+    .col-lg-6 {
+        margin-bottom: 1rem;
+    }
+    .info-value {
+        font-size: 0.95rem;
+    }
+    .info-value-text {
+        font-size: 0.85rem;
+        max-height: 3.5rem;
+    }
+}
+
+/* ---------- SIDEBAR FIXA ---------- */
+@media (min-width: 992px) {
+    .col-lg-3 {
+        position: sticky;
+        top: 1rem;
+        height: fit-content;
     }
 }
 
@@ -757,12 +869,35 @@
     color: #6c757d;
     line-height: 1.5;
 }
-/* Cores adicionais usadas em marcadores do histórico */
-.bg-orange {
-    background-color: #fd7e14 !important;
+
+/* ---------- MELHORIAS ESPECÍFICAS PARA CAMPOS LONGOS ---------- */
+.info-value-text {
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
 }
-.bg-purple {
-    background-color: #6f42c1 !important;
+
+/* Garantir que textos longos não quebrem o layout */
+.info-value {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* ---------- AJUSTES PARA MANTER ALINHAMENTO ---------- */
+.row.mb-3 .col-lg-6:nth-child(odd) {
+    padding-right: 0.75rem;
+}
+
+.row.mb-3 .col-lg-6:nth-child(even) {
+    padding-left: 0.75rem;
+}
+
+@media (max-width: 991px) {
+    .row.mb-3 .col-lg-6:nth-child(odd),
+    .row.mb-3 .col-lg-6:nth-child(even) {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
 }
 </style>
-@stop
+@endsection

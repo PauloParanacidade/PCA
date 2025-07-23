@@ -348,23 +348,101 @@ class PppController extends Controller
     public function show($id)
     {
         try {
-            $ppp = PcaPpp::findOrFail($id);
+            $ppp = PcaPpp::with(['user', 'status', 'gestorAtual'])->findOrFail($id);
+            $usuarioLogado = Auth::user();
+            
+            // Buscar histórico
             $historicos = PppHistorico::where('ppp_id', $ppp->id)
             ->with(['statusAnterior', 'statusAtual', 'usuario'])
-            ->orderBy('created_at')
+            ->orderBy('created_at', 'desc')
             ->get();
+    
+            // Lógica de navegação para secretária
+            $navegacao = null;
+            if ($usuarioLogado->hasRole('secretaria')) {
+                $navegacao = $this->obterNavegacaoSecretaria($ppp->id);
+            }
+    
+            // Registrar visualização se for gestor
+            if ($ppp->gestor_atual_id === $usuarioLogado->id && $ppp->status_id === 2) {
+                $ppp->update(['status_id' => 3]); // em_avaliacao
+                $this->historicoService->registrarEmAvaliacao($ppp);
+            }
+    
+            return view('ppp.show', compact('ppp', 'historicos', 'navegacao'));
+        } catch (\Exception $e) {
+            Log::error('Erro ao visualizar PPP: ' . $e->getMessage());
+            return redirect()->route('ppp.index')->with('error', 'Erro ao carregar PPP.');
+        }
+    }
+    
+    /**
+    * Obtém informações de navegação para a secretária
+    */
+    private function obterNavegacaoSecretaria($pppAtualId)
+    {
+        // Buscar todos os PPPs que a secretária pode visualizar (aprovados pelo DAF)
+        $pppsSecretaria = PcaPpp::where('status_id', 6) // aprovado_final
+            ->orderBy('id')
+            ->pluck('id')
+            ->toArray();
+        
+        $posicaoAtual = array_search($pppAtualId, $pppsSecretaria);
+        
+        if ($posicaoAtual === false) {
+            return null;
+        }
+        
+        return [
+            'anterior' => $posicaoAtual > 0 ? $pppsSecretaria[$posicaoAtual - 1] : null,
+            'proximo' => $posicaoAtual < count($pppsSecretaria) - 1 ? $pppsSecretaria[$posicaoAtual + 1] : null,
+            'atual' => $posicaoAtual + 1,
+            'total' => count($pppsSecretaria)
+        ];
+    }
+    
+    /**
+    * Método específico para secretária incluir PPP na tabela PCA
+    */
+    public function incluirNaPca($id)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
+            $usuarioLogado = Auth::user();
             
-            Log::info('Exibindo PPP e histórico.', ['ppp_id' => $ppp->id, 'historico_count' => $historicos->count()]);
-            $isCreating = false;
+            // Verificar se é secretária
+            if (!$usuarioLogado->hasRole('secretaria')) {
+                return redirect()->back()->with('error', 'Acesso negado. Apenas a secretária pode incluir PPPs na tabela PCA.');
+            }
             
-            return view('ppp.show', compact('ppp', 'historicos', 'isCreating'));
-        } catch (\Throwable $ex) {
-            Log::error('Erro ao exibir PPP:', [
-                'exception' => $ex,
-                'ppp_id' => $id,
+            // Verificar se PPP está no status correto
+            if ($ppp->status_id !== 6) { // aprovado_final
+                return redirect()->back()->with('error', 'PPP deve estar com status "Aprovado Final" para ser incluído na tabela PCA.');
+            }
+            
+            $comentario = request('comentario');
+            
+            // Atualizar status para aprovado_direx
+            $ppp->update([
+                'status_id' => 8, // aprovado_direx
+                'gestor_atual_id' => $usuarioLogado->id
             ]);
-            Log::debug($ex->getTraceAsString());
-            return back()->withErrors(['msg' => 'Erro ao exibir o PPP.']);
+            
+            // Registrar no histórico
+            $this->historicoService->registrarAcao(
+                $ppp,
+                'incluido_pca',
+                $comentario ?? 'PPP incluído na tabela PCA pela secretária',
+                6, // Status anterior: aprovado_final
+                8  // Status atual: aprovado_direx
+            );
+            
+            return redirect()->route('ppp.index')
+                ->with('success', 'PPP incluído na tabela PCA com sucesso!');
+                
+        } catch (\Exception $e) {
+            Log::error('Erro ao incluir PPP na PCA: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao incluir PPP na tabela PCA.');
         }
     }
     
@@ -659,12 +737,13 @@ class PppController extends Controller
         $request->validate([
             'comentario' => 'nullable|string|max:1000'
         ]);
+        
         if(!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
             return redirect()->back()->with('error', 'Você não tem permissão para aprovar PPPs.');
         }
         
-        if ($ppp->status_id !== 2) { // 2 = aguardando_aprovacao
-            return redirect()->back()->with('error', 'Este PPP não está aguardando aprovação.');
+        if (!in_array($ppp->status_id, [2, 3])) { // 2 = aguardando_aprovacao, 3 = em_avaliacao
+            return redirect()->back()->with('error', 'Este PPP não está disponível para aprovação.');
         }
         
         if ($ppp->gestor_atual_id !== auth()->id()) {
