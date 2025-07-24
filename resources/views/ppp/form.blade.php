@@ -18,7 +18,7 @@
             @endif
         </div>
     @endif
-    <h1><i class="fas fa-plus-circle mr-2"></i>{{ $isCreating ? 'Criar novo PPP e TESTANDO' : 'Editar PPP' }}</h1>
+    <h1><i class="fas fa-plus-circle mr-2"></i>{{ $isCreating ? 'Criar novo PPP' : 'Editar PPP' }}</h1>
 @endsection
 
 @section('content')

@@ -141,97 +141,84 @@ class PppController extends Controller
         }
     }
     
-    public function update(StorePppRequest $request, $id)
+public function update(StorePppRequest $request, $id)
 {
-    try {
-        $usuario = auth()->user();
-        $acao = $request->input('acao'); // 'salvar' ou 'enviar_aprovacao'
-        $modo = $request->input('modo'); // 'edicao' ou 'criacao'
+    $usuario = auth()->user();
+    $acao    = $request->input('acao'); // 'salvar' ou 'enviar_aprovacao'
+    $modo    = $request->input('modo'); // 'edicao' ou 'criacao'
 
-        Log::info('🛠️ Ação detectada no update()', [
-            'acao' => $acao,
-            'modo' => $modo,
-            'full_data' => $request->all()
-        ]);
+    Log::info('🛠️ Ação detectada no update()', [
+        'ppp_id' => $id,
+        'acao'   => $acao,
+        'modo'   => $modo,
+        'data'   => $request->all()
+    ]);
 
+    // Se for apenas salvar/rascunho
+    if ($modo === 'edicao' && $acao === 'salvar') {
         $ppp = PcaPpp::findOrFail($id);
-        $dados = $request->validated();
 
-        // ✅ Tratamento de valores monetários
-        if (isset($dados['estimativa_valor'])) {
-            $dados['estimativa_valor'] = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $dados['estimativa_valor'])));
-        }
-
-        if (isset($dados['valor_contrato_atualizado'])) {
-            $dados['valor_contrato_atualizado'] = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $dados['valor_contrato_atualizado'])));
-        }
-
-        // 🔄 Atualiza PPP (sem alterar status ainda)
         $statusAnterior = $ppp->status_id;
-        $statusNovo = $dados['status_id'] ?? $statusAnterior;
-
-        $ppp->fill($dados);
-        $ppp->updated_at = $usuario->id;
-
-        // 🎯 Se for apenas salvar (não enviar)
-        if ($modo === 'edicao' && $acao === 'salvar') {
-            $ppp->save();
-
-            if ($statusAnterior != $statusNovo) {
-                PppHistorico::create([
-                    'ppp_id' => $ppp->id,
-                    'status_anterior' => $statusAnterior,
-                    'status_atual' => $statusNovo,
-                    'justificativa' => $request->input('justificativa'),
-                    'user_id' => $usuario->id,
-                ]);
-            }
-
-            Log::info('PPP atualizada sem envio para aprovação', ['ppp_id' => $ppp->id]);
-            return redirect()->route('ppp.show', $ppp->id)->with('success', 'PPP atualizada com sucesso.');
-        }
-
-        // ✅ Enviar para aprovação
-        if ($acao === 'enviar_aprovacao') {
-            Log::info('Enviando PPP para aprovação', ['ppp_id' => $ppp->id]);
-
-            $resultado = $this->processarEnvioAprovacao($ppp, $request);
-
-            if (!$resultado['success']) {
-                Log::error('Erro ao enviar para aprovação', ['ppp_id' => $ppp->id, 'erro' => $resultado['message']]);
-                return redirect()->back()->withErrors(['erro' => $resultado['message']]);
-            }
-
-            Log::info('PPP enviada com sucesso', ['ppp_id' => $ppp->id]);
-            return redirect()->route('ppp.index')->with('success', 'PPP enviada para aprovação.');
-        }
-
-        // 🔃 Ação padrão: apenas salvar
+        $ppp->fill($request->validated());
         $ppp->save();
 
-        if ($statusAnterior != $statusNovo) {
+        if ($statusAnterior != $ppp->status_id) {
             PppHistorico::create([
-                'ppp_id' => $ppp->id,
+                'ppp_id'          => $ppp->id,
                 'status_anterior' => $statusAnterior,
-                'status_atual' => $statusNovo,
-                'justificativa' => $request->input('justificativa'),
-                'user_id' => $usuario->id,
+                'status_atual'    => $ppp->status_id,
+                'justificativa'   => $request->input('justificativa'),
+                'user_id'         => $usuario->id,
             ]);
         }
 
-        return redirect()->route('ppp.index')->with('success', 'PPP atualizada com sucesso.');
-
-    } catch (\Throwable $ex) {
-        Log::error('Erro ao atualizar PPP', [
-            'erro' => $ex->getMessage(),
-            'trace' => $ex->getTraceAsString(),
-            'ppp_id' => $id,
-        ]);
-
-        return back()->withInput()->withErrors(['msg' => 'Erro ao atualizar.']);
+        return redirect()
+            ->route('ppp.show', $ppp->id)
+            ->with('success', 'PPP atualizada com sucesso.');
     }
-}
 
+    // Se for enviar para aprovação
+    if ($acao === 'enviar_aprovacao') {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
+
+            // Delegamos ao service todo o fluxo de aprovação
+            $this->pppService->enviarParaAprovacao(
+                $ppp,
+                $request->input('justificativa')
+            );
+
+            return redirect()
+                ->route('ppp.index')
+                ->with('success', 'PPP enviada para aprovação.');
+
+        } catch (\Throwable $e) {
+            Log::error('Erro ao enviar PPP para aprovação no update: '.$e->getMessage(), ['ppp_id'=>$id]);
+            return redirect()->back()->withErrors(['erro' => $e->getMessage()]);
+        }
+    }
+
+    // Ação padrão: apenas salvar quaisquer outras alterações
+    $ppp = PcaPpp::findOrFail($id);
+    $statusAnterior = $ppp->status_id;
+
+    $ppp->fill($request->validated());
+    $ppp->save();
+
+    if ($statusAnterior != $ppp->status_id) {
+        PppHistorico::create([
+            'ppp_id'          => $ppp->id,
+            'status_anterior' => $statusAnterior,
+            'status_atual'    => $ppp->status_id,
+            'justificativa'   => $request->input('justificativa'),
+            'user_id'         => $usuario->id,
+        ]);
+    }
+
+    return redirect()
+        ->route('ppp.index')
+        ->with('success', 'PPP atualizada com sucesso.');
+}
 
     public function index(Request $request)
     {
@@ -297,6 +284,19 @@ class PppController extends Controller
             }
             
             $ppps = $query->paginate(10)->withQueryString();
+
+            // -- INÍCIO DEBUG --
+// foreach ($ppps as $ppp) {
+//     $gestor = $ppp->gestorAtual; // relacionamento carregado em with()
+//     dd([
+//         'ppp_id'           => $ppp->id,
+//         'gestor_atual_id'  => $gestor?->id,
+//         'gestor_nome'      => $gestor?->name,
+//         'gestor_department'=> $gestor?->department,
+//         'gestor_managerDN' => $gestor?->manager,
+//     ]);
+// }
+// -- FIM DEBUG --
             
             $ppps = $this->getNextApprover($ppps);
             
@@ -351,6 +351,15 @@ class PppController extends Controller
             $ppp = PcaPpp::with(['user', 'status', 'gestorAtual'])->findOrFail($id);
             $usuarioLogado = Auth::user();
             
+            // CORRIGIDO: Para determinar próximo gestor, considerar o usuário logado se ele for gestor
+            $usuarioParaAnalise = $usuarioLogado->hasRole(['dom', 'supex', 'doe']) ? $usuarioLogado : $ppp->user;
+            $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($usuarioParaAnalise);
+            $ehProximoGestor = $proximoGestor && $proximoGestor->id === $usuarioLogado->id;
+            
+            // CORRIGIDO: Definir se o usuário pode gerenciar este PPP
+            $ehGestor = $usuarioLogado->hasRole(['admin', 'daf', 'secretaria']) || 
+                       ($usuarioLogado->hasRole('gestor') && $this->hierarquiaService->ehGestorDe($usuarioLogado, $ppp->user));
+            
             // Buscar histórico
             $historicos = PppHistorico::where('ppp_id', $ppp->id)
             ->with(['statusAnterior', 'statusAtual', 'usuario'])
@@ -368,8 +377,23 @@ class PppController extends Controller
                 $ppp->update(['status_id' => 3]); // em_avaliacao
                 $this->historicoService->registrarEmAvaliacao($ppp);
             }
-    
-            return view('ppp.show', compact('ppp', 'historicos', 'navegacao'));
+            
+            // dd([
+            //     'ppp_id' => $ppp->id,
+            //     'ppp_status' => $ppp->status_id,
+            //     'ppp_criador' => $ppp->user->name ?? 'N/A',
+            //     'ppp_criador_department' => $ppp->user->department ?? 'N/A',
+            //     'usuario_logado' => $usuarioLogado->name,
+            //     'usuario_department' => $usuarioLogado->department ?? 'N/A',
+            //     'usuario_roles' => $usuarioLogado->roles->pluck('name')->toArray(), // CORRIGIDO: usar 'name' em vez de 'slug'
+            //     'proximoGestor' => $proximoGestor ? $proximoGestor->name : 'null',
+            //     'proximoGestor_roles' => $proximoGestor ? $proximoGestor->roles->pluck('name')->toArray() : [],
+            //     'ehProximoGestor' => $ehProximoGestor,
+            //     'ehGestor' => $ehGestor,
+            //     'navegacao' => $navegacao
+            // ]);
+            
+            return view('ppp.show', compact('ppp', 'historicos', 'navegacao', 'ehProximoGestor', 'ehGestor'));
         } catch (\Exception $e) {
             Log::error('Erro ao visualizar PPP: ' . $e->getMessage());
             return redirect()->route('ppp.index')->with('error', 'Erro ao carregar PPP.');
@@ -579,118 +603,36 @@ class PppController extends Controller
     }
     
     public function enviarParaAprovacao($id, Request $request)
-    {
-        Log::info('🚀 PppController.enviarParaAprovacao() - INICIANDO', [
-            'ppp_id' => $id,
-            'user_id' => Auth::id(),
-            'user_name' => Auth::user()->name ?? 'N/A',
-            'request_method' => $request->method(),
-            'is_ajax' => $request->ajax(),
-            'request_data' => $request->all()
-        ]);
-        
-        try {
-            $ppp = PcaPpp::findOrFail($id);
-            
-            Log::info('✅ PPP encontrado', [
-                'ppp_id' => $ppp->id,
-                'ppp_nome' => $ppp->nome_item,
-                'status_atual' => $ppp->status_id,
-                'user_criador' => $ppp->user_id,
-                'gestor_atual' => $ppp->gestor_atual_id
-            ]);
-            
-            if ($ppp->user_id !== Auth::id()) {
-                Log::warning('❌ Usuário não tem permissão para enviar este PPP', [
-                    'ppp_user_id' => $ppp->user_id,
-                    'current_user_id' => Auth::id()
-                ]);
-                
-                if ($request->ajax()) {
-                    return response()->json(['success' => false, 'message' => 'Você não tem permissão para esta ação.'], 403);
-                }
-                return back()->withErrors(['msg' => 'Você não tem permissão para esta ação.']);
-            }
-            
-            Log::info('✅ Permissão validada - Buscando próximo gestor');
-            
-            // ✅ ALTERAÇÃO: Usar HierarquiaService
-            $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
-            
-            if (!$proximoGestor) {
-                Log::error('❌ Próximo gestor não encontrado', [
-                    'user_manager' => Auth::user()->manager ?? 'N/A'
-                ]);
-                if ($request->ajax()) {
-                    return response()->json(['success' => false, 'message' => 'Não foi possível identificar o próximo gestor.'], 400);
-                }
-                return back()->withErrors(['msg' => 'Não foi possível identificar o próximo gestor.']);
-            }
-            
-            Log::info('✅ Próximo gestor encontrado', [
-                'gestor_id' => $proximoGestor->id,
-                'gestor_nome' => $proximoGestor->name
-            ]);
-            
-            Log::info('🔄 Atualizando status do PPP', [
-                'status_anterior' => $ppp->status_id,
-                'status_novo' => 2, // aguardando_aprovacao
-                'gestor_anterior' => $ppp->gestor_atual_id,
-                'gestor_novo' => $proximoGestor->id
-            ]);
-            
-            $ppp->update([
-                'status_id' => 2, // aguardando_aprovacao
-                'gestor_atual_id' => $proximoGestor->id,
-            ]);
-            
-            Log::info('✅ PPP atualizado com sucesso', [
-                'ppp_id' => $ppp->id,
-                'novo_status' => $ppp->fresh()->status_id,
-                'novo_gestor' => $ppp->fresh()->gestor_atual_id
-            ]);
-            
-            // Registrar no histórico
-            $justificativa = $request->input('justificativa', 'PPP enviado para aprovação');
-            Log::info('📝 Registrando no histórico', ['justificativa' => $justificativa]);
-            
-            $this->historicoService->registrarEnvioAprovacao($ppp, $justificativa);
-            
-            Log::info('✅ Histórico registrado com sucesso');
-            
-            if ($request->ajax()) {
-                $response = [
-                    'success' => true,
-                    'message' => 'PPP enviado para aprovação com sucesso!',
-                    'ppp_id' => $ppp->id,
-                    'novo_status' => $ppp->fresh()->status_id
-                ];
-                
-                Log::info('📤 Retornando resposta AJAX', $response);
-                return response()->json($response);
-            }
-            
-            Log::info('🔄 Redirecionando para index');
-            
-            return redirect()->route('ppp.index')->with('success', 'PPP enviado para aprovação com sucesso!');
-            
-        } catch (\Throwable $ex) {
-            Log::error('💥 ERRO em enviarParaAprovacao', [
-                'exception_message' => $ex->getMessage(),
-                'exception_file' => $ex->getFile(),
-                'exception_line' => $ex->getLine(),
-                'stack_trace' => $ex->getTraceAsString(),
-                'ppp_id' => $id,
-                'user_id' => Auth::id()
-            ]);
-            
-            if ($request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Erro ao enviar PPP para aprovação: ' . $ex->getMessage()], 500);
-            }
-            
-            return back()->withErrors(['msg' => 'Erro ao enviar PPP para aprovação: ' . $ex->getMessage()]);
-        }
+{
+    $ppp = PcaPpp::findOrFail($id);
+
+    if ($ppp->user_id !== Auth::id()) {
+        abort(403, 'Você não tem permissão.');
     }
+
+    try {
+        // 🔥 Aqui só delegamos ao service:
+        $this->pppService->enviarParaAprovacao(
+            $ppp,
+            $request->input('justificativa')
+        );
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'PPP enviado para aprovação com sucesso!'
+            ]);
+        }
+
+        return redirect()
+            ->route('ppp.index')
+            ->with('success', 'PPP enviado para aprovação com sucesso!');
+    } catch (\Throwable $e) {
+        Log::error('Erro ao enviar PPP: '.$e->getMessage(), ['ppp_id' => $id]);
+        return back()->withErrors(['msg' => 'Erro: ' . $e->getMessage()]);
+    }
+}
+
     
     public function aprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
     {

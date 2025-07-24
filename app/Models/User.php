@@ -183,8 +183,6 @@ public function garantirPapelGestor(): void
     }
 }
 
-
-
     public function getAreaResponsavelFormatadaAttribute(): string
     {
         $manager = $this->manager;
