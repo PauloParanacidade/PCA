@@ -37,36 +37,63 @@ class PppService
         return $ppp;
     }
 
+    
     /**
      * Envia PPP para aprovação
      */
     public function enviarParaAprovacao(PcaPpp $ppp, ?string $justificativa = null): bool
     {
         try {
-            // Obter próximo gestor
+            $criadorPpp = User::find($ppp->user_id);
+            
+            // ✅ NOVA LÓGICA: Verificar se o criador do PPP é DAF, DOM, DOE, SUPEX ou Secretária
+            if ($criadorPpp && $this->verificarSeEhPerfilEspecialParaDirex($criadorPpp)) {
+                // Buscar secretária diretamente
+                $secretaria = User::whereHas('roles', function ($query) {
+                    $query->where('name', 'secretaria');
+                })->where('active', true)->first();
+                
+                if ($secretaria) {
+                    $ppp->update([
+                        'status_id' => 7, // aguardando_direx
+                        'gestor_atual_id' => $secretaria->id,
+                    ]);
+                    
+                    $this->historicoService->registrarEnvioAprovacao(
+                        $ppp,
+                        ($justificativa ?? 'PPP enviado para aprovação') . ' - Encaminhado diretamente para DIREX (perfil especial)'
+                    );
+                    
+                    return true;
+                } else {
+                    throw new \Exception('Secretária não encontrada no sistema.');
+                }
+            }
+            
+            // Lógica normal para outros usuários
             $proximoGestor = $this->hierarquiaService->obterProximoGestor($ppp->user_id);
-
+    
             if (!$proximoGestor) {
                 throw new \Exception('Não foi possível identificar o próximo gestor.');
             }
-
+    
             // Garantir que o próximo gestor tenha o papel de gestor
             $proximoGestor->garantirPapelGestor();
-
-            // Atualizar PPP - CORRIGIDO: usar status_id em vez de status_fluxo
+    
+            // Atualizar PPP
             $ppp->update([
                 'status_id' => 2, // aguardando_aprovacao
                 'gestor_atual_id' => $proximoGestor->id,
             ]);
-
+    
             // Registrar no histórico
             $this->historicoService->registrarEnvioAprovacao(
                 $ppp,
                 $justificativa ?? 'PPP enviado para aprovação'
             );
-
+    
             return true;
-
+    
         } catch (\Throwable $ex) {
             Log::error('Erro ao enviar PPP para aprovação: ' . $ex->getMessage());
             throw $ex;
@@ -81,11 +108,31 @@ class PppService
         try {
             $gestorAtual = User::find($ppp->gestor_atual_id);
             
-            // ✅ EXCEÇÃO: Verificar se o gestor atual é SUPEX, DOE ou DOM
-            $isSupexDoeOuDom = $this->verificarSeEhSupexDoeOuDom($gestorAtual);
+            // ✅ VERIFICAÇÃO DAF: Se gestor atual é DAF, encaminhar para Secretária
+            if ($gestorAtual && $gestorAtual->hasRole('daf')) {
+                $secretaria = User::whereHas('roles', function ($query) {
+                    $query->where('name', 'secretaria');
+                })->where('active', true)->first();
+                
+                if ($secretaria) {
+                    $ppp->update([
+                        'status_id' => 7, // aguardando_direx
+                        'gestor_atual_id' => $secretaria->id,
+                    ]);
+                    
+                    $this->historicoService->registrarAprovacao(
+                        $ppp, 
+                        ($comentario ?? 'PPP aprovado pelo DAF') . ' - Encaminhado para avaliação da DIREX'
+                    );
+                    
+                    return true;
+                } else {
+                    throw new \Exception('Secretária não encontrada no sistema.');
+                }
+            }
             
-            if ($isSupexDoeOuDom) {
-                // Encaminhar diretamente para DAF
+            // ✅ VERIFICAÇÃO SUPEX/DOE/DOM: Encaminhar para DAF
+            if ($gestorAtual && $this->verificarSeEhSupexDoeOuDom($gestorAtual)) {
                 $dafUser = $this->obterUsuarioDAF();
                 
                 if ($dafUser) {
@@ -98,7 +145,7 @@ class PppService
                     
                     $this->historicoService->registrarAprovacao(
                         $ppp, 
-                        ($comentario ?? 'PPP aprovado') . ' - Encaminhado diretamente para DAF (exceção SUPEX/DOE/DOM)'
+                        ($comentario ?? 'PPP aprovado') . ' - Encaminhado para DAF (SUPEX/DOE/DOM)'
                     );
                     
                     return true;
@@ -107,23 +154,18 @@ class PppService
                 }
             }
             
-            // Lógica normal para outros gestores
+            // ✅ LÓGICA NORMAL: Para todos os outros gestores (incluindo Aníbal → Camila)
             $proximoGestor = $this->hierarquiaService->obterProximoGestor($gestorAtual);
         
             if($proximoGestor) {
                 $proximoGestor->garantirPapelGestor();
         
-                // Ainda há níveis na hierarquia
                 $ppp->update([
                     'status_id' => 2, // aguardando_aprovacao
                     'gestor_atual_id' => $proximoGestor->id,
                 ]);
             } else {
-                // Aprovação final
-                $ppp->update([
-                    'status_id' => 6, // aprovado_final
-                    'gestor_atual_id' => null,
-                ]);
+                throw new \Exception('Fim da hierarquia atingido sem encontrar próximo gestor.');
             }
         
             $this->historicoService->registrarAprovacao($ppp, $comentario ?? 'PPP aprovado');
@@ -237,5 +279,32 @@ class PppService
         Log::error('Erro ao reprovar PPP: ' . $ex->getMessage());
         throw $ex;
     }
+}
+
+
+/**
+ * Verifica se o usuário é DAF, DOM, DOE, SUPEX ou Secretária
+ */
+private function verificarSeEhPerfilEspecialParaDirex(User $usuario): bool
+{
+    // Verificar por role secretaria
+    if ($usuario->hasRole('secretaria')) {
+        return true;
+    }
+    
+    // Verificar por role DAF
+    if ($usuario->hasRole('daf')) {
+        return true;
+    }
+    
+    // Verificar por department (DOM, DOE, SUPEX)
+    $department = strtoupper($usuario->department ?? '');
+    $departamentosEspeciais = ['DOM', 'DOE', 'SUPEX'];
+    
+    if (in_array($department, $departamentosEspeciais)) {
+        return true;
+    }
+    
+    return false;
 }
 }

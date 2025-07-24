@@ -52,44 +52,60 @@ class PPPStatusSeeder extends Seeder
                 'cor' => '#6f42c1', // roxo
             ],
             [
-                'nome' => 'Aprovado Final',
-                'slug' => 'aprovado_final',
-                'descricao' => 'PPP aprovado em todos os níveis hierárquicos',
-                'ordem' => 6,
-                'ativo' => true,
-                'cor' => '#28a745', // verde
-            ],
-            [
                 'nome' => 'Cancelado',
                 'slug' => 'cancelado',
                 'descricao' => 'PPP cancelado ou reprovado',
-                'ordem' => 7,
+                'ordem' => 6,
                 'ativo' => true,
                 'cor' => '#dc3545', // vermelho
             ],
             [
-                'nome' => 'Aguardando Secretária',
-                'slug' => 'aguardando_secretaria',
-                'descricao' => 'Aguardando Secretária DIREX/Conselho',
-                'ordem' => 8,
+                'nome' => 'Aguardando DIREX',
+                'slug' => 'aguardando_direx',
+                'descricao' => 'PPP aguardando avaliação da DIREX',
+                'ordem' => 7,
                 'ativo' => true,
                 'cor' => '#20c997', // verde-azulado
             ],
             [
-                'nome' => 'Aprovado DIREX',
-                'slug' => 'aprovado_direx',
-                'descricao' => 'Aprovado pela DIREX',
-                'ordem' => 9,
+                'nome' => 'DIREX Avaliando',
+                'slug' => 'direx_avaliando',
+                'descricao' => 'PPP sendo avaliado na reunião da DIREX',
+                'ordem' => 8,
                 'ativo' => true,
                 'cor' => '#007bff', // azul primário
             ],
             [
-                'nome' => 'Aprovado Conselho',
-                'slug' => 'aprovado_conselho',
-                'descricao' => 'Aprovado pelo Conselho',
+                'nome' => 'DIREX Editado',
+                'slug' => 'direx_editado',
+                'descricao' => 'PPP editado durante reunião da DIREX',
+                'ordem' => 9,
+                'ativo' => true,
+                'cor' => '#17a2b8', // azul claro
+            ],
+            [
+                'nome' => 'Aguardando Conselho',
+                'slug' => 'aguardando_conselho',
+                'descricao' => 'PPP aguardando aprovação do Conselho',
                 'ordem' => 10,
                 'ativo' => true,
+                'cor' => '#6610f2', // índigo
+            ],
+            [
+                'nome' => 'Conselho Aprovado',
+                'slug' => 'conselho_aprovado',
+                'descricao' => 'PPP aprovado pelo Conselho',
+                'ordem' => 11,
+                'ativo' => true,
                 'cor' => '#6f42c1', // roxo
+            ],
+            [
+                'nome' => 'Conselho Reprovado',
+                'slug' => 'conselho_reprovado',
+                'descricao' => 'PPP reprovado pelo Conselho',
+                'ordem' => 12,
+                'ativo' => true,
+                'cor' => '#e83e8c', // rosa
             ],
         ];
 

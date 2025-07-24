@@ -109,6 +109,7 @@ class HierarquiaService
         }
     }
 
+    
     /**
      * Verifica se o usuário é DAF, DOM, DOE, SUPEX ou Secretária
      * Estes perfis devem ter seus PPPs avaliados pela Secretária para DIREX
@@ -119,17 +120,21 @@ class HierarquiaService
         if ($usuario->hasRole('secretaria')) {
             return true;
         }
-        
-        // Verificar por role daf
+
+        // Verificar por role DAF
         if ($usuario->hasRole('daf')) {
             return true;
         }
         
-        // Verificar por department (sigla da área)
+        // Verificar por department (DOM, DOE, SUPEX)
         $department = strtoupper($usuario->department ?? '');
-        $areasEspeciais = ['DAF', 'DOM', 'DOE', 'SUPEX'];
+        $departamentosEspeciais = ['DOM', 'DOE', 'SUPEX'];
         
-        return in_array($department, $areasEspeciais);
+        if (in_array($department, $departamentosEspeciais)) {
+            return true;
+        }
+        
+        return false;
     }
     
     /**

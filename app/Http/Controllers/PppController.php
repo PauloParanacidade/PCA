@@ -1165,7 +1165,7 @@ class PppController extends Controller
             // Gerar Excel usando Maatwebsite\Excel
             $fileName = 'PCA_' . date('Y-m-d_H-i-s') . '.xlsx';
             
-            return Excel::download(new PcaExport($ppps), $fileName);
+            //return Excel::download(new PcaExport($ppps), $fileName);
                 
         } catch (\Exception $e) {
             Log::error('Erro ao gerar Excel: ' . $e->getMessage());

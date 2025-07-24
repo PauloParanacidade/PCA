@@ -231,18 +231,17 @@ Baseado no arquivo `PPPStatusSeeder.php`, o sistema possui os seguintes status:
 | 3 | Em Avaliação | `em_avaliacao` | PPP sendo avaliado pelo gestor | Amarelo (#ffc107) |
 | 4 | Aguardando Correção | `aguardando_correcao` | PPP retornado para correção | Laranja (#fd7e14) |
 | 5 | Em Correção | `em_correcao` | PPP sendo corrigido pelo usuário | Roxo (#6f42c1) |
-| 6 | Aprovado Final | `aprovado_final` | PPP aprovado pelo DAF | Verde (#28a745) |
-| 7 | Cancelado | `cancelado` | PPP cancelado | Vermelho (#dc3545) |
+| 6 | Cancelado | `cancelado` | PPP cancelado | Vermelho (#dc3545) |
 
 ### Status DIREX e Conselho - NOVOS
 | ID | Nome | Slug | Descrição | Cor |
 |----|------|------|-----------|-----|
-| 8 | Aguardando DIREX | `aguardando_direx` | PPP aguardando avaliação da DIREX | Verde-azulado (#20c997) |
-| 9 | DIREX Avaliando | `direx_avaliando` | PPP sendo avaliado na reunião da DIREX | Azul primário (#007bff) |
-| 10 | DIREX Editado | `direx_editado` | PPP editado durante reunião da DIREX | Azul claro (#17a2b8) |
-| 11 | Aguardando Conselho | `aguardando_conselho` | PPP aguardando aprovação do Conselho | Índigo (#6610f2) |
-| 12 | Conselho Aprovado | `conselho_aprovado` | PPP aprovado pelo Conselho | Roxo (#6f42c1) |
-| 13 | Conselho Reprovado | `conselho_reprovado` | PPP reprovado pelo Conselho | Rosa (#e83e8c) |
+| 7 | Aguardando DIREX | `aguardando_direx` | PPP aguardando avaliação da DIREX | Verde-azulado (#20c997) |
+| 8 | DIREX Avaliando | `direx_avaliando` | PPP sendo avaliado na reunião da DIREX | Azul primário (#007bff) |
+| 9 | DIREX Editado | `direx_editado` | PPP editado durante reunião da DIREX | Azul claro (#17a2b8) |
+| 10 | Aguardando Conselho | `aguardando_conselho` | PPP aguardando aprovação do Conselho | Índigo (#6610f2) |
+| 11 | Conselho Aprovado | `conselho_aprovado` | PPP aprovado pelo Conselho | Roxo (#6f42c1) |
+| 12 | Conselho Reprovado | `conselho_reprovado` | PPP reprovado pelo Conselho | Rosa (#e83e8c) |
 
 ### Regras de Transição - ATUALIZADAS
 
