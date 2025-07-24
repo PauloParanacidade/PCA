@@ -35,6 +35,7 @@ class PcaExport implements FromCollection, WithHeadings, WithMapping, WithStyles
             'Justificativa',
             'Valor Estimado (R$)',
             'Origem do Recurso',
+            'Mês Início Prestação', // NOVO
             'Data Ideal',
             'Responsável',
             'Setor',
@@ -52,6 +53,12 @@ class PcaExport implements FromCollection, WithHeadings, WithMapping, WithStyles
             $ppp->justificativa_item,
             'R$ ' . number_format($ppp->valor_estimado, 2, ',', '.'),
             $ppp->origem_recurso,
+            $ppp->mes_inicio_prestacao ? ([
+                '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
+                '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
+                '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
+                '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
+            ][$ppp->mes_inicio_prestacao] ?? $ppp->mes_inicio_prestacao) . ' de 2026' : '', // NOVO
             $ppp->data_ideal ? $ppp->data_ideal->format('d/m/Y') : '',
             $ppp->user->name ?? '',
             $ppp->user->department ?? '',

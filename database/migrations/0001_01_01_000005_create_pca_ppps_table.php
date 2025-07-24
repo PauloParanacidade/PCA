@@ -54,6 +54,31 @@ return new class extends Migration
                   
             $table->string('natureza_objeto', 100)
                   ->comment('Natureza do objeto (bem/serviço)');
+
+            // === CONTRATO VIGENTE ===
+            $table->enum('tem_contrato_vigente', ['Sim', 'Não'])
+                  ->default('Não')
+                  ->comment('Possui contrato vigente');
+
+            $table->string('mes_inicio_prestacao', 10)
+                  ->nullable()
+                  ->comment('Mês de início da prestação do serviço quando não tiver contrato vigente');
+                  
+            $table->string('num_contrato', 20)
+                  ->nullable()
+                  ->comment('Número do contrato atual (obrigatório se tem_contrato_vigente = Sim)');
+                  
+            $table->string('mes_vigencia_final', 10)
+                  ->nullable()
+                  ->comment('Mês de vigência final do contrato');
+                  
+            $table->enum('contrato_prorrogavel', ['Sim', 'Não'])
+                  ->nullable()
+                  ->comment('Contrato é prorrogável (obrigatório se tem_contrato_vigente = Sim)');
+                  
+            $table->enum('renov_contrato', ['Sim', 'Não'])
+                  ->nullable()
+                  ->comment('Pretensão de prorrogação (obrigatório se tem_contrato_vigente = Sim)');
             
             // === INFORMAÇÕES FINANCEIRAS ===
             $table->decimal('estimativa_valor', 12, 2)
@@ -81,27 +106,6 @@ return new class extends Migration
             $table->text('justificativa_vinculacao')
                   ->nullable()
                   ->comment('Justificativa da vinculação (obrigatória se vinculacao_item = Sim)');
-            
-            // === CONTRATO VIGENTE ===
-            $table->enum('tem_contrato_vigente', ['Sim', 'Não'])
-                  ->default('Não')
-                  ->comment('Possui contrato vigente');
-                  
-            $table->string('num_contrato', 20)
-                  ->nullable()
-                  ->comment('Número do contrato atual (obrigatório se tem_contrato_vigente = Sim)');
-                  
-            $table->string('mes_vigencia_final', 10)
-                  ->nullable()
-                  ->comment('Mês de vigência final do contrato');
-                  
-            $table->enum('contrato_prorrogavel', ['Sim', 'Não'])
-                  ->nullable()
-                  ->comment('Contrato é prorrogável (obrigatório se tem_contrato_vigente = Sim)');
-                  
-            $table->enum('renov_contrato', ['Sim', 'Não'])
-                  ->nullable()
-                  ->comment('Pretensão de prorrogação (obrigatório se tem_contrato_vigente = Sim)');
             
             // === CONTROLE DO SISTEMA ===
             $table->softDeletes();

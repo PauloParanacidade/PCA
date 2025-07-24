@@ -87,7 +87,7 @@ class HierarquiaService
     /**
      * Obtém a Secretária da DIREX/Conselho
      */
-    private function obterSecretaria(): ?User
+    public function obterSecretaria(): ?User
     {
         // Primeiro, tentar encontrar por role 'secretaria'
         $secretaria = User::whereHas('roles', function ($query) {

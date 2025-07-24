@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; // ✅ ADICIONAR
 
 class PcaPpp extends Model
 {
-    use SoftDeletes; // ✅ ADICIONAR
+    use SoftDeletes;
     
     protected $table = 'pca_ppps';
 
@@ -30,6 +30,7 @@ class PcaPpp extends Model
         'num_contrato',
         'valor_contrato_atualizado',
         'mes_vigencia_final',
+        'mes_inicio_prestacao', // NOVO CAMPO
         'contrato_prorrogavel',
         'tem_contrato_vigente',
         'natureza_objeto',

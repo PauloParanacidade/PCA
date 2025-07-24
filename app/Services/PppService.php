@@ -78,75 +78,64 @@ class PppService
         * Aprova um PPP
         */
         public function aprovarPpp(PcaPpp $ppp, ?string $comentario = null): bool
-{
-    try {
-        $gestorAtual = User::find($ppp->gestor_atual_id);
+        {
+            //dd($ppp);
+            try {
+                $gestorAtual = User::find($ppp->gestor_atual_id);
+    
+                // ✅ VERIFICAÇÃO DAF: Se gestor atual é DAF, encaminhar para Secretária
+                if ($gestorAtual && $gestorAtual->hasRole('daf')) {
+                    // Usar o método do HierarquiaService para encontrar a secretária
+                    $secretaria = $this->hierarquiaService->obterSecretaria();
+                            
+                    if ($secretaria) {
+                        $ppp->update([
+                            'status_id' => 7, // Aguardando DIREX
+                            'gestor_atual_id' => $secretaria->id,
+                        ]);
+    
+                        $this->historicoService->registrarAprovacao(
+                            $ppp, 
+                            ($comentario ?? 'PPP aprovado pelo DAF') . ' - Encaminhado para avaliação da DIREX'
+                        );
+    
+                        return true;
+                    } else {
+                        throw new \Exception('Secretária não encontrada no sistema.');
+                    }
+                }
 
-        // ✅ VERIFICAÇÃO DAF: Se gestor atual é DAF, encaminhar para Secretária
-        if ($gestorAtual && $gestorAtual->hasRole('daf')) {
-            $secretaria = User::whereHas('roles', function ($query) {
-                $query->where('name', 'secretaria');
-            })->where('active', true)->first();
-    
-            if ($secretaria) {
-                $ppp->update([
-                    'status_id' => 8, // aguardando_direx (CORRIGIDO: era 7, agora é 8)
-                    'gestor_atual_id' => $secretaria->id,
-                ]);
-    
-                $this->historicoService->registrarAprovacao(
-                    $ppp, 
-                    ($comentario ?? 'PPP aprovado pelo DAF') . ' - Encaminhado para avaliação da DIREX'
-                );
-    
+                $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($gestorAtual);
+                
+                if ($proximoGestor) {
+                    $proximoGestor->garantirPapelGestor();
+
+                    $ppp->update([
+                        'status_id' => 2, // aguardando_aprovacao
+                        'gestor_atual_id' => $proximoGestor->id,
+                    ]);
+
+                    // ✅ Registrar no histórico com contexto adequado
+                    $comentarioFinal = $comentario ?? 'PPP aprovado';
+                    
+                    // Se for redirecionamento SUPEX/DOE/DOM → DAF, adicionar contexto
+                    if ($gestorAtual && in_array(strtoupper($gestorAtual->department ?? ''), ['SUPEX', 'DOE', 'DOM']) 
+                        && $proximoGestor->hasRole('daf')) {
+                        $comentarioFinal .= ' - Encaminhado para DAF (SUPEX/DOE/DOM)';
+                    }
+                    
+                    $this->historicoService->registrarAprovacao($ppp, $comentarioFinal);
+                } else {
+                    throw new \Exception('Fim da hierarquia atingido sem encontrar próximo gestor.');
+                }
+
                 return true;
-            } else {
-                throw new \Exception('Secretária não encontrada no sistema.');
+
+            } catch (\Throwable $ex) {
+                Log::error('Erro ao aprovar PPP: ' . $ex->getMessage());
+                throw $ex;
             }
         }
-
-        // ✅ USAR APENAS HierarquiaService (que já trata SUPEX/DOE/DOM)
-        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($gestorAtual);
-        // dd([
-        //     'gestorAtual' => $gestorAtual,
-        //     'gestorAtual_id' => $gestorAtual ? $gestorAtual->id : null,
-        //     'gestorAtual_name' => $gestorAtual ? $gestorAtual->name : null,
-        //     'gestorAtual_department' => $gestorAtual ? $gestorAtual->department : null,
-        //     'gestorAtual_roles' => $gestorAtual ? $gestorAtual->roles->pluck('name')->toArray() : null,
-        //     'proximoGestor' => $proximoGestor,
-        //     'proximoGestor_id' => $proximoGestor ? $proximoGestor->id : null,
-        //     'proximoGestor_name' => $proximoGestor ? $proximoGestor->name : null
-        // ]);
-
-        if ($proximoGestor) {
-            $proximoGestor->garantirPapelGestor();
-
-            $ppp->update([
-                'status_id' => 2, // aguardando_aprovacao
-                'gestor_atual_id' => $proximoGestor->id,
-            ]);
-
-            // ✅ Registrar no histórico com contexto adequado
-            $comentarioFinal = $comentario ?? 'PPP aprovado';
-            
-            // Se for redirecionamento SUPEX/DOE/DOM → DAF, adicionar contexto
-            if ($gestorAtual && in_array(strtoupper($gestorAtual->department ?? ''), ['SUPEX', 'DOE', 'DOM']) 
-                && $proximoGestor->hasRole('daf')) {
-                $comentarioFinal .= ' - Encaminhado para DAF (SUPEX/DOE/DOM)';
-            }
-            
-            $this->historicoService->registrarAprovacao($ppp, $comentarioFinal);
-        } else {
-            throw new \Exception('Fim da hierarquia atingido sem encontrar próximo gestor.');
-        }
-
-        return true;
-
-    } catch (\Throwable $ex) {
-        Log::error('Erro ao aprovar PPP: ' . $ex->getMessage());
-        throw $ex;
-    }
-}
         
         // /**
         // * Verifica se o usuário pertence às áreas SUPEX, DOE ou DOM
@@ -234,9 +223,8 @@ class PppService
         public function reprovarPpp(PcaPpp $ppp, string $motivo): bool
         {
             try {
-                // CORRIGIDO: usar status_id
                 $ppp->update([
-                    'status_id' => 7, // cancelado/reprovado (conforme PPPStatusSeeder)
+                    'status_id' => 6, // cancelado
                     //'gestor_atual_id' => null,   // gestor_atual_id mantido (não alterado)
                 ]);
                 

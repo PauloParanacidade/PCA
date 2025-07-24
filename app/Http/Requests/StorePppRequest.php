@@ -151,6 +151,11 @@ class StorePppRequest extends FormRequest
             'renov_contrato.required_if' => 'A pretensão de renovação é obrigatória quando há contrato vigente.',
             'renov_contrato.in' => 'A renovação do contrato deve ser Sim ou Não.',
             
+            // Mensagens para o novo campo
+            'mes_inicio_prestacao.required_if' => 'O mês pretendido para início é obrigatório quando não há contrato vigente.',
+            'mes_inicio_prestacao.string' => 'O mês pretendido deve ser um texto válido.',
+            'mes_inicio_prestacao.max' => 'O mês pretendido não pode ter mais de 10 caracteres.',
+            
             // Cronograma
             'cronograma_jan.in' => 'Janeiro deve ser Sim ou Não.',
             'cronograma_fev.in' => 'Fevereiro deve ser Sim ou Não.',

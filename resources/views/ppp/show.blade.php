@@ -208,6 +208,26 @@
                                     <i class="fas fa-file-times text-muted" style="font-size: 2.5rem;"></i>
                                     <p class="text-muted mt-2 mb-0">Sem contrato vigente</p>
                                 </div>
+                                @if($ppp->mes_inicio_prestacao)
+                                    <div class="row mb-2 mt-3">
+                                        <div class="col-md-12">
+                                            <div class="info-group">
+                                                <label class="info-label">Mês pretendido para início da prestação</label>
+                                                <div class="info-value">
+                                                    @php
+                                                        $mesesNomes = [
+                                                            '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
+                                                            '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
+                                                            '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
+                                                            '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
+                                                        ];
+                                                    @endphp
+                                                    {{ $mesesNomes[$ppp->mes_inicio_prestacao] ?? $ppp->mes_inicio_prestacao }} de 2026
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             @endif
                         </div>
                     </div>

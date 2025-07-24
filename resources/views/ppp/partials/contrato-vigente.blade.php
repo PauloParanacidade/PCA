@@ -20,6 +20,7 @@
                 </select>
             </div>
 
+            {{-- Campos quando TEM contrato vigente --}}
             <div id="campos-contrato-vigente" class="mt-3" style="display: none;">
                 <div class="mb-3">
                     <label class="form-label fw-bold">
@@ -64,6 +65,45 @@
                     </select>
                 </div>
             </div>
+
+            {{-- NOVO: Campo quando NÃO TEM contrato vigente --}}
+            <div id="campo-mes-inicio-prestacao" class="mt-3" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-calendar-plus text-warning me-1"></i>
+                        Mês pretendido para início da prestação de serviço ou do fornecimento do bem <span class="text-danger">*</span>
+                    </label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <select name="mes_inicio_prestacao" id="mes_inicio_prestacao" class="form-control">
+                                <option value="" disabled {{ old('mes_inicio_prestacao', $ppp->mes_inicio_prestacao ?? '') == '' ? 'selected' : '' }}>Selecione o mês</option>
+                                @php
+                                    $meses = [
+                                        '01' => 'Janeiro',
+                                        '02' => 'Fevereiro', 
+                                        '03' => 'Março',
+                                        '04' => 'Abril',
+                                        '05' => 'Maio',
+                                        '06' => 'Junho',
+                                        '07' => 'Julho',
+                                        '08' => 'Agosto',
+                                        '09' => 'Setembro',
+                                        '10' => 'Outubro',
+                                        '11' => 'Novembro',
+                                        '12' => 'Dezembro'
+                                    ];
+                                @endphp
+                                @foreach($meses as $numero => $nome)
+                                    <option value="{{ $numero }}" {{ old('mes_inicio_prestacao', $ppp->mes_inicio_prestacao ?? '') == $numero ? 'selected' : '' }}>{{ $nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" value="de 2026" readonly style="background-color: #f8f9fa;">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -72,6 +112,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const selectContrato = document.getElementById('tem_contrato_vigente');
     const camposContrato = document.getElementById('campos-contrato-vigente');
+    const campoMesInicio = document.getElementById('campo-mes-inicio-prestacao'); // NOVO
     const selectProrrogavel = document.getElementById('contrato_prorrogavel');
     const campoPretensao = document.getElementById('campo-pretensao-prorrogacao');
     
@@ -84,11 +125,23 @@ document.addEventListener('DOMContentLoaded', function() {
     function toggleCamposContrato() {
         if (selectContrato.value === 'Sim') {
             camposContrato.style.display = 'block';
+            campoMesInicio.style.display = 'none'; // NOVO: Esconder campo de mês início
+            // Remover obrigatoriedade do campo mês início
+            document.getElementById('mes_inicio_prestacao').removeAttribute('required');
             // Verificar se já existe valor selecionado para prorrogável
             toggleCampoPretensao();
+        } else if (selectContrato.value === 'Não') {
+            camposContrato.style.display = 'none';
+            campoMesInicio.style.display = 'block'; // NOVO: Mostrar campo de mês início
+            campoPretensao.style.display = 'none';
+            // Tornar o campo mês início obrigatório
+            document.getElementById('mes_inicio_prestacao').setAttribute('required', 'required');
         } else {
             camposContrato.style.display = 'none';
+            campoMesInicio.style.display = 'none'; // NOVO: Esconder ambos quando nada selecionado
             campoPretensao.style.display = 'none';
+            // Remover obrigatoriedade
+            document.getElementById('mes_inicio_prestacao').removeAttribute('required');
         }
     }
     
