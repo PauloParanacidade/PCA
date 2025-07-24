@@ -255,12 +255,10 @@ public function update(StorePppRequest $request, $id)
                     break;
                 }
             } else {
-                // Comportamento padrão: mostrar PPPs criados pelo usuário OU onde ele é gestor atual
-                $query->where(function ($q) {
-                    $q->where('user_id', Auth::id())
-                    ->orWhere('gestor_atual_id', Auth::id());
-                });
-            }
+            // CORRIGIDO: Para "PPPs para Avaliar" - apenas PPPs onde o usuário é gestor, excluindo os que ele criou
+            $query->where('gestor_atual_id', Auth::id())
+                  ->where('user_id', '!=', Auth::id()); // Excluir PPPs criados pelo próprio usuário
+        }
 
         $query->with([
             'user',
@@ -1409,6 +1407,55 @@ public function update(StorePppRequest $request, $id)
         } catch (\Exception $e) {
             Log::error('Erro ao atualizar status DIREX: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Erro interno.'], 500);
+        }
+    }
+
+    /**
+     * Lista apenas os PPPs criados pelo usuário logado
+     */
+    public function meusPpps(Request $request)
+    {
+        try {
+            Log::info('DEBUG Meus PPPs - Usuário atual', [
+                'user_id' => Auth::id(),
+                'user_name' => Auth::user()->name ?? 'N/A'
+            ]);
+            
+            $query = PcaPpp::query();
+            
+            // Filtrar apenas PPPs criados pelo usuário logado
+            $query->where('user_id', Auth::id());
+
+            $query->with([
+                'user',
+                'status',
+                'gestorAtual',
+                'historicos.usuario'
+            ])->orderBy('id', 'desc');
+            
+            // Filtro por status
+            if ($request->filled('status_id')) {
+                $query->where('status_id', $request->status_id);
+            }
+            
+            // Filtro por busca
+            if ($request->filled('busca')) {
+                $busca = $request->busca;
+                $query->where(function($q) use ($busca) {
+                    $q->where('nome_item', 'like', "%{$busca}%")
+                      ->orWhere('descricao', 'like', "%{$busca}%");
+                });
+            }
+            
+            $ppps = $query->paginate(10)->withQueryString();
+            
+            $ppps = $this->getNextApprover($ppps);
+            
+            return view('ppp.meus', compact('ppps'));
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao listar Meus PPPs: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao carregar a lista de Meus PPPs.');
         }
     }
 

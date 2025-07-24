@@ -322,8 +322,13 @@ return [
             'icon' => 'fas fa-fw fa-plus-circle',
         ],
         [
-            'text' => 'Meus PPPs',
+            'text' => 'PPPs para Avaliar',
             'url'  => 'ppp',
+            'icon' => 'fas fa-fw fa-user-check',
+        ],
+        [
+            'text' => 'Meus PPPs',
+            'url'  => 'ppp/meus',
             'icon' => 'fas fa-fw fa-list',
         ],
         [

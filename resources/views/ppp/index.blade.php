@@ -1,11 +1,11 @@
 @extends('layouts.adminlte-custom')
 
-@section('title', 'Meus PPPs')
+@section('title', 'PPPs para Avaliar')
 
 @section('content_header')
     @parent
     <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-user-check mr-2"></i>Meus PPPs</h1>
+        <h1><i class="fas fa-user-check mr-2"></i>PPPs para Avaliar</h1>
         <a href="{{ route('ppp.create') }}" class="btn btn-primary">
             <i class="fas fa-plus mr-1"></i>Novo PPP
         </a>

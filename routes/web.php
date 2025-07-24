@@ -40,7 +40,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 // Rotas do PPP para usuários autenticados
 Route::middleware(['auth'])->group(function () {
+    // Nova rota para "Meus PPPs" - DEVE vir ANTES do resource
+    Route::get('ppp/meus', [PppController::class, 'meusPpps'])->name('ppp.meus');
+    
     Route::resource('ppp', PppController::class);
+    
+    // Nova rota para "Meus PPPs" - PPPs criados pelo usuário
+    Route::get('ppp/meus', [PppController::class, 'meusPpps'])->name('ppp.meus');
+    
     Route::post('ppp/{ppp}/aprovar', [PppController::class, 'aprovar'])->name('ppp.aprovar');
     Route::post('/ppp/{ppp}/reprovar', [PppController::class, 'reprovar'])->name('ppp.reprovar');
     Route::post('ppp/{ppp}/solicitar-correcao', [PppController::class, 'solicitarCorrecao'])->name('ppp.solicitar-correcao');

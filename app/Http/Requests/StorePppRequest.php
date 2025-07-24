@@ -46,6 +46,7 @@ class StorePppRequest extends FormRequest
 
             // Contrato vigente (Card Amarelo)
             'tem_contrato_vigente' => 'required|in:Sim,Não',
+            'mes_inicio_prestacao' => 'required_if:tem_contrato_vigente,Não|nullable|string|max:10',
             'num_contrato' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:20',
             'mes_vigencia_final' => 'required_if:tem_contrato_vigente,Sim|nullable|string|max:10',
             'contrato_prorrogavel' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
