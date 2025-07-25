@@ -292,8 +292,8 @@ class HierarquiaService
                 })
                 ->first();
         }
-    
+
         // Caso contrário, retorna fluxo normal
-        return $this->obterProximoGestor($usuario);
+        return $usuario;
     }
 }

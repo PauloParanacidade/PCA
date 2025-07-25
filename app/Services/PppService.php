@@ -44,28 +44,36 @@ class PppService
     public function enviarParaAprovacao(PcaPpp $ppp, ?string $justificativa = null): bool
     {
         try {
+            $proximoGestor = null;
             $gestorAtual = User::find($ppp->gestor_atual_id);
-            // ✅ VERIFICAÇÃO DAF: Se gestor atual é DAF, encaminhar para Secretária
-            if ($gestorAtual && $gestorAtual->hasRole('daf')) {
-                // Usar o método do HierarquiaService para encontrar a secretária
-                $secretaria = $this->hierarquiaService->obterSecretaria();
-                if ($secretaria) {
-                    $ppp->update([
-                        'status_id' => 7, // Aguardando DIREX
-                        'gestor_atual_id' => $secretaria->id,
-                    ]);
-                    $this->historicoService->registrarAprovacao(
-                        $ppp,
-                        ($comentario ?? 'PPP aprovado pelo DAF') . ' - Encaminhado para avaliação da DIREX'
-                    );
-                    return true;
+            if(!$gestorAtual) {
+                $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
+            } else {
+                $departamento = strtoupper($gestorAtual->department ?? '');
+                $areasEspeciais = ['SUPEX', 'DOE', 'DOM'];
+
+                if(in_array($departamento, $areasEspeciais)) {
+                    $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->gestor_atual_id);
+
+                } else if($gestorAtual->hasRole('daf')) {
+                    $secretaria = $this->hierarquiaService->obterSecretaria();
+                    if ($secretaria) {
+                        $ppp->update([
+                            'status_id' => 7, // Aguardando DIREX
+                            'gestor_atual_id' => $secretaria->id,
+                        ]);
+                        $this->historicoService->registrarAprovacao(
+                            $ppp,
+                            ($comentario ?? 'PPP aprovado pelo DAF') . ' - Encaminhado para avaliação da DIREX'
+                        );
+                        return true;
+                    } else {
+                        throw new \Exception('Secretária não encontrada no sistema.');
+                    }
                 } else {
-                    throw new \Exception('Secretária não encontrada no sistema.');
+                    $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
                 }
             }
-
-            // Se for SUPEX, DOE ou DOM → retorna direto o DAF
-            $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->gestor_atual_id);
             if (!$proximoGestor) {
                 throw new \Exception('Não foi possível identificar o próximo gestor.');
             }
