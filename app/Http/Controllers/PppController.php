@@ -193,7 +193,6 @@ public function update(StorePppRequest $request, $id)
             ->with('success', 'PPP atualizada com sucesso.');
     }
 
-    // Se for enviar para aprovação
     if ($acao === 'enviar_aprovacao') {
         try {
             $ppp = PcaPpp::findOrFail($id);
