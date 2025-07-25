@@ -16,18 +16,20 @@
                 Voltar
             </button>
             @endif
-            
+
             {{-- Botões de ação --}}
             {{-- Sempre exibe o botão "Salvar e Enviar para Avaliação" no modo criação. Ele só será ocultado via JS --}}
-            <button type="submit" id="btn-salvar-enviar" name="acao" value="enviar_aprovacao"
-                class="btn btn-primary btn-lg mx-2" 
-                style="{{ isset($ppp) && $ppp->id ? '' : 'display: none;' }}">
-                <i class="fas fa-paper-plane me-2"></i>
-                Salvar e Enviar para Avaliação
-            </button>
-        
+            @if(isset($isCreating) && $isCreating)
+                <button type="submit" id="btn-salvar-enviar" name="acao" value="enviar_aprovacao"
+                    class="btn btn-primary btn-lg mx-2"
+                    style="{{ isset($ppp) && $ppp->id ? '' : 'display: none;' }}">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    Salvar e Enviar para Avaliação
+                </button>
+            @endif
+
             {{-- Só exibe o botão Salvar no modo edição --}}
-            @if (isset($ppp) && $ppp->id && !isset($isCreating))
+            @if (isset($ppp) && $ppp->id && isset($isCreating) && !$isCreating)
                 <button type="submit" name="acao" value="salvar" class="btn btn-success btn-lg mx-2">
                     <i class="fas fa-save me-2"></i>
                     Salvar
