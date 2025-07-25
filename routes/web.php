@@ -40,8 +40,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 // Rotas do PPP para usuários autenticados
 Route::middleware(['auth'])->group(function () {
-    // Nova rota para "Meus PPPs" - DEVE vir ANTES do resource
+    
     Route::get('ppp/meus', [PppController::class, 'meusPpps'])->name('ppp.meus');
+    Route::post('ppp/{ppp}/reenviar-apos-correcao', [PppController::class, 'reenviarAposCorrecao'])->name('ppp.reenviar-apos-correcao');
     
     Route::resource('ppp', PppController::class);
     
@@ -91,6 +92,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ppp/direx/aguardando', [PppController::class, 'obterPppsAguardandoDirectx'])->name('ppp.direx.aguardando');
     Route::get('/ppp/conselho/aguardando', [PppController::class, 'obterPppsAguardandoConselho'])->name('ppp.conselho.aguardando');
 });
+
+
+
 
 // Rota para depuração (ambiente local)
 if (app()->environment('local')) {

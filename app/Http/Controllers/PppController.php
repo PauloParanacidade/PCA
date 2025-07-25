@@ -376,6 +376,12 @@ public function update(StorePppRequest $request, $id)
                 $this->historicoService->registrarEmAvaliacao($ppp);
             }
             
+            // NOVO: Registrar quando usuário abre PPP para correção
+            if ($ppp->gestor_atual_id === $usuarioLogado->id && $ppp->status_id === 4) {
+                $ppp->update(['status_id' => 5]); // em_correcao
+                $this->historicoService->registrarCorrecaoIniciada($ppp);
+            }
+            
             // dd([
             //     'ppp_id' => $ppp->id,
             //     'ppp_status' => $ppp->status_id,
@@ -1456,6 +1462,35 @@ public function update(StorePppRequest $request, $id)
         } catch (\Exception $e) {
             Log::error('Erro ao listar Meus PPPs: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Erro ao carregar a lista de Meus PPPs.');
+        }
+    }
+
+    /**
+     * Reenvia PPP após correção
+     */
+    public function reenviarAposCorrecao(Request $request, PcaPpp $ppp)
+    {
+        // Verificar se o usuário é o responsável pela correção
+        if ($ppp->gestor_atual_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'Você não tem permissão para reenviar este PPP.');
+        }
+        
+        // Verificar se o PPP está no status correto
+        if ($ppp->status_id !== 5) { // em_correcao
+            return redirect()->back()->with('error', 'PPP não está no status adequado para reenvio.');
+        }
+        
+        try {
+            $this->pppService->reenviarAposCorrecao(
+                $ppp,
+                $request->input('comentario')
+            );
+            
+            return redirect()->route('ppp.index')
+                ->with('success', 'PPP corrigido e reenviado para aprovação com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erro ao reenviar PPP: ' . $e->getMessage());
         }
     }
 

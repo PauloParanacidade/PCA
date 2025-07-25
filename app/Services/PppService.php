@@ -197,17 +197,20 @@ class PppService
         public function solicitarCorrecao(PcaPpp $ppp, string $motivo): bool
         {
             try {
-                // ✅ CORREÇÃO: Capturar status anterior antes da mudança
+                // Capturar status anterior antes da mudança
                 $statusAnterior = $ppp->status_id;
                 
-                // ✅ CORREÇÃO: Manter gestor_atual_id (não definir como null)
+                // Identificar o usuário que deve receber o PPP de volta
+                $usuarioAnterior = $this->historicoService->identificarUsuarioAnterior($ppp);
+                
+                // Atualizar PPP: status para aguardando_correção e gestor para usuário anterior
                 $ppp->update([
                     'status_id' => 4, // aguardando_correcao
-                    // gestor_atual_id mantido (não alterado)
+                    'gestor_atual_id' => $usuarioAnterior, // PPP retorna para quem enviou
                 ]);
                 
-                // ✅ CORREÇÃO: Passar status_anterior para o histórico
-                $this->historicoService->registrarSolicitacaoCorrecao($ppp, $motivo, $statusAnterior);
+                // Registrar no histórico
+                $this->historicoService->registrarCorrecaoSolicitada($ppp, $motivo);
                 
                 return true;
                 
@@ -238,5 +241,38 @@ class PppService
                 throw $ex;
             }
         }
-    }
+        
+        /**
+         * Reenvia PPP após correção
+         */
+        public function reenviarAposCorrecao(PcaPpp $ppp, ?string $comentario = null): bool
+        {
+            try {
+                // Identificar o próximo gestor na hierarquia
+                $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->user_id);
+                
+                if (!$proximoGestor) {
+                    throw new \Exception('Não foi possível identificar o próximo gestor.');
+                }
+                
+                // Garantir que o próximo gestor tenha o papel de gestor
+                $proximoGestor->garantirPapelGestor();
+                
+                // Atualizar PPP: status volta para aguardando_aprovacao
+                $ppp->update([
+                    'status_id' => 2, // aguardando_aprovacao
+                    'gestor_atual_id' => $proximoGestor->id,
+                ]);
+                
+                // Registrar no histórico
+                $this->historicoService->registrarCorrecaoEnviada($ppp, $comentario);
+                
+                return true;
+                
+            } catch (\Throwable $ex) {
+                Log::error('Erro ao reenviar PPP após correção: ' . $ex->getMessage());
+                throw $ex;
+            }
+        }
+}
     

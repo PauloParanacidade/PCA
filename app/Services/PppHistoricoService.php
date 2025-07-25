@@ -519,4 +519,44 @@ class PppHistoricoService
         // Por enquanto, verifica se há PPPs com status direx_avaliando
         return PcaPpp::where('status_id', 8)->exists(); // direx_avaliando
     }
+
+    /**
+     * Identifica o usuário que enviou o PPP anteriormente
+     * Busca no histórico a última ação de envio (ppp_enviado, correcao_enviada, aprovacao)
+     * para determinar quem deve receber o PPP de volta quando solicitada correção
+     */
+    public function identificarUsuarioAnterior(PcaPpp $ppp): ?int
+    {
+        // Buscar no histórico as ações que indicam envio/aprovação em ordem cronológica reversa
+        $ultimaAcaoEnvio = PppHistorico::where('ppp_id', $ppp->id)
+            ->whereIn('acao', [
+                'ppp_enviado',           // Usuário enviou PPP inicial
+                'correcao_enviada',      // Usuário reenviou após correção
+                'aprovacao_intermediaria', // Gestor aprovou e encaminhou
+                'aprovacao_final'        // Gestor aprovou final
+            ])
+            ->with('usuario')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($ultimaAcaoEnvio) {
+            // Se foi uma aprovação, o PPP deve voltar para quem enviou antes dessa aprovação
+            if (in_array($ultimaAcaoEnvio->acao, ['aprovacao_intermediaria', 'aprovacao_final'])) {
+                // Buscar quem enviou antes desta aprovação
+                $envioAnterior = PppHistorico::where('ppp_id', $ppp->id)
+                    ->whereIn('acao', ['ppp_enviado', 'correcao_enviada'])
+                    ->where('created_at', '<', $ultimaAcaoEnvio->created_at)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                
+                return $envioAnterior ? $envioAnterior->user_id : $ppp->user_id;
+            }
+            
+            // Se foi um envio direto, retornar o usuário que enviou
+            return $ultimaAcaoEnvio->user_id;
+        }
+
+        // Fallback: retornar o criador do PPP
+        return $ppp->user_id;
+    }
 }
