@@ -182,84 +182,82 @@ export const FormButtons = {
             console.error('💥 Erro capturado no handleSubmit:', error);
             console.error('💥 Stack trace:', error.stack);
             alert('Erro ao processar solicitação: ' + error.message);
-            
+
             submitBtn.prop('disabled', false)
                    .html('<i class="fas fa-paper-plane me-2"></i>Salvar e Enviar para Aprovação');
         }
-        
+
         console.log('🏁 FormButtons.handleSubmit() - Finalizando processamento');
         return false;
     },
-    // ... existing code ...
 
-/**
- * Função centralizada para carregar histórico do PPP
- * @param {number} pppId - ID do PPP
- * @param {string} nomeItem - Nome do item PPP
- */
-carregarHistoricoPPP: function(pppId, nomeItem) {
-    // Verificar se o modal já existe, se não, criar
-    if (!$('#historicoModal').length) {
-        const modalHtml = `
-            <div class="modal fade" id="historicoModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header bg-info text-white">
-                            <h5 class="modal-title" id="historicoModalTitle">
-                                <i class="fas fa-history mr-2"></i>Histórico do PPP
-                            </h5>
-                            <button type="button" class="close text-white" data-dismiss="modal">
-                                <span>&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body" id="historicoModalBody">
-                            <div class="text-center py-3">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...
+    /**
+     * Função centralizada para carregar histórico do PPP
+     * @param {number} pppId - ID do PPP
+     * @param {string} nomeItem - Nome do item PPP
+     */
+    carregarHistoricoPPP: function(pppId, nomeItem) {
+        // Verificar se o modal já existe, se não, criar
+        if (!$('#historicoModal').length) {
+            const modalHtml = `
+                <div class="modal fade" id="historicoModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title" id="historicoModalTitle">
+                                    <i class="fas fa-history mr-2"></i>Histórico do PPP
+                                </h5>
+                                <button type="button" class="close text-white" data-dismiss="modal">
+                                    <span>&times;</span>
+                                </button>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                <i class="fas fa-times mr-1"></i>Fechar
-                            </button>
+                            <div class="modal-body" id="historicoModalBody">
+                                <div class="text-center py-3">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <i class="fas fa-times mr-1"></i>Fechar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
-        $('body').append(modalHtml);
-    }
-    
-    // Atualizar título e abrir modal
-    $('#historicoModalTitle').html(`<i class="fas fa-history mr-2"></i>Histórico: ${nomeItem}`);
-    $('#historicoModalBody').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...</div>');
-    $('#historicoModal').modal('show');
-    
-    // Usar apenas jQuery modal (Bootstrap 4)
-    $('#historicoModal').modal('show');
-    
-    // Requisição AJAX
-    $.ajax({
-        url: `/ppp/${pppId}/historico`,
-        type: 'GET',
-        success: function(response) {
-            $('#historicoModalBody').html(response);
-        },
-        error: function(xhr, status, error) {
-            $('#historicoModalBody').html(
-                '<div class="alert alert-danger">' +
-                '<i class="fas fa-exclamation-triangle mr-2"></i>' +
-                'Erro ao carregar histórico. Tente novamente.' +
-                '</div>'
-            );
-            console.error('Erro ao carregar histórico:', error);
+            `;
+            $('body').append(modalHtml);
         }
-    });
-},
 
-// Função de compatibilidade (alias)
-carregarHistorico: function(pppId, nomeItem) {
-    return this.carregarHistoricoPPP(pppId, nomeItem);
-}
+        // Atualizar título e abrir modal
+        $('#historicoModalTitle').html(`<i class="fas fa-history mr-2"></i>Histórico: ${nomeItem}`);
+        $('#historicoModalBody').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando histórico...</div>');
+        $('#historicoModal').modal('show');
 
-// ... existing code ...
+        // Usar apenas jQuery modal (Bootstrap 4)
+        $('#historicoModal').modal('show');
+
+        // Requisição AJAX
+        $.ajax({
+            url: `/ppp/${pppId}/historico`,
+            type: 'GET',
+            success: function(response) {
+                $('#historicoModalBody').html(response);
+            },
+            error: function(xhr, status, error) {
+                $('#historicoModalBody').html(
+                    '<div class="alert alert-danger">' +
+                    '<i class="fas fa-exclamation-triangle mr-2"></i>' +
+                    'Erro ao carregar histórico. Tente novamente.' +
+                    '</div>'
+                );
+                console.error('Erro ao carregar histórico:', error);
+            }
+        });
+    },
+
+    // Função de compatibilidade (alias)
+    carregarHistorico: function(pppId, nomeItem) {
+        return this.carregarHistoricoPPP(pppId, nomeItem);
+    }
+
 };
