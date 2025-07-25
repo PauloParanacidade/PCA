@@ -636,7 +636,6 @@ public function update(StorePppRequest $request, $id)
         return back()->withErrors(['msg' => 'Erro: ' . $e->getMessage()]);
     }
 }
-
     
     public function aprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
     {
@@ -648,7 +647,7 @@ public function update(StorePppRequest $request, $id)
             return redirect()->back()->with('error', 'Você não tem permissão para aprovar PPPs.');
         }
         
-        if (!in_array($ppp->status_id, [2, 3])) { // 2 = aguardando_aprovacao, 3 = em_avaliacao
+        if (!in_array($ppp->status_id, [3])) { // 3 = em_avaliacao
             return redirect()->back()->with('error', 'Este PPP não está disponível para aprovação.');
         }
         
@@ -657,7 +656,7 @@ public function update(StorePppRequest $request, $id)
         }
         
         try {
-            $resultado = $pppService->aprovarPpp($ppp, $request->input('comentario'));
+            $resultado = $pppService->enviarParaAprovacao($ppp, $request->input('comentario'));
             
             if ($resultado) return redirect()->route('ppp.index')->with('success', 'PPP aprovado com sucesso!');
             
@@ -668,96 +667,96 @@ public function update(StorePppRequest $request, $id)
         }
     }
     
-    /**
-    * Processa o envio para aprovação internamente
-    */
-    private function processarEnvioAprovacao(PcaPpp $ppp, Request $request): array
-    {
-        try {
-            Log::info('🔄 processarEnvioAprovacao() - Iniciando processamento interno', [
-                'ppp_id' => $ppp->id,
-                'status_atual' => $ppp->status_id,
-                'gestor_atual' => $ppp->gestor_atual_id,
-                'user_solicitante' => Auth::id()
-            ]);
+    // /**
+    // * Processa o envio para aprovação internamente
+    // */
+    // private function processarEnvioAprovacao(PcaPpp $ppp, Request $request): array
+    // {
+    //     try {
+    //         Log::info('🔄 processarEnvioAprovacao() - Iniciando processamento interno', [
+    //             'ppp_id' => $ppp->id,
+    //             'status_atual' => $ppp->status_id,
+    //             'gestor_atual' => $ppp->gestor_atual_id,
+    //             'user_solicitante' => Auth::id()
+    //         ]);
             
-            // ✅ ALTERAÇÃO: Usar HierarquiaService em vez da lógica duplicada
-            $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
+    //         // ✅ ALTERAÇÃO: Usar HierarquiaService em vez da lógica duplicada
+    //         $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
             
-            Log::info('🔍 Resultado da busca por próximo gestor', [
-                'proximo_gestor_encontrado' => $proximoGestor ? true : false,
-                'proximo_gestor_id' => $proximoGestor ? $proximoGestor->id : null,
-                'proximo_gestor_nome' => $proximoGestor ? $proximoGestor->name : null
-            ]);
+    //         Log::info('🔍 Resultado da busca por próximo gestor', [
+    //             'proximo_gestor_encontrado' => $proximoGestor ? true : false,
+    //             'proximo_gestor_id' => $proximoGestor ? $proximoGestor->id : null,
+    //             'proximo_gestor_nome' => $proximoGestor ? $proximoGestor->name : null
+    //         ]);
             
-            if (!$proximoGestor) {
-                Log::error('❌ Próximo gestor não encontrado', [
-                    'ppp_id' => $ppp->id,
-                    'user_id' => Auth::id()
-                ]);
-                return [
-                    'success' => false,
-                    'message' => 'Não foi possível identificar o próximo gestor.'
-                ];
-            }
+    //         if (!$proximoGestor) {
+    //             Log::error('❌ Próximo gestor não encontrado', [
+    //                 'ppp_id' => $ppp->id,
+    //                 'user_id' => Auth::id()
+    //             ]);
+    //             return [
+    //                 'success' => false,
+    //                 'message' => 'Não foi possível identificar o próximo gestor.'
+    //             ];
+    //         }
             
-            Log::info('📝 Atualizando status do PPP', [
-                'ppp_id' => $ppp->id,
-                'status_de' => $ppp->status_id,
-                'status_para' => 2,
-                'gestor_de' => $ppp->gestor_atual_id,
-                'gestor_para' => $proximoGestor->id
-            ]);
+    //         Log::info('📝 Atualizando status do PPP', [
+    //             'ppp_id' => $ppp->id,
+    //             'status_de' => $ppp->status_id,
+    //             'status_para' => 2,
+    //             'gestor_de' => $ppp->gestor_atual_id,
+    //             'gestor_para' => $proximoGestor->id
+    //         ]);
             
-            //dd(HierarquiaService->extrairSiglaAreaGestor($proximoGestor));
+    //         //dd(HierarquiaService->extrairSiglaAreaGestor($proximoGestor));
             
-            $ppp->update([
-                'status_id' => 2, // aguardando_aprovacao
-                'gestor_atual_id' => $proximoGestor->id,            
-            ]);
+    //         $ppp->update([
+    //             'status_id' => 2, // aguardando_aprovacao
+    //             'gestor_atual_id' => $proximoGestor->id,            
+    //         ]);
             
-            Log::info('✅ Status do PPP atualizado', [
-                'ppp_id' => $ppp->id,
-                'novo_status' => $ppp->fresh()->status_id,
-                'novo_gestor' => $ppp->fresh()->gestor_atual_id
-            ]);
+    //         Log::info('✅ Status do PPP atualizado', [
+    //             'ppp_id' => $ppp->id,
+    //             'novo_status' => $ppp->fresh()->status_id,
+    //             'novo_gestor' => $ppp->fresh()->gestor_atual_id
+    //         ]);
             
-            // Registrar no histórico
-            $this->historicoService->registrarEnvioAprovacao(
-                $ppp,
-                'PPP enviado para aprovação automaticamente após criação'
-            );
+    //         // Registrar no histórico
+    //         $this->historicoService->registrarEnvioAprovacao(
+    //             $ppp,
+    //             'PPP enviado para aprovação automaticamente após criação'
+    //         );
             
-            Log::info('📋 Histórico registrado com sucesso', [
-                'ppp_id' => $ppp->id
-            ]);
+    //         Log::info('📋 Histórico registrado com sucesso', [
+    //             'ppp_id' => $ppp->id
+    //         ]);
             
-            Log::info('✅ processarEnvioAprovacao() - Concluído com sucesso', [
-                'ppp_id' => $ppp->id,
-                'status_final' => $ppp->fresh()->status_id,
-                'gestor_final' => $ppp->fresh()->gestor_atual_id
-            ]);
+    //         Log::info('✅ processarEnvioAprovacao() - Concluído com sucesso', [
+    //             'ppp_id' => $ppp->id,
+    //             'status_final' => $ppp->fresh()->status_id,
+    //             'gestor_final' => $ppp->fresh()->gestor_atual_id
+    //         ]);
             
-            return [
-                'success' => true,
-                'message' => 'PPP enviado para aprovação com sucesso!'
-            ];
+    //         return [
+    //             'success' => true,
+    //             'message' => 'PPP enviado para aprovação com sucesso!'
+    //         ];
             
-        } catch (\Throwable $ex) {
-            Log::error('💥 ERRO CRÍTICO em processarEnvioAprovacao()', [
-                'ppp_id' => $ppp->id,
-                'exception_message' => $ex->getMessage(),
-                'exception_file' => $ex->getFile(),
-                'exception_line' => $ex->getLine(),
-                'stack_trace' => $ex->getTraceAsString()
-            ]);
+    //     } catch (\Throwable $ex) {
+    //         Log::error('💥 ERRO CRÍTICO em processarEnvioAprovacao()', [
+    //             'ppp_id' => $ppp->id,
+    //             'exception_message' => $ex->getMessage(),
+    //             'exception_file' => $ex->getFile(),
+    //             'exception_line' => $ex->getLine(),
+    //             'stack_trace' => $ex->getTraceAsString()
+    //         ]);
             
-            return [
-                'success' => false,
-                'message' => $ex->getMessage()
-            ];
-        }
-    }
+    //         return [
+    //             'success' => false,
+    //             'message' => $ex->getMessage()
+    //         ];
+    //     }
+    // }
     /**
     * Reprova um PPP
     */
@@ -844,8 +843,6 @@ public function update(StorePppRequest $request, $id)
         
         return false; // Todos os campos estão preenchidos, não é rascunho
     }
-
-    // ... existing code ...
 
     /**
      * NOVOS MÉTODOS PARA FLUXO DIREX E CONSELHO
