@@ -136,11 +136,25 @@ class PppController extends Controller
                 'stack_trace' => $ex->getTraceAsString(),
                 'request_data' => $request->all()
             ]);
-            
+
             return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP: ' . $ex->getMessage()]);
         }
     }
-    
+
+    public function processMonetaryFields($request, $ppp) : PcaPpp
+    {
+        $estimativaFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->estimativa_valor)));
+
+        $valorFloat = null;
+        if ($request->filled('valor_contrato_atualizado')) {
+            $valorFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->valor_contrato_atualizado)));
+        }
+        $ppp->estimativa_valor = $estimativaFloat;
+        $ppp->valor_contrato_atualizado = $valorFloat;
+
+        return $ppp;
+    }
+
 public function update(StorePppRequest $request, $id)
 {
     $usuario = auth()->user();
@@ -154,12 +168,14 @@ public function update(StorePppRequest $request, $id)
         'data'   => $request->all()
     ]);
 
-    // Se for apenas salvar/rascunho
     if ($modo === 'edicao' && $acao === 'salvar') {
         $ppp = PcaPpp::findOrFail($id);
 
         $statusAnterior = $ppp->status_id;
         $ppp->fill($request->validated());
+
+        $ppp = $this->processMonetaryFields($request, $ppp);
+
         $ppp->save();
 
         if ($statusAnterior != $ppp->status_id) {
