@@ -89,6 +89,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ppp/direx/verificar-reuniao-ativa', [PppController::class, 'verificarReuniaoDirectxAtiva'])->name('ppp.direx.verificar-reuniao-ativa');
     Route::get('/ppp/direx/aguardando', [PppController::class, 'obterPppsAguardandoDirectx'])->name('ppp.direx.aguardando');
     Route::get('/ppp/conselho/aguardando', [PppController::class, 'obterPppsAguardandoConselho'])->name('ppp.conselho.aguardando');
+
+    // Dashboard
+    Route::get('/dashboard', [PppController::class, 'dashboard'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 });
 
 

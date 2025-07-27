@@ -1506,6 +1506,18 @@ public function update(StorePppRequest $request, $id)
         }
     }
 
+    public function dashboard()
+    {
+        $userId = Auth::id();
+
+        $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
+        $pppsMeus = $this->pppService->contarMeus($userId);
+
+        $usuario = Auth::user();
+
+        return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'usuario'));
+    }
+
 }
 
 

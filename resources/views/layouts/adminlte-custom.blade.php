@@ -1,3 +1,4 @@
+{{-- resources/views/layouts/adminlte-custom.blade.php --}}
 @extends('adminlte::page')
 
 @section('content_header')
@@ -9,9 +10,8 @@
 @stop
 
 @section('css')
-    <!-- Adicionar meta tag CSRF -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+    @parent
+    <!-- Adicione aqui seus estilos CSS customizados, se precisar -->
     <style>
         /* Ajustes específicos para AdminLTE */
         .impersonate-banner {
@@ -23,10 +23,32 @@
         .content-header {
             padding-top: 0;
         }
+
+        /* Faz o card inteiro clicável com cursor pointer */
+        .info-box-link {
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
     </style>
     @yield('page_css')
 @stop
 
 @section('js')
+    @parent
+    <!-- Scripts customizados, se precisar -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.info-box-link').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    if(url) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+    </script>
     @yield('page_js')
 @stop

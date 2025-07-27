@@ -312,8 +312,8 @@ return [
 
         // Sidebar items:
         [
-            'text' => 'Dashboard',
-            'url'  => 'dashboard',
+            'text' => 'Home',
+            'url'  => 'home',
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
         [
