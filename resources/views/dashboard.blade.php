@@ -3,61 +3,100 @@
 @section('title', 'Bem-vindo')
 
 @section('content_header')
-    <h1>Bem-vindo(a), {{ Auth::user()->name }} - {{ Auth::user()->setor ?? 'Setor não informado' }}</h1>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center flex-wrap">
+        <h1 class="mb-2 mb-md-0">Bem-vindo(a), <strong>{{ Auth::user()->name }}</strong></h1>
+        <small class="text-muted font-italic">{{ Auth::user()->department ?? 'Setor não informado' }}</small>
+    </div>
 @stop
 
 @section('content')
-<div class="row">
+<div class="container-fluid">
 
-    {{-- Card de Boas-vindas e resumo --}}
-    <div class="col-md-12">
-        <x-adminlte-callout theme="info" title="Sistema PCA - Planejamento de Contratações Anual">
-            Este sistema auxilia na gestão de pedidos de planejamento de compras e contratações públicas.
-            Utilize o menu lateral para iniciar um novo pedido (PPP), consultar status, aprovar solicitações e muito mais.
+    {{-- Mensagem PCA com destaque --}}
+    <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-body">
+            <h3 class="card-title font-weight-bold text-primary">Sistema PCA - Planejamento de Contratações Anual</h3>
+            <p class="card-text text-secondary">
+                Este sistema auxilia na gestão de pedidos de planejamento de compras e contratações públicas.
+                Utilize o menu lateral para iniciar um novo pedido (PPP), consultar status, aprovar solicitações e muito mais.
+            </p>
+        </div>
+    </div>
 
-            <hr>
-
-            <p><strong>PPPs para avaliar:</strong> {{ $pppsParaAvaliar ?? 0 }}</p>
-            <p><strong>PPPs criados por você:</strong> {{ $pppsMeus ?? 0 }}</p>
-        </x-adminlte-callout>
+    {{-- Título Acesso Rápido --}}
+    <div class="mb-3">
+        <h4 class="font-weight-bold text-secondary border-left border-primary pl-3" style="border-width: 4px !important;">
+            Acesso Rápido:
+        </h4>
     </div>
 
     {{-- Cards de Acesso Rápido --}}
-    <div class="col-md-4">
-        <a href="{{ route('ppp.create') }}" class="info-box-link">
-            <x-adminlte-info-box 
-                title="Novo PPP" 
-                text="Inicie criando uma novo PPP (Proposta para o PCA)" 
-                icon="fas fa-plus-circle" 
-                icon-theme="green" />
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{{ route('ppp.index') }}" class="info-box-link">
-            <x-adminlte-info-box 
-                title="Para Avaliar" 
-                text="Pedidos aguardando sua análise" 
-                icon="fas fa-user-check" 
-                icon-theme="warning" />
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{{ route('ppp.meus') }}" class="info-box-link">
-            <x-adminlte-info-box 
-                title="Meus PPPs" 
-                text="Acompanhe seus pedidos" 
-                icon="fas fa-list" 
-                icon-theme="primary" />
-        </a>
+    <div class="row mb-3">
+        <div class="col-12 col-md-4 mb-3 mb-md-0">
+            <a href="{{ route('ppp.create') }}" class="info-box-link d-block" title="Clique para iniciar um novo PPP">
+                <x-adminlte-info-box 
+                    title="Novo PPP" 
+                    text="Clique para iniciar um novo PPP" 
+                    icon="fas fa-plus-circle" 
+                    icon-theme="green" />
+            </a>
+        </div>
+
+        <div class="col-12 col-md-4 mb-3 mb-md-0">
+            <a href="{{ route('ppp.index') }}" class="info-box-link d-block" title="Clique para ver PPPs para avaliar">
+                <x-adminlte-info-box 
+                    title="Para Avaliar" 
+                    text="Clique para ver PPPs para avaliar" 
+                    icon="fas fa-user-check" 
+                    icon-theme="warning" />
+            </a>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <a href="{{ route('ppp.meus') }}" class="info-box-link d-block" title="Clique para ver seus PPPs">
+                <x-adminlte-info-box 
+                    title="Meus PPPs" 
+                    text="Clique para ver seus PPPs" 
+                    icon="fas fa-list" 
+                    icon-theme="primary" />
+            </a>
+        </div>
     </div>
 
-    {{-- Card de Status do Sistema --}}
-    <div class="col-md-12 mt-4">
-        <x-adminlte-callout theme="success" title="Status do Sistema">
-            Última atualização: {{ now()->format('d/m/Y H:i') }} <br>
-            Todos os módulos estão operacionais.
-        </x-adminlte-callout>
+    {{-- Quantidades após os botões --}}
+    <div class="row mb-4">
+        <div class="col-6 col-md-3">
+            <div class="border rounded p-3 bg-light text-center shadow-sm">
+                <h3 class="mb-0 text-primary">{{ $pppsParaAvaliar ?? 0 }}</h3>
+                <small class="text-muted">PPPs para avaliar</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="border rounded p-3 bg-light text-center shadow-sm">
+                <h3 class="mb-0 text-success">{{ $pppsMeus ?? 0 }}</h3>
+                <small class="text-muted">PPPs criados por você</small>
+            </div>
+        </div>
     </div>
 
+    {{-- Status do Sistema --}}
+    {{-- <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title text-success font-weight-bold">Status do Sistema</h5>
+            <p class="card-text mb-0">
+                Última atualização do código: <strong>{{ $ultimoCommit ?? 'Data desconhecida' }}</strong>
+            </p>
+        </div>
+    </div> --}}
 </div>
+@stop
+
+@section('css')
+<style>
+    /* Cursor pointer para o card inteiro */
+    a.info-box-link:hover {
+        filter: brightness(0.93);
+        text-decoration: none;
+    }
+</style>
 @stop

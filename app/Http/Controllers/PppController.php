@@ -11,12 +11,15 @@ use App\Services\PppHistoricoService;
 use App\Services\PppService;
 use App\Services\HierarquiaService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PcaExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
+
 
 class PppController extends Controller
 {
@@ -1510,12 +1513,21 @@ public function update(StorePppRequest $request, $id)
     {
         $userId = Auth::id();
 
-        $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
-        $pppsMeus = $this->pppService->contarMeus($userId);
+    $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
+    $pppsMeus = $this->pppService->contarMeus($userId);
 
-        $usuario = Auth::user();
+    $usuario = Auth::user();
 
-        return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'usuario'));
+    // Recuperar data da última atualização via GitHub com cache de 1 hora
+    $ultimaAtualizacao = Cache::remember('ultima_atualizacao_github', 3600, function () {
+        $response = Http::withToken(env('GITHUB_TOKEN'))
+            ->get('https://api.github.com/repos/PauloParanacidade/PCA/commits');
+
+        return $response->json()[0]['commit']['committer']['date'] ?? null;
+    });
+
+    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'usuario', 'ultimaAtualizacao'));
+
     }
 
 }

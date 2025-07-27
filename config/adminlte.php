@@ -313,7 +313,7 @@ return [
         // Sidebar items:
         [
             'text' => 'Home',
-            'url'  => 'home',
+            'url'  => 'dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
         [
