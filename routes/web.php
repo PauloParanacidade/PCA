@@ -94,6 +94,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [PppController::class, 'dashboard'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+    // REMOVER A ROTA DASHBOARD DUPLICADA DAQUI
+    // Route::get('/dashboard', [PppController::class, 'dashboard'])
+    // ->middleware(['auth', 'verified'])
+    // ->name('dashboard');
 });
 
 

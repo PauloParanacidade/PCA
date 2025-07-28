@@ -18,7 +18,7 @@
             <h3 class="card-title font-weight-bold text-primary">Sistema PCA - Planejamento de Contratações Anual</h3>
             <p class="card-text text-secondary">
                 Este sistema auxilia na gestão de pedidos de planejamento de compras e contratações públicas.
-                Utilize o menu lateral para iniciar um novo pedido (PPP), consultar status, aprovar solicitações e muito mais.
+                Utilize o menu lateral para acassar a página inicial (home), iniciar um novo PPP (Projeção para PCA), consultar status dos seus PPPs e aprovar solicitações, se você for um gestor.
             </p>
         </div>
     </div>
@@ -51,39 +51,30 @@
             @if($podeAvaliar)
                 <a href="{{ route('ppp.index') }}" class="info-box-link d-block" title="Clique para ver PPPs para avaliar">
                     <x-adminlte-info-box 
-                        title="Para Avaliar" 
+                        title="Para Avaliar ({{ $pppsParaAvaliar ?? 0 }})" 
                         text="Clique para ver PPPs para avaliar" 
                         icon="fas fa-user-check" 
                         icon-theme="warning" />
                 </a>
-
+            @else
+                <div class="info-box-disabled">
+                    <x-adminlte-info-box 
+                        title="Para Avaliar (—)" 
+                        text="Sem permissão para avaliar" 
+                        icon="fas fa-user-check" 
+                        icon-theme="secondary" />
+                </div>
             @endif
         </div>
 
         <div class="col-12 col-md-4">
             <a href="{{ route('ppp.meus') }}" class="info-box-link d-block" title="Clique para ver seus PPPs">
                 <x-adminlte-info-box 
-                    title="Meus PPPs" 
+                    title="Meus PPPs ({{ $pppsMeus ?? 0 }})" 
                     text="Clique para ver seus PPPs" 
                     icon="fas fa-list" 
                     icon-theme="primary" />
             </a>
-        </div>
-    </div>
-
-    {{-- Quantidades após os botões --}}
-    <div class="row mb-4">
-        <div class="col-6 col-md-3">
-            <div class="border rounded p-3 {{ $podeAvaliar ? 'bg-light' : 'bg-secondary text-muted' }} text-center shadow-sm">
-                <h3 class="mb-0 {{ $podeAvaliar ? 'text-primary' : 'text-muted' }}">{{ $podeAvaliar ? ($pppsParaAvaliar ?? 0) : '—' }}</h3>
-                <small class="text-muted">{{ $podeAvaliar ? 'PPPs para avaliar' : 'Sem permissão' }}</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="border rounded p-3 bg-light text-center shadow-sm">
-                <h3 class="mb-0 text-success">{{ $pppsMeus ?? 0 }}</h3>
-                <small class="text-muted">PPPs criados por você</small>
-            </div>
         </div>
     </div>
 

@@ -18,7 +18,7 @@
 
 #### 1.3 Botões finais
 * **Botão de Salvar e Enviar para Aprovação**: envia para o próximo nível hierárquico
-* **Botão Cancelar**: redireciona para a dashboard
+* **Botão Cancelar**: redireciona para a Home
 
 ### 2. Edição do PPP
 
