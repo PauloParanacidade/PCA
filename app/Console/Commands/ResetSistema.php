@@ -1,6 +1,5 @@
 <?php
-//alterar yes para y e no para n
-//automatizar as respostas y e n para não precisar digitar
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -20,14 +19,24 @@ class ResetSistema extends Command
             return;
         }
 
-        $this->info('🔄 Resetando o sistema...');
+        $this->info('🔄 Iniciando processo de reset...');
 
-        // migrate:fresh recomendado apenas em dev, mas depende do caso
+        $executarMigrateFresh = false;
+
         if ($env !== 'production') {
+            $executarMigrateFresh = true;
+        } else {
+            $this->warn('⚠️ Atenção: você está em produção. Executar "migrate:fresh" irá APAGAR todos os dados.');
+            if ($this->confirm('❗ Deseja mesmo continuar com migrate:fresh em produção? [y/N]', false)) {
+                $executarMigrateFresh = true;
+            } else {
+                $this->info('⏩ migrate:fresh ignorado por segurança.');
+            }
+        }
+
+        if ($executarMigrateFresh) {
             $this->call('migrate:fresh');
             $this->info('✅ Tabelas dropadas e recriadas via migrate:fresh.');
-        } else {
-            $this->info('⚠️ migrate:fresh ignorado em produção para evitar perda de dados.');
         }
 
         $this->call('ldap:import');
@@ -36,13 +45,11 @@ class ResetSistema extends Command
         $this->call('db:seed');
         $this->info('✅ Seeders executados.');
 
-        // composer dump-autoload sempre
         $this->info('🔄 Executando composer dump-autoload...');
         shell_exec('composer dump-autoload');
         $this->info('✅ Autoload do Composer regenerado.');
 
         if ($env === 'production') {
-            // Limpa e gera cache para produção
             $this->call('config:clear');
             $this->call('cache:clear');
             $this->call('route:clear');
@@ -54,7 +61,6 @@ class ResetSistema extends Command
 
             $url = 'https://pca.paranacidade.org.br/';
         } else {
-            // Em dev, limpezas de cache opcionais - aqui decidi não fazer nada para evitar atrapalhar debug
             $this->info('⚠️ Pulando limpeza e geração de cache para evitar problemas em desenvolvimento.');
             $url = 'http://localhost:8000/';
         }
