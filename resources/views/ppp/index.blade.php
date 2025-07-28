@@ -111,14 +111,6 @@
                                             <a href="{{ route('ppp.show', $ppp->id) }}" class="btn btn-sm btn-outline-info" title="Visualizar" onclick="event.stopPropagation();">
                                                 <i class="fas fa-eye"></i>  {{-- Ver o PPP --}}
                                             </a>
-                                            <a href="{{ route('ppp.edit', $ppp->id) }}" class="btn btn-sm btn-outline-warning" title="Editar" onclick="event.stopPropagation();">
-                                                <i class="fas fa-edit"></i> {{-- Editar o PPP --}}
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-historico" 
-                                                onclick="event.stopPropagation(); FormButtons.carregarHistoricoPPP({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')"
-                                                title="Histórico">          {{-- Histórico do PPP --}}
-                                                <i class="fas fa-history"></i>
-                                            </button>
                                             <button type="button" class="btn btn-sm btn-outline-danger" 
                                                     onclick="event.stopPropagation(); confirmarExclusao({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')" title="Remover">
                                                 <i class="fas fa-trash"></i> {{-- Apagar o PPP --}}
