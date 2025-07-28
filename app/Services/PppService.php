@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\PcaPpp;
-use App\Models\User;
+use App\Models\User; // Adicionar este import
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\HierarquiaService;
@@ -224,9 +224,16 @@ class PppService
         
         public function contarParaAvaliar(int $userId): int
         {
+            $usuario = User::find($userId);
+            
+            // Se o usuário não tem permissão para avaliar, retorna 0
+            if (!$usuario || !$usuario->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
+                return 0;
+            }
+            
             return PcaPpp::where('status_id', 2)
-            ->where('gestor_atual_id', $userId)
-            ->count();
+                ->where('gestor_atual_id', $userId)
+                ->count();
         }
         
         public function contarMeus(int $userId): int

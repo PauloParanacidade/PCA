@@ -6,9 +6,6 @@
     @parent
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-user-check mr-2"></i>PPPs para Avaliar</h1>
-        <a href="{{ route('ppp.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus mr-1"></i>Novo PPP
-        </a>
     </div>
 @endsection
 
@@ -52,11 +49,6 @@
                 <i class="fas fa-list mr-2"></i>Listagem de PPPs
                 <small class="ml-2">({{ $ppps->total() }} {{ $ppps->total() == 1 ? 'item' : 'itens' }})</small>
             </h5>
-            @if($ppps->count() == 0)
-                <a href="{{ route('ppp.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus mr-1"></i>Criar Primeiro PPP
-                </a>
-            @endif
         </div>
         <div class="card-body p-0">
             @if($ppps->count() > 0)
@@ -149,10 +141,7 @@
                 <div class="text-center py-5">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Nenhum PPP encontrado</h5>
-                    <p class="text-muted mb-4">Você ainda não criou nenhum PPP ou nenhum PPP corresponde aos filtros aplicados.</p>
-                    <a href="{{ route('ppp.create') }}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-plus mr-2"></i>Criar Meu Primeiro PPP
-                    </a>
+                    <p class="text-muted mb-4">Você ainda não tem nenhum PPP para avaliar.</p>
                 </div>
             @endif
         </div>

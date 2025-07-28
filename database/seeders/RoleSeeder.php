@@ -25,14 +25,6 @@ class RoleSeeder extends Seeder
                 'name' => 'gestor',
                 'description' => 'Gestor - Avaliador de PPPs'
             ],
-            [
-                'name' => 'user',
-                'description' => 'Usuário Padrão - Solicitante de PPPs'
-            ],
-            [
-                'name' => 'external',
-                'description' => 'Usuário Externo'
-            ]
         ];
 
         foreach ($roles as $role) {

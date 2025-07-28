@@ -368,19 +368,16 @@
                     // Secretária pode ver botões para PPPs aguardando DIREX ou em reunião DIREX
                     $podeVerBotoes = in_array($ppp->status_id, [8, 9, 10]); // aguardando_direx, direx_avaliando, direx_editado
                     $podeEditar = $modoReuniaoDirectx && $ppp->status_id == 9; // Só pode editar se estiver avaliando na reunião
-                } elseif ($usuarioLogado->hasRole(['daf', 'gestor'])) {
+                } elseif ($usuarioLogado->hasAnyRole(['daf', 'gestor'])) {
                     // DAF e gestores podem ver botões para PPPs aguardando aprovação ou em avaliação
-                    $podeVerBotoes = in_array($ppp->status_id, [2, 3, 7, 8, 9]) && (
-                    $usuarioLogado->hasRole(['daf', 'admin', 'gestor']) // É DAF ou ADMIN
-                    // $ehGestor // CORRIGIDO: verificar se tem role de gestor
-                    );
+                    $podeVerBotoes = in_array($ppp->status_id, [2, 3, 7, 8, 9]);
                     // Gestores podem editar PPPs que podem visualizar
                     $podeEditar = $podeVerBotoes;
                 } else {
-                    // Usuário comum só pode ver botões dos próprios PPPs
-                    $podeVerBotoes = $ppp->user_id == $usuarioLogado->id && in_array($ppp->status_id, [2, 3]);
-                    // Usuário pode editar seu próprio PPP
-                    $podeEditar = $ppp->user_id == $usuarioLogado->id;
+                    // MODIFICADO: Usuário padrão NÃO pode ver botões de validação
+                    // Apenas pode editar seus próprios PPPs em rascunho ou aguardando correção
+                    $podeVerBotoes = false; // Nunca mostra botões de validação
+                    $podeEditar = $ppp->user_id == $usuarioLogado->id && in_array($ppp->status_id, [1, 4, 5]); // rascunho, aguardando_correcao, em_correcao
                 }
                 @endphp
                 
@@ -612,7 +609,7 @@
 </div>
 @endif
 
-<a href="{{ route('ppp.index') }}" class="btn btn-outline-secondary btn-lg">
+<a href="{{ route('ppp.meus') }}" class="btn btn-outline-secondary btn-lg">
     <i class="fas fa-arrow-left mr-2"></i>
     Retornar
 </a>

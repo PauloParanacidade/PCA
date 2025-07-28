@@ -212,7 +212,7 @@ public function update(StorePppRequest $request, $id)
             );
             
             return redirect()
-                ->route('ppp.index')
+                ->route('ppp.meus')
                 ->with('success', 'PPP enviada para aprovação.');
                 
         } catch (\Throwable $e) {

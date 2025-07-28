@@ -42,14 +42,22 @@
             </a>
         </div>
 
+        @php
+        $usuarioLogado = auth()->user();
+        $podeAvaliar = $usuarioLogado->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria']);
+        @endphp
+
         <div class="col-12 col-md-4 mb-3 mb-md-0">
-            <a href="{{ route('ppp.index') }}" class="info-box-link d-block" title="Clique para ver PPPs para avaliar">
-                <x-adminlte-info-box 
-                    title="Para Avaliar" 
-                    text="Clique para ver PPPs para avaliar" 
-                    icon="fas fa-user-check" 
-                    icon-theme="warning" />
-            </a>
+            @if($podeAvaliar)
+                <a href="{{ route('ppp.index') }}" class="info-box-link d-block" title="Clique para ver PPPs para avaliar">
+                    <x-adminlte-info-box 
+                        title="Para Avaliar" 
+                        text="Clique para ver PPPs para avaliar" 
+                        icon="fas fa-user-check" 
+                        icon-theme="warning" />
+                </a>
+
+            @endif
         </div>
 
         <div class="col-12 col-md-4">
@@ -66,9 +74,9 @@
     {{-- Quantidades após os botões --}}
     <div class="row mb-4">
         <div class="col-6 col-md-3">
-            <div class="border rounded p-3 bg-light text-center shadow-sm">
-                <h3 class="mb-0 text-primary">{{ $pppsParaAvaliar ?? 0 }}</h3>
-                <small class="text-muted">PPPs para avaliar</small>
+            <div class="border rounded p-3 {{ $podeAvaliar ? 'bg-light' : 'bg-secondary text-muted' }} text-center shadow-sm">
+                <h3 class="mb-0 {{ $podeAvaliar ? 'text-primary' : 'text-muted' }}">{{ $podeAvaliar ? ($pppsParaAvaliar ?? 0) : '—' }}</h3>
+                <small class="text-muted">{{ $podeAvaliar ? 'PPPs para avaliar' : 'Sem permissão' }}</small>
             </div>
         </div>
         <div class="col-6 col-md-3">
@@ -97,6 +105,18 @@
     a.info-box-link:hover {
         filter: brightness(0.93);
         text-decoration: none;
+    }
+    
+    /* Estilo para elementos desabilitados */
+    .info-box-disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    .info-box-disabled .info-box {
+        background-color: #f8f9fa !important;
+        border: 1px dashed #dee2e6;
     }
 </style>
 @stop

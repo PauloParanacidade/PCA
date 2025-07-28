@@ -29,14 +29,20 @@
                 </button>
             @endif
 
-            {{-- Modo EDIÇÃO: botão "Salvar" (NÃO envia para aprovação, apenas atualiza) --}}
+            {{-- Modo EDIÇÃO: botão condicional baseado no status --}}
             @if(isset($ppp) && $ppp->id && isset($isCreating) && !$isCreating)
-                <button type="submit" name="acao" value="salvar" class="btn btn-success btn-lg mx-2">
-                    <i class="fas fa-save me-2"></i>
-                    Salvar
-                </button>
+                @if($ppp->status_id == 5) {{-- Status "em correção" --}}
+                    <button type="submit" name="acao" value="enviar_aprovacao" class="btn btn-primary btn-lg mx-2">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Salvar e Enviar para Avaliação
+                    </button>
+                @else
+                    <button type="submit" name="acao" value="salvar" class="btn btn-success btn-lg mx-2">
+                        <i class="fas fa-save me-2"></i>
+                        Salvar
+                    </button>
+                @endif
             @endif
-
         </div>
     </div>
 </div>

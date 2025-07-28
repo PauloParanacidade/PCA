@@ -325,6 +325,7 @@ return [
             'text' => 'PPPs para Avaliar',
             'url'  => 'ppp',
             'icon' => 'fas fa-fw fa-user-check',
+            'can'  => ['admin', 'daf', 'gestor', 'secretaria'], // Adicionar restrição de permissão
         ],
         [
             'text' => 'Meus PPPs',
