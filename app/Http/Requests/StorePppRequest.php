@@ -121,6 +121,21 @@ class StorePppRequest extends FormRequest
             'area_solicitante.required' => 'A área solicitante é obrigatória.',
             'area_solicitante.max' => 'A área solicitante não pode ter mais de 100 caracteres.',
 
+            // Card Amarelo
+            'tem_contrato_vigente.required' => 'A informação sobre contrato vigente é obrigatória.',
+            'tem_contrato_vigente.in' => 'O contrato vigente deve ser Sim ou Não.',
+            'mes_inicio_prestacao.required_if' => 'O mês pretendido para início é obrigatório quando não há contrato vigente.',
+            'mes_inicio_prestacao.string' => 'O mês pretendido deve ser um texto válido.',
+            'mes_inicio_prestacao.max' => 'O mês pretendido não pode ter mais de 10 caracteres.',
+            'num_contrato.required_if' => 'O número do contrato é obrigatório quando há contrato vigente.',
+            'num_contrato.max' => 'O número do contrato não pode ter mais de 20 caracteres.',
+            'mes_vigencia_final.required_if' => 'O mês de vigência final é obrigatório quando há contrato vigente.',
+            'mes_vigencia_final.max' => 'O mês de vigência final não pode ter mais de 10 caracteres.',
+            'contrato_prorrogavel.required_if' => 'A informação sobre prorrogação é obrigatória quando há contrato vigente.',
+            'contrato_prorrogavel.in' => 'A prorrogação do contrato deve ser Sim ou Não.',
+            'renov_contrato.required_if' => 'A pretensão de renovação é obrigatória quando há contrato vigente.',
+            'renov_contrato.in' => 'A renovação do contrato deve ser Sim ou Não.',
+            
             // Card Verde
             'estimativa_valor.required' => 'O valor estimado é obrigatório.',
             'estimativa_valor.regex' => 'O valor estimado deve estar no formato: R$ 1.000,00',
@@ -139,23 +154,6 @@ class StorePppRequest extends FormRequest
             'dependencia_item.in' => 'A dependência do item deve ser Sim ou Não.',
             'justificativa_dependencia.required_if' => 'A justificativa da dependência é obrigatória quando a dependência for Sim.',
             'justificativa_dependencia.max' => 'A justificativa da dependência não pode ter mais de 600 caracteres.',
-            
-            // Card Amarelo
-            'tem_contrato_vigente.required' => 'A informação sobre contrato vigente é obrigatória.',
-            'tem_contrato_vigente.in' => 'O contrato vigente deve ser Sim ou Não.',
-            'num_contrato.required_if' => 'O número do contrato é obrigatório quando há contrato vigente.',
-            'num_contrato.max' => 'O número do contrato não pode ter mais de 20 caracteres.',
-            'mes_vigencia_final.required_if' => 'O mês de vigência final é obrigatório quando há contrato vigente.',
-            'mes_vigencia_final.max' => 'O mês de vigência final não pode ter mais de 10 caracteres.',
-            'contrato_prorrogavel.required_if' => 'A informação sobre prorrogação é obrigatória quando há contrato vigente.',
-            'contrato_prorrogavel.in' => 'A prorrogação do contrato deve ser Sim ou Não.',
-            'renov_contrato.required_if' => 'A pretensão de renovação é obrigatória quando há contrato vigente.',
-            'renov_contrato.in' => 'A renovação do contrato deve ser Sim ou Não.',
-            
-            // Mensagens para o novo campo
-            'mes_inicio_prestacao.required_if' => 'O mês pretendido para início é obrigatório quando não há contrato vigente.',
-            'mes_inicio_prestacao.string' => 'O mês pretendido deve ser um texto válido.',
-            'mes_inicio_prestacao.max' => 'O mês pretendido não pode ter mais de 10 caracteres.',
             
             // Cronograma
             'cronograma_jan.in' => 'Janeiro deve ser Sim ou Não.',

@@ -15,25 +15,33 @@ class PcaPpp extends Model
         'user_id',
         'status_id',
         'gestor_atual_id',
-        'categoria',
+        
+        //card azul
         'nome_item',
-        'descricao',
         'quantidade',
-        'justificativa_pedido',
-        'estimativa_valor',
-        'justificativa_valor',
-        'origem_recurso',
         'grau_prioridade',
+        'descricao',
+        'natureza_objeto',
+        'justificativa_pedido',
+        'categoria',
+        
+        //card amarelo
+        'tem_contrato_vigente',
+        'mes_inicio_prestacao',
+        'num_contrato',
+        'mes_vigencia_final',
+        'contrato_prorrogavel',
+        'renov_contrato',
+        
+        //card verde
+        'estimativa_valor',
+        'origem_recurso',
+        'valor_contrato_atualizado',
+        'justificativa_valor',
+
+        //card ciano
         'vinculacao_item',
         'justificativa_vinculacao',
-        'renov_contrato',
-        'num_contrato',
-        'valor_contrato_atualizado',
-        'mes_vigencia_final',
-        'mes_inicio_prestacao', // NOVO CAMPO
-        'contrato_prorrogavel',
-        'tem_contrato_vigente',
-        'natureza_objeto',
     ];
 
     protected $casts = [

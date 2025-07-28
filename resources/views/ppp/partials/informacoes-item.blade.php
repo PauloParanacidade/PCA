@@ -65,7 +65,7 @@
                 </label>
                 <select class="form-control form-control-lg" name="natureza_objeto" required>
                     <option value="" disabled {{ old('natureza_objeto', $ppp->natureza_objeto ?? '') == '' ? 'selected' : '' }}>Selecione</option>
-                    @foreach (['Serviço não continuado', 'Serviço continuado', 'Material de consumo', 'Bem permanente/equipamento'] as $natureza)
+                    @foreach (['Serviço não continuado', 'Serviço continuado', 'Material de consumo', 'Bem permanente/ equipamento'] as $natureza)
                         <option value="{{ $natureza }}" {{ old('natureza_objeto', $ppp->natureza_objeto ?? '') == $natureza ? 'selected' : '' }}>{{ $natureza }}</option>
                     @endforeach
                 </select>
