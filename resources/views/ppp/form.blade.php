@@ -4,6 +4,7 @@
 
 @section('content_header')
     @parent
+    {{-- Remover o debug dump após confirmar funcionamento --}}
     @if($errors->any() || session('error'))
         <div class="alert alert-danger">
             @if(session('error'))
@@ -23,13 +24,16 @@
 
 @section('content')
     <form id="form-ppp" method="POST" action="{{ $isCreating ? route('ppp.store') : route('ppp.update', $ppp->id) }}">
-        @csrf
-        @if(!$isCreating)
-            @method('PUT')
-            <input type="hidden" name="acao" value="enviar_aprovacao">
-        @endif
-
+    @csrf
+    @if(!$isCreating)
+        @method('PUT')
+    @endif
         <input type="hidden" name="modo" value="{{ $isCreating ? 'criacao' : 'edicao' }}">
+        
+        {{-- Adicionar campo hidden com ID para JavaScript --}}
+        @if(!$isCreating)
+            <input type="hidden" id="ppp-id" value="{{ $ppp->id }}">
+        @endif
 
         <div class="row mb-4 align-items-stretch">
             {{-- Lado esquerdo: Azul ocupa metade da linha --}}
@@ -210,6 +214,12 @@
                                 methodInput.name = '_method';
                                 methodInput.value = 'PUT';
                                 form.appendChild(methodInput);
+                            }
+                            
+                            // ✅ CORREÇÃO: Atualizar o campo modo para 'edicao'
+                            let inputModo = form.querySelector('input[name="modo"]');
+                            if (inputModo) {
+                                inputModo.value = 'edicao';
                             }
                             
                             // Alterar ação para enviar_aprovacao

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePppRequest;
 use App\Models\PcaPpp;
 use App\Models\PppHistorico;
-use App\Models\PppStatusDinamico;
 use App\Models\User;
 use App\Services\PppHistoricoService;
 use App\Services\PppService;
@@ -170,6 +169,7 @@ public function update(StorePppRequest $request, $id)
         'modo'   => $modo,
         'data'   => $request->all()
     ]);
+    //dd($request->all());
 
     if ($modo === 'edicao' && $acao === 'salvar') {
         $ppp = PcaPpp::findOrFail($id);
@@ -199,17 +199,22 @@ public function update(StorePppRequest $request, $id)
     if ($acao === 'enviar_aprovacao') {
         try {
             $ppp = PcaPpp::findOrFail($id);
-
+            
+            // ✅ CORREÇÃO: Salvar os dados do formulário ANTES de enviar
+            $ppp->fill($request->validated());
+            $ppp = $this->processMonetaryFields($request, $ppp);
+            $ppp->save();
+            
             // Delegamos ao service todo o fluxo de aprovação
             $this->pppService->enviarParaAprovacao(
                 $ppp,
                 $request->input('justificativa')
             );
-
+            
             return redirect()
                 ->route('ppp.index')
                 ->with('success', 'PPP enviada para aprovação.');
-
+                
         } catch (\Throwable $e) {
             Log::error('Erro ao enviar PPP para aprovação no update: '.$e->getMessage(), ['ppp_id'=>$id]);
             return redirect()->back()->withErrors(['erro' => $e->getMessage()]);

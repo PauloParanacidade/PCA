@@ -106,11 +106,11 @@
                                     @else
                                     N/A
                                     @endif
-                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                                        <div class="info-group">
+                    <div class="info-group">
                         <label class="info-label">Natureza do Objeto</label>
                         <div class="info-value-text">
                             {{ $ppp->natureza_objeto ?? 'N/A' }}
@@ -122,8 +122,8 @@
                             {{ $ppp->descricao ?? 'N/A' }}
                         </div>
                     </div>
-
-
+                    
+                    
                     
                     <div class="info-group">
                         <label class="info-label">Justificativa da Necessidade</label>
@@ -209,24 +209,24 @@
                         <p class="text-muted mt-2 mb-0">Sem contrato vigente</p>
                     </div>
                     @if($ppp->mes_inicio_prestacao)
-                        <div class="row mb-2 mt-3">
-                            <div class="col-md-12">
-                                <div class="info-group">
-                                    <label class="info-label">Mês pretendido para início deste contrato novo</label>
-                                    <div class="info-value">
-                                        @php
-                                        $mesesNomes = [
-                                        '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
-                                        '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
-                                        '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
-                                        '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
-                                        ];
-                                        @endphp
-                                        {{ $mesesNomes[$ppp->mes_inicio_prestacao] ?? $ppp->mes_inicio_prestacao }} de 2026
-                                    </div>
+                    <div class="row mb-2 mt-3">
+                        <div class="col-md-12">
+                            <div class="info-group">
+                                <label class="info-label">Mês pretendido para início deste contrato novo</label>
+                                <div class="info-value">
+                                    @php
+                                    $mesesNomes = [
+                                    '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
+                                    '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
+                                    '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
+                                    '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
+                                    ];
+                                    @endphp
+                                    {{ $mesesNomes[$ppp->mes_inicio_prestacao] ?? $ppp->mes_inicio_prestacao }} de 2026
                                 </div>
                             </div>
                         </div>
+                    </div>
                     @endif
                     @endif
                 </div>
@@ -252,7 +252,7 @@
                 </div>
                 <div class="card-body py-3">
                     <div class="row mb-2">
-                        <div class="col-md-6">
+                        <div class="col-md-6 mb-0">
                             <div class="info-group">
                                 <label class="info-label">Valor total estimado (exercício)</label>
                                 <div class="info-value font-weight-bold text-success">
@@ -260,7 +260,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 mb-0">
                             <div class="info-group">
                                 <label class="info-label">Origem do Recurso</label>
                                 <div class="info-value">
@@ -278,11 +278,13 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="info-group">
-                        <label class="info-label">Justificativa do Valor Estimado</label>
-                        <div class="info-value-text">
-                            {{ $ppp->justificativa_valor ?? 'N/A' }}
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label class="info-label">Justificativa do Valor Estimado</label>
+                                <div class="info-value-text">
+                                    {{ $ppp->justificativa_valor ?? 'N/A' }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1203,15 +1205,15 @@
         margin-bottom: 0.6rem; /* Reduzido de 0.75rem */
     }
     .info-label {
-    font-size: 0.85rem;
-    font-weight: 700; /* de 600 para 700 */
-    color: #343a40;   /* de #6c757d para cor mais escura */
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 0.35rem;
-    display: block;
-}
-
+        font-size: 0.85rem;
+        font-weight: 700; /* de 600 para 700 */
+        color: #343a40;   /* de #6c757d para cor mais escura */
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 0.35rem;
+        display: block;
+    }
+    
     .info-value {
         font-size: 1.1rem; /* Aumentado de 0.95rem */
         font-weight: 500;
