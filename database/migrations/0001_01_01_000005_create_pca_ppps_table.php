@@ -36,7 +36,7 @@ return new class extends Migration
                   ->nullable()
                   ->comment('Data da última ação de aprovação');
             
-            // === DETALHES DO ITEM/SERVIÇO ===
+            // === CARD AZUL - DETALHES DO ITEM/SERVIÇO ===
             $table->string('categoria', 100)
                   ->comment('Categoria do item/serviço');
                   
@@ -55,7 +55,7 @@ return new class extends Migration
             $table->string('natureza_objeto', 100)
                   ->comment('Natureza do objeto (bem/serviço)');
 
-            // === CONTRATO VIGENTE ===
+            // === CARD AMARELO - CONTRATO VIGENTE ===
             $table->enum('tem_contrato_vigente', ['Sim', 'Não'])
                   ->default('Não')
                   ->comment('Possui contrato vigente');
@@ -80,7 +80,7 @@ return new class extends Migration
                   ->nullable()
                   ->comment('Pretensão de prorrogação (obrigatório se tem_contrato_vigente = Sim)');
             
-            // === INFORMAÇÕES FINANCEIRAS ===
+            // === CARD VERDE - INFORMAÇÕES FINANCEIRAS ===
             $table->decimal('estimativa_valor', 12, 2)
                   ->comment('Valor estimado da aquisição');
                   
@@ -98,7 +98,7 @@ return new class extends Migration
                   ->nullable()
                   ->comment('Valor atualizado do contrato (se aplicável)');
             
-            // === VINCULAÇÃO/DEPENDÊNCIA ===
+            // === CARD CIANO - VINCULAÇÃO/DEPENDÊNCIA ===
             $table->enum('vinculacao_item', ['Sim', 'Não'])
                   ->default('Não')
                   ->comment('Item possui vinculação/dependência');

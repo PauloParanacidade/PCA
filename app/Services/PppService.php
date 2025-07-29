@@ -100,48 +100,6 @@ class PppService
         }
         
         /**
-        * Aprova um PPP
-        */
-        // public function aprovarPpp(PcaPpp $ppp, ?string $comentario = null): bool
-        // {
-        
-        //     try {
-        
-        
-        //         // $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($gestorAtual);
-        
-        //         // if ($proximoGestor) {
-        //         //     $proximoGestor->garantirPapelGestor();
-        
-        //         //     $ppp->update([
-        //         //         'status_id' => 2, // aguardando_aprovacao
-        //         //         'gestor_atual_id' => $proximoGestor->id,
-        //         //     ]);
-        
-        //             // ✅ Registrar no histórico com contexto adequado
-        //             // $comentarioFinal = $comentario ?? 'PPP aprovado';
-        
-        //             // // Se for redirecionamento SUPEX/DOE/DOM → DAF, adicionar contexto
-        //             // if (
-        //             //     $gestorAtual && in_array(strtoupper($gestorAtual->department ?? ''), ['SUPEX', 'DOE', 'DOM'])
-        //             //     && $proximoGestor->hasRole('daf')
-        //             // ) {
-        //             //     $comentarioFinal .= ' - Encaminhado para DAF (SUPEX/DOE/DOM)';
-        //             // }
-        
-        //     //         $this->historicoService->registrarAprovacao($ppp, $comentarioFinal);
-        //     //     } else {
-        //     //         throw new \Exception('Fim da hierarquia atingido sem encontrar próximo gestor.');
-        //     //     }
-        
-        //     //     return true;
-        //     // } catch (\Throwable $ex) {
-        //     //     Log::error('Erro ao aprovar PPP: ' . $ex->getMessage());
-        //     //     throw $ex;
-        //     // }
-        // }
-        
-        /**
         * Solicita correção do PPP
         */
         public function solicitarCorrecao(PcaPpp $ppp, string $motivo): bool

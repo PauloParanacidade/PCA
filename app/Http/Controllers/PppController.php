@@ -200,7 +200,7 @@ public function update(StorePppRequest $request, $id)
         try {
             $ppp = PcaPpp::findOrFail($id);
             
-            // ✅ CORREÇÃO: Salvar os dados do formulário ANTES de enviar
+            // ✅ Salvar os dados do formulário ANTES de enviar
             $ppp->fill($request->validated());
             $ppp = $this->processMonetaryFields($request, $ppp);
             $ppp->save();
@@ -239,7 +239,7 @@ public function update(StorePppRequest $request, $id)
     }
 
     return redirect()
-        ->route('ppp.index')
+        ->route('ppp.meus')
         ->with('success', 'PPP atualizada com sucesso.');
 }
 
