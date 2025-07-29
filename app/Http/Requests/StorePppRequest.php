@@ -53,10 +53,18 @@ class StorePppRequest extends FormRequest
             'renov_contrato' => 'required_if:contrato_prorrogavel,Sim|nullable|in:Sim,Não',
 
             // Informações financeiras (Card Verde) - REGEX corrigido para PCRE2
-            'estimativa_valor' => ['required', 'regex:/^\\s*R\\$\\s?\\d{1,3}(\\.\\d{3})*(,\\d{2})?\\s*$/'],
-            'justificativa_valor' => 'required|string|max:800',
+            'estimativa_valor' => [
+                'required', 
+                'string',
+                'regex:/^R\$\s?\d+(\.\d{3})*(,\d{2})?$/'
+            ],
             'origem_recurso' => 'required|string|max:100',
-            'valor_contrato_atualizado' => ['nullable', 'regex:/^\\s*R\\$\\s?\\d{1,3}(\\.\\d{3})*(,\\d{2})?\\s*$/'],
+            'valor_contrato_atualizado' => [
+                'nullable', 
+                'string',
+                'regex:/^R\$\s?\d+(\.\d{3})*(,\d{2})?$/'
+            ],
+            'justificativa_valor' => 'required|string|max:800',
 
             // Vinculação/Dependência (Card Ciano)
             'vinculacao_item' => 'required|in:Sim,Não',

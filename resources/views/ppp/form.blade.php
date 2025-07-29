@@ -460,18 +460,6 @@
             // MÁSCARAS E FORMATAÇÃO
             // ===================================
 
-            // Máscara para valores monetários
-            const camposMonetarios = document.querySelectorAll('.money-field');
-            camposMonetarios.forEach(campo => {
-                campo.addEventListener('input', function(e) {
-                    let valor = e.target.value.replace(/\D/g, '');
-                    valor = (valor / 100).toFixed(2) + '';
-                    valor = valor.replace('.', ',');
-                    valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                    e.target.value = 'R$ ' + valor;
-                });
-            });
-
             // Contador de caracteres para textareas
             const textareasComContador = document.querySelectorAll('textarea[maxlength]');
             textareasComContador.forEach(textarea => {
@@ -573,4 +561,9 @@
             }
         });
     </script>
+@endsection
+
+{{-- Mudar de @push('js') para @section('page_js') --}}
+@section('page_js')
+    @vite('resources/js/ppp-form.js')
 @endsection

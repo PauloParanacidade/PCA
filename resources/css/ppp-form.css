@@ -87,13 +87,6 @@
     font-weight: bold;
 }
 
-/* Máscaras de dinheiro */
-.money-field {
-    text-align: right;
-    font-weight: 600;
-    color: #28a745;
-}
-
 /* Contador de caracteres */
 .char-counter {
     font-size: 0.8rem;
@@ -510,10 +503,6 @@
     .form-control-lg {
         padding: 0.5rem 0.75rem;
         font-size: 1rem;
-    }
-    
-    .money-field {
-        font-size: 0.9rem;
     }
     
     .char-counter {

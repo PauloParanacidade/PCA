@@ -1,11 +1,10 @@
 import $ from 'jquery';
-import 'jquery-maskmoney/dist/jquery.maskMoney.min';
+
 
 // Importar módulos
 import { ProgressiveInterface } from './modules/progressive-interface.js';
 import { FormValidation } from './modules/form-validation.js';
 import { ConditionalFields } from './modules/conditional-fields.js';
-import { FormMasks } from './modules/form-masks.js';
 import { FormUtils } from './modules/form-utils.js';
 import { FormButtons } from './modules/form-buttons.js';
 
@@ -29,7 +28,6 @@ const PPPForm = {
             // Depois inicializar outros módulos
             FormValidation.init();
             ConditionalFields.init();
-            FormMasks.init();
             FormUtils.init();
             FormButtons.init();
         });

@@ -51,33 +51,3 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Aplicar máscara monetária
-    function applyMoneyMask(element) {
-        element.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            value = (value / 100).toFixed(2) + '';
-            value = value.replace('.', ',');
-            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            e.target.value = 'R$ ' + value;
-        });
-        
-        element.addEventListener('focus', function(e) {
-            if (e.target.value === 'R$ 0,00') {
-                e.target.value = '';
-            }
-        });
-        
-        element.addEventListener('blur', function(e) {
-            if (e.target.value === '' || e.target.value === 'R$ ') {
-                e.target.value = 'R$ 0,00';
-            }
-        });
-    }
-    
-    // Aplicar máscara a todos os campos monetários
-    document.querySelectorAll('.money-mask').forEach(applyMoneyMask);
-});
-</script>
