@@ -1,5 +1,5 @@
 import $ from 'jquery';
-
+import './money-mask.js';
 
 // Importar módulos
 import { ProgressiveInterface } from './modules/progressive-interface.js';
@@ -7,6 +7,8 @@ import { FormValidation } from './modules/form-validation.js';
 import { ConditionalFields } from './modules/conditional-fields.js';
 import { FormUtils } from './modules/form-utils.js';
 import { FormButtons } from './modules/form-buttons.js';
+// Importa o money-mask.js
+import { MoneyMask } from './money-mask.js';
 
 console.log("🚀 ppp-form.js carregado");
 
@@ -30,11 +32,11 @@ const PPPForm = {
             ConditionalFields.init();
             FormUtils.init();
             FormButtons.init();
+            MoneyMask.init();
+            // Inicializar quando o documento estiver pronto
+            PPPForm.init();
         });
     }
 };
-
-// Inicializar quando o documento estiver pronto
-PPPForm.init();
 
 export default PPPForm;

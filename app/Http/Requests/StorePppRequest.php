@@ -19,7 +19,6 @@ class StorePppRequest extends FormRequest
         // Verificar se é rascunho (botão Avançar) ou envio completo (botão Salvar e Enviar)
         $isRascunho = $this->input('acao') === 'salvar_rascunho';
 
-        
         if ($isRascunho) {
             // Regras apenas para card azul (rascunho)
             return [
@@ -52,18 +51,10 @@ class StorePppRequest extends FormRequest
             'contrato_prorrogavel' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
             'renov_contrato' => 'required_if:contrato_prorrogavel,Sim|nullable|in:Sim,Não',
 
-            // Informações financeiras (Card Verde) - REGEX corrigido para PCRE2
-            'estimativa_valor' => [
-                'required', 
-                'string',
-                'regex:/^R\$\s?\d+(\.\d{3})*(,\d{2})?$/'
-            ],
+            // Informações financeiras (Card Verde) - Usar validação numérica
+            'estimativa_valor' => 'required|numeric|min:0',
             'origem_recurso' => 'required|string|max:100',
-            'valor_contrato_atualizado' => [
-                'nullable', 
-                'string',
-                'regex:/^R\$\s?\d+(\.\d{3})*(,\d{2})?$/'
-            ],
+            'valor_contrato_atualizado' => 'nullable|numeric|min:0',
             'justificativa_valor' => 'required|string|max:800',
 
             // Vinculação/Dependência (Card Ciano)
@@ -144,14 +135,16 @@ class StorePppRequest extends FormRequest
             'renov_contrato.required_if' => 'A pretensão de renovação é obrigatória quando há contrato vigente.',
             'renov_contrato.in' => 'A renovação do contrato deve ser Sim ou Não.',
             
-            // Card Verde
+            // Card Verde - Mensagens atualizadas para validação numérica
             'estimativa_valor.required' => 'O valor estimado é obrigatório.',
-            'estimativa_valor.regex' => 'O valor estimado deve estar no formato: R$ 1.000,00',
+            'estimativa_valor.numeric' => 'O valor estimado deve ser um número válido.',
+            'estimativa_valor.min' => 'O valor estimado deve ser maior que zero.',
             'justificativa_valor.required' => 'A justificativa do valor é obrigatória.',
             'justificativa_valor.max' => 'A justificativa do valor não pode ter mais de 800 caracteres.',
             'origem_recurso.required' => 'A origem do recurso é obrigatória.',
             'origem_recurso.max' => 'A origem do recurso não pode ter mais de 100 caracteres.',
-            'valor_contrato_atualizado.regex' => 'O valor do contrato deve estar no formato: R$ 1.000,00',
+            'valor_contrato_atualizado.numeric' => 'O valor do contrato deve ser um número válido.',
+            'valor_contrato_atualizado.min' => 'O valor do contrato deve ser maior que zero.',
             
             // Card Ciano
             'vinculacao_item.required' => 'A vinculação do item é obrigatória.',
@@ -202,5 +195,44 @@ class StorePppRequest extends FormRequest
                 ->withInput()
                 ->with('error', $errorMessage)
         );
+    }
+
+    /**
+     * Preparar dados para validação
+     * Converter valores monetários formatados para numéricos
+     */
+    protected function prepareForValidation()
+    {
+        $data = $this->all();
+        
+        // Campos monetários que precisam ser convertidos
+        $moneyFields = ['estimativa_valor', 'valor_contrato_atualizado'];
+        
+        foreach ($moneyFields as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                // Converter R$ 1.234,56 para 1234.56
+                $numericValue = $this->convertMoneyToNumeric($data[$field]);
+                $data[$field] = $numericValue;
+            }
+        }
+        
+        $this->replace($data);
+    }
+
+    /**
+     * Converter valor monetário formatado para numérico
+     */
+    private function convertMoneyToNumeric($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        
+        // Remover R$, espaços, pontos (separadores de milhares) e converter vírgula para ponto
+        $numericValue = preg_replace('/R\$\s?/', '', $value);
+        $numericValue = str_replace('.', '', $numericValue);
+        $numericValue = str_replace(',', '.', $numericValue);
+        
+        return (float) $numericValue;
     }
 }

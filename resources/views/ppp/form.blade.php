@@ -158,6 +158,7 @@
 
 
 @section('js')
+    @vite('resources/js/ppp-form.js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // ===================================
@@ -565,5 +566,7 @@
 
 {{-- Mudar de @push('js') para @section('page_js') --}}
 @section('page_js')
-    @vite('resources/js/ppp-form.js')
+    
 @endsection
+
+
