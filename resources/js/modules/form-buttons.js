@@ -2,11 +2,6 @@ import $ from 'jquery';
 import { FormValidation } from './form-validation.js';
 import { ApiService } from './api-service.js';
 
-
-// Expor funções globalmente para compatibilidade com inline onclick
-window.carregarHistoricoPPP = FormButtons.carregarHistoricoPPP.bind(FormButtons);
-window.carregarHistorico = FormButtons.carregarHistorico.bind(FormButtons);
-
 /**
  * Módulo de Botões do Formulário
  * Gerencia comportamento dos botões e submissão
@@ -261,3 +256,7 @@ export const FormButtons = {
     }
 
 };
+
+// Expor funções globalmente para compatibilidade com inline onclick
+window.carregarHistoricoPPP = FormButtons.carregarHistoricoPPP.bind(FormButtons);
+window.carregarHistorico = FormButtons.carregarHistorico.bind(FormButtons);

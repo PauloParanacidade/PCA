@@ -18,7 +18,6 @@ console.log("🚀 ppp-form.js carregado");
  */
 const PPPForm = {
     config: {
-        autoSaveInterval: 30000,
         formId: 'ppp-form-draft'
     },
 
@@ -33,10 +32,12 @@ const PPPForm = {
             FormUtils.init();
             FormButtons.init();
             MoneyMask.init();
-            // Inicializar quando o documento estiver pronto
-            PPPForm.init();
         });
     }
 };
+
+// $(function() {
+//     PPPForm.init();
+// });
 
 export default PPPForm;
