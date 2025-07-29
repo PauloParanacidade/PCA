@@ -271,21 +271,7 @@
                         console.error('Erro na requisição:', error);
                         mostrarNotificacao('Erro ao salvar rascunho. Tente novamente.', 'error');
                     });
-                } else {
-                    // modo edição: submete o formulário para salvar rascunho
-                    form.action = "{{ route('ppp.store') }}";
-                    
-                    let inputAcao = form.querySelector('input[name="acao"]');
-                    if (inputAcao) inputAcao.remove();
-                    
-                    inputAcao = document.createElement('input');
-                    inputAcao.type = 'hidden';
-                    inputAcao.name = 'acao';
-                    inputAcao.value = 'salvar_rascunho';
-                    form.appendChild(inputAcao);
-                    
-                    form.submit();
-                }
+                } 
             });
 
 
@@ -362,12 +348,6 @@
 
                 return todosPreenchidos;
             }
-
-            // ===================================
-            // EVENTO DO BOTÃO AVANÇAR
-            // ===================================
-
-            
 
             // ===================================
             // FUNÇÃO DE NOTIFICAÇÃO
@@ -544,20 +524,6 @@
                     }
                 });
             });
-
-            // ===================================
-            // BOTÃO CANCELAR
-            // ===================================
-
-            // if (btnCancelar) {
-            //     btnCancelar.addEventListener('click', function(e) {
-            //         e.preventDefault();
-
-            //         if (confirm('Tem certeza que deseja cancelar? Todas as alterações não salvas serão perdidas.')) {
-            //             window.location.href = '{{ route("ppp.index") }}';
-            //         }
-            //     });
-            // }
 
             // ===================================
             // PREVENÇÃO DE PERDA DE DADOS
