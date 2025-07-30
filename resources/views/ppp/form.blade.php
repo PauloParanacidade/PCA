@@ -48,21 +48,22 @@
                 <div class="row h-100">
                     {{-- Card Amarelo --}}
                     <div class="col-6 d-flex mb-3">
-                        <div id="card-amarelo" class="{{ $isCreating ? 'card-bloqueado bloqueado' : '' }} w-100">
+                        {{-- CORREÇÃO: Bloquear cards apenas se estiver criando E não tiver PPP salvo --}}
+                        <div id="card-amarelo" class="{{ ($isCreating && (!isset($ppp) || !$ppp->id)) ? 'card-bloqueado bloqueado' : '' }} w-100">
                             @include('ppp.partials.contrato-vigente')
                         </div>
                     </div>
 
                     {{-- Card Verde --}}
                     <div class="col-6 d-flex mb-3">
-                        <div id="card-verde" class="{{ $isCreating ? 'card-bloqueado bloqueado' : '' }} w-100">
+                        <div id="card-verde" class="{{ ($isCreating && (!isset($ppp) || !$ppp->id)) ? 'card-bloqueado bloqueado' : '' }} w-100">
                             @include('ppp.partials.informacoes-financeiras')
                         </div>
                     </div>
 
                     {{-- Card Ciano --}}
                     <div class="col-12 d-flex mb-3">
-                        <div id="card-ciano" class="{{ $isCreating ? 'card-bloqueado bloqueado' : '' }} w-100">
+                        <div id="card-ciano" class="{{ ($isCreating && (!isset($ppp) || !$ppp->id)) ? 'card-bloqueado bloqueado' : '' }} w-100">
                             @include('ppp.partials.vinculacao-dependencia')
                         </div>
                     </div>

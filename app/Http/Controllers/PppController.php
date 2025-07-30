@@ -135,24 +135,50 @@ class PppController extends Controller
             ]);
 
             $this->historicoService->registrarCriacao($ppp);
-            
-            Log::info('✅ PPP criado com sucesso', [
-                'ppp_id' => $ppp->id,
-                'status_atual' => $ppp->status_id,
-                'gestor_atual_id' => $ppp->gestor_atual_id,
-            ]);
-            
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'PPP criado com sucesso.',
-                    'ppp_id' => $ppp->id,
-                    'actionValue' => 'aguardando_aprovacao'
+        
+        Log::info('✅ PPP criado com sucesso', [
+            'ppp_id' => $ppp->id,
+            'status_atual' => $ppp->status_id,
+            'gestor_atual_id' => $ppp->gestor_atual_id,
+        ]);
+        
+        // ✅ NOVO: Verificar se deve enviar para aprovação
+        if ($request->input('acao') === 'enviar_aprovacao') {
+            try {
+                Log::info('🚀 Enviando PPP recém-criado para aprovação', [
+                    'ppp_id' => $ppp->id
                 ]);
+                
+                $this->pppService->enviarParaAprovacao(
+                    $ppp,
+                    $request->input('justificativa')
+                );
+                
+                Log::info('✅ PPP enviado para aprovação com sucesso');
+                
+                return redirect()
+                    ->route('ppp.meus')
+                    ->with('success', 'PPP criado e enviado para aprovação com sucesso.');
+                    
+            } catch (\Throwable $e) {
+                Log::error('❌ Erro ao enviar PPP para aprovação: '.$e->getMessage());
+                return redirect()
+                    ->route('ppp.edit', $ppp->id)
+                    ->with('error', 'PPP criado, mas houve erro ao enviar para aprovação: ' . $e->getMessage());
             }
-            
-            return redirect()->route('ppp.edit', $ppp->id)
-            ->with('success', 'Rascunho salvo com sucesso! Agora você pode preencher os demais campos.');
+        }
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'PPP criado com sucesso.',
+                'ppp_id' => $ppp->id,
+                'actionValue' => 'aguardando_aprovacao'
+            ]);
+        }
+        
+        return redirect()->route('ppp.edit', $ppp->id)
+        ->with('success', 'Rascunho salvo com sucesso! Agora você pode preencher os demais campos.');
             
         } catch (\Throwable $ex) {
             Log::error('💥 ERRO CRÍTICO ao criar PPP', [
@@ -166,6 +192,113 @@ class PppController extends Controller
             return back()->withInput()->withErrors(['msg' => 'Erro ao criar PPP: ' . $ex->getMessage()]);
         }
     }
+
+    public function update(StorePppRequest $request, $id)
+    {
+        // DEBUG: Verificar dados recebidos
+        Log::info('📝 Dados recebidos no update:', [
+            'acao' => $request->input('acao'),
+            'modo' => $request->input('modo'),
+            'ppp_id' => $id,
+            'all_data' => $request->all()
+        ]);
+        
+        $usuario = auth()->user();
+        $acao    = $request->input('acao'); // 'salvar' ou 'enviar_aprovacao'
+        $modo    = $request->input('modo'); // 'edicao' ou 'criacao'
+
+        Log::info('🛠️ Ação detectada no update()', [
+            'ppp_id' => $id,
+            'acao'   => $acao,
+            'modo'   => $modo,
+            'data'   => $request->all()
+        ]);
+        //dd($request->all());
+
+        if ($modo === 'edicao' && $acao === 'salvar') {
+            $ppp = PcaPpp::findOrFail($id);
+
+            $statusAnterior = $ppp->status_id;
+            $ppp->fill($request->validated());
+
+            $ppp = $this->processMonetaryFields($request, $ppp);
+
+            $ppp->save();
+
+            if ($statusAnterior != $ppp->status_id) {
+                PppHistorico::create([
+                    'ppp_id'          => $ppp->id,
+                    'status_anterior' => $statusAnterior,
+                    'status_atual'    => $ppp->status_id,
+                    'justificativa'   => $request->input('justificativa'),
+                    'user_id'         => $usuario->id,
+                ]);
+            }
+
+            return redirect()
+                ->route('ppp.show', $ppp->id)
+                ->with('success', 'PPP atualizada com sucesso.');
+        }
+
+        if ($acao === 'enviar_aprovacao') {
+            try {
+                Log::info('🚀 Iniciando envio para aprovação', [
+                    'ppp_id' => $id,
+                    'user_id' => auth()->id(),
+                    'dados' => $request->validated()
+                ]);
+                
+                $ppp = PcaPpp::findOrFail($id);
+                
+                // ✅ Salvar os dados do formulário ANTES de enviar
+                $ppp->fill($request->validated());
+                $ppp = $this->processMonetaryFields($request, $ppp);
+                $ppp->save();
+                
+                Log::info('✅ PPP salvo com sucesso, enviando para aprovação');
+                
+                // Delegamos ao service todo o fluxo de aprovação
+                $this->pppService->enviarParaAprovacao(
+                    $ppp,
+                    $request->input('justificativa')
+                );
+                
+                Log::info('✅ PPP enviado para aprovação com sucesso, redirecionando');
+                
+                return redirect()
+                    ->route('ppp.meus')
+                    ->with('success', 'PPP enviada para aprovação.');
+                    
+            } catch (\Throwable $e) {
+                Log::error('❌ Erro ao enviar PPP para aprovação no update: '.$e->getMessage(), [
+                    'ppp_id' => $id,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return redirect()->back()->withErrors(['erro' => $e->getMessage()]);
+            }
+        }
+
+        // Ação padrão: apenas salvar quaisquer outras alterações
+        $ppp = PcaPpp::findOrFail($id);
+        $statusAnterior = $ppp->status_id;
+
+        $ppp->fill($request->validated());
+        $ppp->save();
+
+        if ($statusAnterior != $ppp->status_id) {
+            PppHistorico::create([
+                'ppp_id'          => $ppp->id,
+                'status_anterior' => $statusAnterior,
+                'status_atual'    => $ppp->status_id,
+                'justificativa'   => $request->input('justificativa'),
+                'user_id'         => $usuario->id,
+            ]);
+        }
+
+        return redirect()
+            ->route('ppp.meus')
+            ->with('success', 'PPP atualizada com sucesso.');
+}
 
     public function processMonetaryFields($request, $ppp) : PcaPpp
     {
@@ -212,91 +345,7 @@ class PppController extends Controller
         return $ppp;
     }
 
-public function update(StorePppRequest $request, $id)
-{
-    $usuario = auth()->user();
-    $acao    = $request->input('acao'); // 'salvar' ou 'enviar_aprovacao'
-    $modo    = $request->input('modo'); // 'edicao' ou 'criacao'
 
-    Log::info('🛠️ Ação detectada no update()', [
-        'ppp_id' => $id,
-        'acao'   => $acao,
-        'modo'   => $modo,
-        'data'   => $request->all()
-    ]);
-    //dd($request->all());
-
-    if ($modo === 'edicao' && $acao === 'salvar') {
-        $ppp = PcaPpp::findOrFail($id);
-
-        $statusAnterior = $ppp->status_id;
-        $ppp->fill($request->validated());
-
-        $ppp = $this->processMonetaryFields($request, $ppp);
-
-        $ppp->save();
-
-        if ($statusAnterior != $ppp->status_id) {
-            PppHistorico::create([
-                'ppp_id'          => $ppp->id,
-                'status_anterior' => $statusAnterior,
-                'status_atual'    => $ppp->status_id,
-                'justificativa'   => $request->input('justificativa'),
-                'user_id'         => $usuario->id,
-            ]);
-        }
-
-        return redirect()
-            ->route('ppp.show', $ppp->id)
-            ->with('success', 'PPP atualizada com sucesso.');
-    }
-
-    if ($acao === 'enviar_aprovacao') {
-        try {
-            $ppp = PcaPpp::findOrFail($id);
-            
-            // ✅ Salvar os dados do formulário ANTES de enviar
-            $ppp->fill($request->validated());
-            $ppp = $this->processMonetaryFields($request, $ppp);
-            $ppp->save();
-            
-            // Delegamos ao service todo o fluxo de aprovação
-            $this->pppService->enviarParaAprovacao(
-                $ppp,
-                $request->input('justificativa')
-            );
-            
-            return redirect()
-                ->route('ppp.meus')
-                ->with('success', 'PPP enviada para aprovação.');
-                
-        } catch (\Throwable $e) {
-            Log::error('Erro ao enviar PPP para aprovação no update: '.$e->getMessage(), ['ppp_id'=>$id]);
-            return redirect()->back()->withErrors(['erro' => $e->getMessage()]);
-        }
-    }
-
-    // Ação padrão: apenas salvar quaisquer outras alterações
-    $ppp = PcaPpp::findOrFail($id);
-    $statusAnterior = $ppp->status_id;
-
-    $ppp->fill($request->validated());
-    $ppp->save();
-
-    if ($statusAnterior != $ppp->status_id) {
-        PppHistorico::create([
-            'ppp_id'          => $ppp->id,
-            'status_anterior' => $statusAnterior,
-            'status_atual'    => $ppp->status_id,
-            'justificativa'   => $request->input('justificativa'),
-            'user_id'         => $usuario->id,
-        ]);
-    }
-
-    return redirect()
-        ->route('ppp.meus')
-        ->with('success', 'PPP atualizada com sucesso.');
-}
 
     public function index(Request $request)
     {
@@ -574,8 +623,14 @@ public function update(StorePppRequest $request, $id)
     {
         try {
             $ppp = PcaPpp::findOrFail($id);
+        // Se o PPP ainda está em rascunho (status 1), manter comportamento de criação
+        if ($ppp->status_id == 1) {
+            $edicao = false;
+            $isCreating = true;
+        } else {
             $edicao = true;
             $isCreating = false;
+        }
 
             return view('ppp.form', compact('ppp','edicao', 'isCreating'));
         } catch (\Throwable $ex) {
