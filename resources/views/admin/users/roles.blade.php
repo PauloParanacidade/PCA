@@ -50,13 +50,13 @@
                 <div class="col-md-6">
                     <form method="GET" action="{{ route('admin.users.roles') }}" class="form-inline">
                         <div class="input-group">
-                            <input type="text" name="search" value="{{ $search }}" class="form-control"
+                            <input type="text" name="search" id="searchInput" value="{{ request('search') }}" class="form-control"
                                 placeholder="Buscar por nome ou email">
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-search"></i> Buscar
                                 </button>
-                                @if ($search)
+                                @if (request('search'))
                                     <a href="{{ route('admin.users.roles') }}" class="btn btn-default">
                                         <i class="fas fa-times"></i> Limpar
                                     </a>
@@ -64,6 +64,7 @@
                             </div>
                         </div>
                     </form>
+
                 </div>
                 <div class="col-md-6 text-right">
                     <div class="btn-group">
@@ -165,7 +166,7 @@
                 </table>
             </div>
             <div class="card-footer">
-                {{ $users->appends(['search' => $search])->links('pagination::bootstrap-4') }}
+                {{ $users->appends(['search' => request('search')])->links('pagination::bootstrap-4') }}
             </div>
         </div>
     </div>
@@ -506,25 +507,25 @@
         });
 
         // Validação de email
-        $('#email').on('blur', function() {
-            const email = $(this).val();
-            const errorElement = $('#email-error');
+        // $('#email').on('blur', function() {
+        //     const email = $(this).val();
+        //     const errorElement = $('#email-error');
 
-            if (email) {
-                $.get(`/api/check-email?email=${encodeURIComponent(email)}`)
-                    .done(function(data) {
-                        if (data.exists) {
-                            errorElement.text('Este e-mail já está em uso');
-                            errorElement.show();
-                        } else {
-                            errorElement.hide();
-                        }
-                    })
-                    .fail(function(error) {
-                        console.error('Erro ao verificar email:', error);
-                    });
-            }
-        });
+        //     if (email) {
+        //         $.get(`/api/check-email?email=${encodeURIComponent(email)}`)
+        //             .done(function(data) {
+        //                 if (data.exists) {
+        //                     errorElement.text('Este e-mail já está em uso');
+        //                     errorElement.show();
+        //                 } else {
+        //                     errorElement.hide();
+        //                 }
+        //             })
+        //             .fail(function(error) {
+        //                 console.error('Erro ao verificar email:', error);
+        //             });
+        //     }
+        // });
 
         // Validação do formulário antes do envio
         $('form[action="{{ route('admin.users.store') }}"]').on('submit', function(e) {
@@ -557,5 +558,104 @@
         $('#selectAll').on('change', function() {
             $('.user-checkbox').prop('checked', $(this).prop('checked'));
         });
+
+    
+
+
+// Busca em tempo real com AJAX
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const tableBody = document.querySelector('#users-table tbody');
+const loadingIndicator = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Buscando...</td></tr>';
+
+if (searchInput && tableBody) {
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        
+        // Limpa o timeout anterior
+        clearTimeout(searchTimeout);
+        
+        // Define um novo timeout de 500ms
+        searchTimeout = setTimeout(function() {console.log(searchTerm)
+            performSearch(searchTerm);
+        }, 500);
+    });
+    
+    // Limpar busca com ESC
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            performSearch('');
+        }
+    });
+}
+
+function performSearch(searchTerm) {
+    // Mostra indicador de carregamento
+    if (searchTerm.length > 0) {
+        tableBody.innerHTML = loadingIndicator;
+    }
+    
+    // Faz a requisição AJAX
+    fetch(`{{ route('admin.users.search') }}?search=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro na requisição');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            tableBody.innerHTML = data.data;
+            
+            // Atualiza o termo de busca na mensagem "nenhum usuário encontrado"
+            const searchTermElement = document.getElementById('search-term');
+            if (searchTermElement) {
+                searchTermElement.textContent = searchTerm;
+            }
+            
+            
+        } else {
+            console.error('Erro na busca:', data.message);
+            showErrorMessage('Erro ao realizar a busca');
+        }
+    })
+    .catch(error => {
+        console.error('Erro na requisição:', error);
+        showErrorMessage('Erro de conexão. Tente novamente.');
+    });
+}
+
+function updateResultsCounter(total, searchTerm) {
+    const counterElement = document.getElementById('results-counter');
+    if (counterElement) {
+        if (searchTerm.length > 0) {
+            counterElement.textContent = `${total} resultado(s) encontrado(s) para "${searchTerm}"`;
+            counterElement.style.display = 'block';
+        } else {
+            counterElement.style.display = 'none';
+        }
+    }
+}
+
+function showErrorMessage(message) {
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center text-danger py-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
+                ${message}
+            </td>
+        </tr>
+    `;
+}
+
+
     </script>
 @stop

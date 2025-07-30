@@ -22,10 +22,42 @@ class UserRoleController extends Controller
             ->orderBy('name')
             ->paginate(10);
 
-        $roles = Role::all();
+        $roles = Role::orderBy('name')->get(); // FORÇA ordem alfabética aqui
 
         return view('admin.users.roles', compact('users', 'roles', 'search'));
     }
+
+    
+
+public function searchUsers(Request $request)
+{
+    $search = $request->get('search', '');
+    
+    if (empty($search)) {
+        return response()->json([
+            'status' => 'success',
+            'data' => [],
+            'message' => 'Termo de busca vazio'
+        ]);
+    }
+    
+    $users = User::where('name', 'LIKE', "%{$search}%")
+                 ->orWhere('email', 'LIKE', "%{$search}%")
+                 ->with('role')
+                 ->paginate(10);
+    
+    $html = view('admin.users.partials.user-rows', compact('users'))->render();
+    
+    return response()->json([
+        'status' => 'success',
+        'data' => $html,
+        'total' => $users->total(),
+        'message' => 'Busca realizada com sucesso'
+    ]);
+}
+
+
+
 
     public function update(Request $request, User $user)
     {
@@ -303,5 +335,24 @@ class UserRoleController extends Controller
             Log::error('Erro ao criar usuário externo: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Erro ao criar usuário externo. Por favor, tente novamente.');
         }
+    }
+
+    public function listarUsuariosComFiltro(Request $request)
+    {
+        $search = $request->input('search');
+
+        $users = User::query()
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->paginate(10);
+
+        $roles = Role::orderBy('name')->get();
+
+
+        //dd($roles->pluck('name')); // debug para ver se ordenou
+
+        return view('admin.users.roles', compact('users', 'roles'));
     }
 }

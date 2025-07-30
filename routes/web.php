@@ -36,6 +36,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // Rota de Impersonate - DENTRO do middleware admin
     Route::post('/admin/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('admin.impersonate');
+    Route::get('/admin/users/search', [UserRoleController::class, 'searchUsers'])->name('admin.users.search');
 });
 
 // Rotas do PPP para usuários autenticados
