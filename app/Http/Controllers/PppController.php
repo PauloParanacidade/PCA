@@ -60,6 +60,14 @@ class PppController extends Controller
                 Log::info('💾 Ação detectada: salvar_rascunho');
             }
             
+            // 🔍 LOG: Valores financeiros recebidos do frontend
+            Log::info('💰 VALORES FINANCEIROS - Processamento completo', [
+                'estimativa_valor_original' => $request->estimativa_valor,
+                'valor_contrato_atualizado_original' => $request->valor_contrato_atualizado,
+                'user_id' => Auth::id(),
+                'timestamp' => now()->format('Y-m-d H:i:s')
+            ]);
+            
             // ✅ Processar valores monetários
             $estimativaFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->estimativa_valor)));
             
@@ -67,6 +75,14 @@ class PppController extends Controller
             if ($request->filled('valor_contrato_atualizado')) {
                 $valorFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->valor_contrato_atualizado)));
             }
+            
+            // 🔍 LOG: Valores após conversão para float
+            Log::info('💰 VALORES FINANCEIROS - Após conversão para float', [
+                'estimativa_valor_convertido' => $estimativaFloat,
+                'valor_contrato_atualizado_convertido' => $valorFloat,
+                'estimativa_valor_que_sera_salvo' => $estimativaFloat ?: 0.01,
+                'valor_contrato_atualizado_que_sera_salvo' => $valorFloat ?: 0.01
+            ]);
             
             $ppp = PcaPpp::create([
                 
@@ -109,6 +125,15 @@ class PppController extends Controller
                 // 'cronograma_dez' => $request->cronograma_dez ?: 'Não',
             ]);
             
+            // 🔍 LOG: Confirmação dos valores salvos no banco
+            Log::info('✅ PPP criado - Valores financeiros confirmados no banco', [
+                'ppp_id' => $ppp->id,
+                'estimativa_valor_salvo_no_banco' => $ppp->estimativa_valor,
+                'valor_contrato_atualizado_salvo_no_banco' => $ppp->valor_contrato_atualizado,
+                'tipo_estimativa_valor' => gettype($ppp->estimativa_valor),
+                'tipo_valor_contrato_atualizado' => gettype($ppp->valor_contrato_atualizado)
+            ]);
+
             $this->historicoService->registrarCriacao($ppp);
             
             Log::info('✅ PPP criado com sucesso', [
@@ -129,7 +154,6 @@ class PppController extends Controller
             return redirect()->route('ppp.edit', $ppp->id)
             ->with('success', 'Rascunho salvo com sucesso! Agora você pode preencher os demais campos.');
             
-            
         } catch (\Throwable $ex) {
             Log::error('💥 ERRO CRÍTICO ao criar PPP', [
                 'exception_message' => $ex->getMessage(),
@@ -145,15 +169,46 @@ class PppController extends Controller
 
     public function processMonetaryFields($request, $ppp) : PcaPpp
     {
-        $estimativaFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->estimativa_valor)));
+        Log::info('💰 PROCESSAMENTO VALORES - Entrada', [
+            'estimativa_valor_original' => $request->estimativa_valor,
+            'valor_contrato_original' => $request->valor_contrato_atualizado,
+            'tipo_estimativa' => gettype($request->estimativa_valor),
+            'tipo_valor_contrato' => gettype($request->valor_contrato_atualizado)
+        ]);
+        
+        // ✅ CORREÇÃO: Processar apenas se o valor estiver formatado em padrão brasileiro
+        $estimativaValor = $request->estimativa_valor;
+        
+        if (is_string($estimativaValor) && strpos($estimativaValor, 'R$') !== false) {
+            // Valor formatado brasileiro: "R$ 1.234,56"
+            $estimativaFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $estimativaValor)));
+        } else {
+            // Valor já numérico: 1234.56
+            $estimativaFloat = floatval($estimativaValor);
+        }
 
         $valorFloat = null;
         if ($request->filled('valor_contrato_atualizado')) {
-            $valorFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $request->valor_contrato_atualizado)));
+            $valorContratoAtualizado = $request->valor_contrato_atualizado;
+            
+            if (is_string($valorContratoAtualizado) && strpos($valorContratoAtualizado, 'R$') !== false) {
+                // Valor formatado brasileiro: "R$ 4.567,89"
+                $valorFloat = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $valorContratoAtualizado)));
+            } else {
+                // Valor já numérico: 4567.89
+                $valorFloat = floatval($valorContratoAtualizado);
+            }
         }
+        
         $ppp->estimativa_valor = $estimativaFloat;
         $ppp->valor_contrato_atualizado = $valorFloat;
 
+        Log::info('💰 PROCESSAMENTO VALORES - Saída', [
+            'estimativa_valor_processado' => $estimativaFloat,
+            'valor_contrato_processado' => $valorFloat,
+            'ppp_id' => $ppp->id ?? 'novo'
+        ]);
+        
         return $ppp;
     }
 
