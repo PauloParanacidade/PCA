@@ -64,14 +64,14 @@
                     <table class="table table-hover table-striped mb-0">
                         <thead class="thead-light text-center">
                             <tr>
-                                <th width="1%">#</th>
-                                <th width="23%">Nome do Item</th>
-                                <th width="10%">Área Solicitante</th>
-                                <th width="12%">Avaliador Seguinte</th>
-                                <th width="10%">Valor Estimado</th>
-                                <th width="10%">Status</th>
-                                <th width="10%">Data Criação</th>
-                                <th width="15%" class="text-center">Ações</th>
+                                <th width="2%">#</th>
+                                <th width="32%">Nome do Item</th>
+                                <th width="12%">Prioridade</th>
+                                <th width="12%">Área Solicitante</th>
+                                <th width="15%">Status</th>
+                                <th width="15%">Avaliador</th>
+                                <th width="12%">Valor Estimado</th>
+                                <th width="18%" class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,33 +86,51 @@
                                             @endif
                                         </div>
                                     </td>
+                                    <td class="align-middle"> {{-- Coluna Prioridade --}}
+                                        @if($ppp->grau_prioridade)
+                                            <span class="badge 
+                                                @if($ppp->grau_prioridade === 'Alta' || $ppp->grau_prioridade === 'Urgente') badge-danger
+                                                @elseif($ppp->grau_prioridade === 'Média') badge-warning
+                                                @else badge-success
+                                                @endif">
+                                                @if($ppp->grau_prioridade === 'Alta' || $ppp->grau_prioridade === 'Urgente') 🔴
+                                                @elseif($ppp->grau_prioridade === 'Média') 🟡
+                                                @else 🟢
+                                                @endif
+                                                {{ $ppp->grau_prioridade }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-secondary">N/A</span>
+                                        @endif
+                                    </td>
                                     <td class="align-middle"> {{-- Coluna Sigla da Área solicitante --}}
                                         <span class="badge badge-secondary">
                                             {{ $ppp->user->department ?? 'Área N/A' }}
                                         </span>
                                     </td>
-                                    <td class="align-middle"> {{-- Coluna Avaliador Seguinte --}}
+                                    <td class="align-middle"> {{-- Coluna Status --}}
+                                        <div class="d-flex flex-column">
+                                            <span class="badge badge-info mb-1">
+                                                @if($ppp->status)
+                                                    <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
+                                                @else
+                                                    <i class="fas fa-info-circle mr-1"></i>Status não definido
+                                                @endif
+                                            </span>
+                                            <small class="text-muted">
+                                                {{ $ppp->ultima_mudanca_status ? $ppp->ultima_mudanca_status->format('d/m/Y H:i') : 'N/A' }}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle"> {{-- Coluna Avaliador --}}
                                         <span class="badge badge-info">
                                             {{ $ppp->current_approver }}
                                         </span>
                                     </td>
-                                    <td class="align-middle text-left"> {{-- Coluna Valor estimado --}}
+                                    <td class="align-middle"> {{-- Coluna Valor estimado --}}
                                         <span class="text-success font-weight-bold">
                                             R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
                                         </span>
-                                    </td>
-                                    
-                                    <td class="align-middle text-left"> {{-- Coluna Status --}}
-                                        <span class="badge badge-info">
-                                            @if($ppp->status)
-                                                <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
-                                            @else
-                                                <i class="fas fa-info-circle mr-1"></i>Status não definido
-                                            @endif
-                                        </span>
-                                    </td>
-                                    <td class="align-middle"> {{-- Coluna Data Criação --}}
-                                        <small>{{ $ppp->created_at ? $ppp->created_at->format('d/m/Y H:i') : 'N/A' }}</small>
                                     </td>
                                     <td class="align-middle text-center"> {{-- Coluna Ações --}}
                                         <div class="btn-group" role="group">

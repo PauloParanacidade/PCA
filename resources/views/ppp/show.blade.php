@@ -45,6 +45,12 @@
                                 <i class="fas fa-circle mr-2"></i>
                                 {{ $ppp->status->nome ?? 'Status não definido' }}
                             </span>
+                            {{-- @if($ppp->current_approver)
+                                <span class="badge badge-info d-block mb-1">
+                                    <i class="fas fa-user mr-1"></i>
+                                    {{ $ppp->current_approver }}
+                                </span>
+                            @endif --}}
                             <small class="text-white-100 d-block">
                                 Criado em {{ $ppp->created_at->format('d/m/Y H:i') }}
                             </small>

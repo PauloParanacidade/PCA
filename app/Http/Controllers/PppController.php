@@ -465,9 +465,44 @@ class PppController extends Controller
                 $ppp->next_approver = 'Aguardando definição';
                 $ppp->current_approver = 'Nenhum gestor atribuído';
             }
+            
+            // NOVO: Identificar quem enviou o PPP para o usuário logado
+            $ppp->sender_name = $this->getSenderName($ppp);
+            
+            // NOVO: Obter data da última mudança de status
+            $ultimaAcao = PppHistorico::where('ppp_id', $ppp->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            $ppp->ultima_mudanca_status = $ultimaAcao ? $ultimaAcao->created_at : $ppp->created_at;
         }
         
         return $ppps;
+    }
+    
+    /**
+     * Identifica quem enviou o PPP para o usuário logado atual
+     */
+    private function getSenderName($ppp)
+    {
+        // Buscar no histórico a última ação de envio/aprovação que resultou no PPP chegar ao usuário atual
+        $ultimaAcaoEnvio = PppHistorico::where('ppp_id', $ppp->id)
+            ->whereIn('acao', [
+                'ppp_enviado',           // Usuário enviou PPP inicial
+                'correcao_enviada',      // Usuário reenviou após correção
+                'aprovacao_intermediaria', // Gestor aprovou e encaminhou
+                'aprovacao_final'        // Gestor aprovou final
+            ])
+            ->with('usuario')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($ultimaAcaoEnvio && $ultimaAcaoEnvio->usuario) {
+            return $ultimaAcaoEnvio->usuario->name . ' - ' . ($ultimaAcaoEnvio->usuario->department ?? 'N/A');
+        }
+        
+        // Fallback: retornar o criador do PPP
+        return $ppp->user ? ($ppp->user->name . ' - ' . ($ppp->user->department ?? 'N/A')) : 'Criador N/A';
     }
     
     public function show($id)
