@@ -19,31 +19,41 @@
             <!-- Header do PPP -->
             <div class="card bg-gradient-primary shadow-lg mb-3">
                 <div class="card-body py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="text-white mb-1 font-weight-bold">{{ $ppp->nome_item }}</h2>
-                            <small class="text-white-100 d-block mt-1">
+                    <div class="position-relative">
+                        
+                        {{-- Título centralizado sobreposto --}}
+                        <h2 class="position-absolute w-100 text-center text-white mb-1 font-weight-bold" style="top: 0.5rem;">
+                            {{ $ppp->nome_item }}
+                        </h2>
+                        
+                        <div class="d-flex justify-content-between align-items-start pt-2">
+                            
+                            {{-- ID à esquerda --}}
+                            <div>
+                                <span class="badge badge-light badge-lg">
+                                    #{{ $ppp->id }}
+                                </span>
+                            </div>
+                            
+                            {{-- Espaço central vazio para permitir centralização real do título --}}
+                            <div></div>
+                            
+                            {{-- Status à direita --}}
+                            <div class="text-right">
+                                <span class="badge badge-lg px-4 py-2 d-block mb-1"
+                                style="background-color: {{ $ppp->status->cor ?? '#6c757d' }}; color: white; font-size: 1.1rem;">
+                                <i class="fas fa-circle mr-2"></i>
+                                {{ $ppp->status->nome ?? 'Status não definido' }}
+                            </span>
+                            <small class="text-white-100 d-block">
                                 Criado em {{ $ppp->created_at->format('d/m/Y H:i') }}
                             </small>
                         </div>
-                        <div class="text-right">
-                            <span class="badge badge-light badge-lg">
-                                #{{ $ppp->id }}
-                            </span>
-                            <div class="mt-1">
-                                <span class="badge
-                                    @if($ppp->status_fluxo === 'rascunho') badge-secondary
-                                    @elseif($ppp->status_fluxo === 'aguardando_aprovacao') badge-warning
-                                    @elseif($ppp->status_fluxo === 'em_avaliacao') badge-info
-                                    @elseif($ppp->status_fluxo === 'aprovado_final') badge-success
-                                    @elseif($ppp->status_fluxo === 'cancelado') badge-danger
-                                    @else badge-dark
-                                    @endif badge-lg">
-                                {{ ucfirst(str_replace('_', ' ', $ppp->status_fluxo)) }}
-                            </span>
-                        </div>
+                        
                     </div>
+                    
                 </div>
+                
             </div>
         </div>
         
@@ -202,12 +212,6 @@
                         </div>
                     </div>
                     @else
-                    <div class="text-center py-2">
-                        <i class="fas fa-file text-muted" style="font-size: 2.5rem; position: relative;">
-                            <i class="fas fa-ban text-danger" style="position: absolute; top: -0.2rem; right: -0.5rem; font-size: 1.2rem;"></i>
-                        </i>
-                        <p class="text-muted mt-2 mb-0">Sem contrato vigente</p>
-                    </div>
                     @if($ppp->mes_inicio_prestacao)
                     <div class="row mb-2 mt-3">
                         <div class="col-md-12">
@@ -227,6 +231,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="text-center py-2">
+                        <i class="fas fa-file text-muted" style="font-size: 2.5rem; position: relative;">
+                            <i class="fas fa-ban text-danger" style="position: absolute; top: -0.2rem; right: -0.5rem; font-size: 1.2rem;"></i>
+                        </i>
+                        <p class="text-muted mt-2 mb-0">Sem contrato vigente</p>
+                    </div>
+
+
+                    
                     @endif
                     @endif
                 </div>
