@@ -28,8 +28,12 @@ class PcaPpp extends Model
         //card amarelo
         'tem_contrato_vigente',
         'mes_inicio_prestacao',
+        'ano_pca',                    
+        'contrato_mais_um_exercicio', 
         'num_contrato',
+        'ano_contrato',               
         'mes_vigencia_final',
+        'ano_vigencia_final',         
         'contrato_prorrogavel',
         'renov_contrato',
         
@@ -47,6 +51,9 @@ class PcaPpp extends Model
     protected $casts = [
         'estimativa_valor' => 'decimal:2',
         'valor_contrato_atualizado' => 'decimal:2',
+        'ano_contrato' => 'integer',        
+        'ano_vigencia_final' => 'integer',  
+        'ano_pca' => 'integer',             
     ];
 
     public function user()

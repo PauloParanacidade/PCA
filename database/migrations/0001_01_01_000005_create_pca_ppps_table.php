@@ -61,7 +61,6 @@ return new class extends Migration
 
             // === CARD AMARELO - CONTRATO VIGENTE ===
             $table->enum('tem_contrato_vigente', ['Sim', 'Não'])
-                  ->default('Não')
                   ->comment('Possui contrato vigente');
 
             $table->string('mes_inicio_prestacao', 10)
