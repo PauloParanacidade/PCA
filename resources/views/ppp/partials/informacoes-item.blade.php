@@ -12,6 +12,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-tag text-primary me-1"></i>
                     Nome do Item <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Informe o nome específico do item ou serviço que será contratado. Ex: Aluguel de impressoras multifuncionais ou Consultoria especializada em TI"></i>
                 </label>
                 <input type="text" name="nome_item" class="form-control form-control-lg @error('nome_item') is-invalid @enderror" required
                     value="{{ old('nome_item', $ppp->nome_item ?? '') }}"
@@ -24,6 +25,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-cubes text-primary me-1"></i>
                     Quantidade <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Especifique a quantidade necessária com a unidade de medida. Ex: 5 unidades, 12 meses, 1 visita/ano"></i>
                 </label>
                 <input type="text" name="quantidade" class="form-control form-control-lg @error('quantidade') is-invalid @enderror" required
                     value="{{ old('quantidade', $ppp->quantidade ?? '') }}"
@@ -36,6 +38,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-exclamation-triangle text-primary me-1"></i>
                     Grau de prioridade <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Alta: Urgente/essencial para funcionamento. Média: Importante mas não crítico. Baixa: Desejável mas pode aguardar"></i>
                 </label>
                 <select class="form-control form-control-lg" name="grau_prioridade" required>
                     <option value="" disabled {{ old('grau_prioridade', $ppp->grau_prioridade ?? '') == '' ? 'selected' : '' }}>Selecione</option>
@@ -51,6 +54,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-file-alt text-primary me-1"></i>
                     Descrição sucinta do objeto <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Descreva detalhadamente as características técnicas, especificações e funcionalidades do objeto a ser contratado"></i>
                 </label>
                 <textarea name="descricao" class="form-control @error('descricao') is-invalid @enderror" rows="4" maxlength="500" required 
                     placeholder="Descreva detalhadamente o objeto da contratação">{{ old('descricao', $ppp->descricao ?? '') }}</textarea>
@@ -62,6 +66,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-cog text-primary me-1"></i>
                     Natureza do Objeto <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Classifique o tipo de contratação: Serviço não continuado (pontual), Serviço continuado (recorrente), Material de consumo ou Bem permanente"></i>
                 </label>
                 <select class="form-control form-control-lg" name="natureza_objeto" required>
                     <option value="" disabled {{ old('natureza_objeto', $ppp->natureza_objeto ?? '') == '' ? 'selected' : '' }}>Selecione</option>
@@ -77,6 +82,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-clipboard-list text-primary me-1"></i>
                     Justificativa da necessidade <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Explique detalhadamente por que esta contratação é necessária, qual problema resolve e como impacta as atividades da instituição"></i>
                 </label>
                 <textarea name="justificativa_pedido" class="form-control @error('justificativa_pedido') is-invalid @enderror" rows="4" maxlength="1000" required 
                     placeholder="Justifique detalhadamente a necessidade desta contratação">{{ old('justificativa_pedido', $ppp->justificativa_pedido ?? '') }}</textarea>
@@ -88,6 +94,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-list text-primary me-1"></i>
                     Categoria <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Selecione a categoria que melhor se adequa ao objeto: Aquisição de bens, Contratação de Serviço, Obras ou T.I."></i>
                 </label>
                 <select class="form-control form-control-lg" name="categoria" required>
                     <option value="" disabled {{ old('categoria', $ppp->categoria ?? '') == '' ? 'selected' : '' }}>Selecione</option>

@@ -12,6 +12,7 @@
                 <label class="form-label fw-bold">
                     <i class="fas fa-question-circle text-warning me-1"></i>
                     Objeto tem contrato vigente? <span class="text-danger">*</span>
+                    <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Verifique se já existe um contrato ativo para este mesmo objeto ou serviço na instituição"></i>
                 </label>
                 <select name="tem_contrato_vigente" id="tem_contrato_vigente" class="form-control form-control-lg" required>
                     <option value="" disabled {{ old('tem_contrato_vigente', $ppp->tem_contrato_vigente ?? '') == '' ? 'selected' : '' }}>Selecione</option>
@@ -26,6 +27,7 @@
                     <label class="form-label fw-bold">
                         <i class="fas fa-hashtag text-warning me-1"></i>
                         Número/Ano do contrato
+                        <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Informe o número e ano do contrato vigente. Ex: 0001/2023, 0045/2024"></i>
                     </label>
                     <input type="text" name="num_contrato" id="num_contrato" class="form-control contract-number"
                         value="{{ old('num_contrato', $ppp->num_contrato ?? '') }}" 
@@ -36,6 +38,7 @@
                     <label class="form-label fw-bold">
                         <i class="fas fa-calendar-times text-warning me-1"></i>
                         Mês da vigência final prevista
+                        <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Selecione o mês e ano em que o contrato atual está previsto para terminar"></i>
                     </label>
                     <input type="month" name="mes_vigencia_final" class="form-control"
                         value="{{ old('mes_vigencia_final', $ppp->mes_vigencia_final ?? '') }}">
@@ -45,6 +48,7 @@
                     <label class="form-label fw-bold">
                         <i class="fas fa-sync-alt text-warning me-1"></i>
                         Prorrogável <span class="text-danger">*</span>
+                        <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Verifique se o contrato atual permite prorrogação conforme previsto no instrumento contratual"></i>
                     </label>
                     <select name="contrato_prorrogavel" id="contrato_prorrogavel" class="form-control">
                         <option value="" disabled {{ old('contrato_prorrogavel', $ppp->contrato_prorrogavel ?? '') == '' ? 'selected' : '' }}>Selecione</option>
@@ -57,6 +61,7 @@
                     <label class="form-label fw-bold">
                         <i class="fas fa-handshake text-warning me-1"></i>
                         Pretensão de prorrogação <span class="text-danger">*</span>
+                        <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Informe se há intenção de prorrogar o contrato atual ou se será necessária nova contratação"></i>
                     </label>
                     <select name="renov_contrato" id="renov_contrato" class="form-control">
                         <option value="" disabled {{ old('renov_contrato', $ppp->renov_contrato ?? '') == '' ? 'selected' : '' }}>Selecione</option>
@@ -72,6 +77,7 @@
                     <label class="form-label fw-bold">
                         <i class="fas fa-calendar-plus text-warning me-1"></i>
                         Mês pretendido para início da prestação de serviço ou do fornecimento do bem <span class="text-danger">*</span>
+                        <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Selecione o mês em que você pretende que o serviço ou fornecimento tenha início, considerando os prazos de licitação"></i>
                     </label>
                     <div class="row">
                         <div class="col-md-6">
