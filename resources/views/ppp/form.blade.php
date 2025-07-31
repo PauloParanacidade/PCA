@@ -1,5 +1,10 @@
 @extends('layouts.adminlte-custom')
 
+@php
+    $anoPadrao = now()->year + 1; // 2026
+    $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
+@endphp
+
 @section('title', $isCreating ? 'Criar PPP' : 'Editar PPP')
 
 @section('content_header')
@@ -153,6 +158,10 @@
 
     .row.mb-4 {
         margin-bottom: 1.5rem !important;
+    }
+
+    .tooltip .tooltip-inner {
+    text-align: left;
     }
 </style>
 @endsection
@@ -562,6 +571,7 @@
                 });
             }
         });
+        
     </script>
 <script>
 $(document).ready(function() {

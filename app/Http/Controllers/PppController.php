@@ -84,6 +84,18 @@ class PppController extends Controller
                 'valor_contrato_atualizado_que_sera_salvo' => $valorFloat ?: 0.01
             ]);
             
+            // Determinar se deve salvar valor_contrato_atualizado baseado na lógica condicional
+            $valorContratoAtualizado = null;
+            if ($this->shouldShowValorMaisUmExercicio($request)) {
+                $valorContratoAtualizado = $valorFloat;
+            }
+            
+            // Processar número do contrato (garantir formato 0001)
+            $numContrato = null;
+            if ($request->filled('num_contrato')) {
+                $numContrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+            }
+            
             $ppp = PcaPpp::create([
                 
                 //CARD AZUL
@@ -97,13 +109,22 @@ class PppController extends Controller
                 'categoria' => $request->categoria,
                 'justificativa_pedido' => $request->justificativa_pedido,
                 
-                //CARD AMARELO
+                //CARD AMARELO - NOVOS CAMPOS ADICIONADOS
                 'tem_contrato_vigente' => $request->tem_contrato_vigente ?: 'Não',
+                'mes_inicio_prestacao' => $request->mes_inicio_prestacao,
+                'ano_pca' => date('Y') + 1, // Sempre ano atual + 1
+                'contrato_mais_um_exercicio' => $request->contrato_mais_um_exercicio,
+                'num_contrato' => $numContrato,
+                'ano_contrato' => $request->ano_contrato,
+                'mes_vigencia_final' => $request->mes_vigencia_final,
+                'ano_vigencia_final' => $request->ano_vigencia_final,
+                'contrato_prorrogavel' => $request->contrato_prorrogavel,
+                'renov_contrato' => $request->renov_contrato,
                 
                 //CARD VERDE
                 'estimativa_valor' => $estimativaFloat ?: 0.01,
                 'origem_recurso' => $request->origem_recurso ?: 'PRC',
-                'valor_contrato_atualizado' => $valorFloat ?: 0.01,
+                'valor_contrato_atualizado' => $valorContratoAtualizado,
                 'justificativa_valor' => $request->justificativa_valor ?: '.',
                 
                 //CARD CIANO
@@ -220,6 +241,11 @@ class PppController extends Controller
 
             $statusAnterior = $ppp->status_id;
             $ppp->fill($request->validated());
+            
+            // Processar número do contrato (garantir formato 0001)
+            if ($request->filled('num_contrato')) {
+                $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+            }
 
             $ppp = $this->processMonetaryFields($request, $ppp);
 
@@ -252,6 +278,12 @@ class PppController extends Controller
                 
                 // ✅ Salvar os dados do formulário ANTES de enviar
                 $ppp->fill($request->validated());
+                
+                // Processar número do contrato (garantir formato 0001)
+                if ($request->filled('num_contrato')) {
+                    $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+                }
+                
                 $ppp = $this->processMonetaryFields($request, $ppp);
                 $ppp->save();
                 
@@ -283,6 +315,12 @@ class PppController extends Controller
         $statusAnterior = $ppp->status_id;
 
         $ppp->fill($request->validated());
+        
+        // Processar número do contrato (garantir formato 0001)
+        if ($request->filled('num_contrato')) {
+            $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+        }
+        
         $ppp->save();
 
         if ($statusAnterior != $ppp->status_id) {
@@ -1657,6 +1695,41 @@ class PppController extends Controller
             return redirect()->back()
                 ->with('error', 'Erro ao reenviar PPP: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Determina se o campo "Valor se +1 exercício" deve ser considerado
+     */
+    private function shouldShowValorMaisUmExercicio($request): bool
+    {
+        $temContrato = $request->input('tem_contrato_vigente');
+        
+        // Se não tem contrato, verificar se é mais de um exercício
+        if ($temContrato === 'Não') {
+            $contratoMaisUmExercicio = $request->input('contrato_mais_um_exercicio');
+            return $contratoMaisUmExercicio === 'Sim';
+        }
+        
+        if ($temContrato === 'Sim') {
+            $anoVigencia = $request->input('ano_vigencia_final');
+            $anoPCA = date('Y') + 1; // Usar ano dinâmico em vez de hardcoded
+            
+            if ($anoVigencia != $anoPCA) {
+                return false;
+            }
+            
+            $prorrogavel = $request->input('contrato_prorrogavel');
+            if ($prorrogavel === 'Não') {
+                return false;
+            }
+            
+            $vaiProrrogar = $request->input('renov_contrato');
+            if ($vaiProrrogar === 'Sim') {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     public function dashboard()

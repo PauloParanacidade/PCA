@@ -37,23 +37,27 @@ return new class extends Migration
                   ->comment('Data da última ação de aprovação');
             
             // === CARD AZUL - DETALHES DO ITEM/SERVIÇO ===
-            $table->string('categoria', 100)
-                  ->comment('Categoria do item/serviço');
-                  
             $table->string('nome_item', 200)
                   ->comment('Nome/título do item');
                   
+            $table->string('quantidade', 50)
+                  ->comment('Quantidade solicitada');
+            
+            $table->enum('grau_prioridade', ['Baixa', 'Média', 'Alta', 'Urgente'])
+                  ->default('Média')
+                  ->comment('Grau de prioridade');
+
             $table->text('descricao')
                   ->comment('Descrição detalhada do item');
                   
-            $table->string('quantidade', 50)
-                  ->comment('Quantidade solicitada');
-                  
-            $table->text('justificativa_pedido')
-                  ->comment('Justificativa para o pedido');
-                  
             $table->string('natureza_objeto', 100)
                   ->comment('Natureza do objeto (bem/serviço)');
+
+            $table->text('justificativa_pedido')
+                  ->comment('Justificativa para o pedido');
+
+            $table->string('categoria', 100)
+                  ->comment('Categoria do item/serviço');
 
             // === CARD AMARELO - CONTRATO VIGENTE ===
             $table->enum('tem_contrato_vigente', ['Sim', 'Não'])
@@ -63,14 +67,30 @@ return new class extends Migration
             $table->string('mes_inicio_prestacao', 10)
                   ->nullable()
                   ->comment('Mês de início da prestação do serviço quando não tiver contrato vigente');
-                  
-            $table->string('num_contrato', 20)
+            
+            $table->year('ano_pca')
                   ->nullable()
-                  ->comment('Número do contrato atual (obrigatório se tem_contrato_vigente = Sim)');
+                  ->comment('Ano do PCA (preenchido automaticamente como ano atual + 1) para objeto novo');
+
+            $table->enum('contrato_mais_um_exercicio', ['Sim', 'Não'])
+                  ->nullable()
+                  ->comment('O contrato é mais de um exercício');
+                  
+            $table->string('num_contrato', 4)
+                  ->nullable()
+                  ->comment('Número do contrato atual (formato 0001) - obrigatório se tem_contrato_vigente = Sim');
+                  
+            $table->year('ano_contrato')
+                  ->nullable()
+                  ->comment('Ano do contrato atual (obrigatório se tem_contrato_vigente = Sim)');
                   
             $table->string('mes_vigencia_final', 10)
                   ->nullable()
                   ->comment('Mês de vigência final do contrato');
+                  
+            $table->year('ano_vigencia_final')
+                  ->nullable()
+                  ->comment('Ano de vigência final do contrato para comparação com PCA');
                   
             $table->enum('contrato_prorrogavel', ['Sim', 'Não'])
                   ->nullable()
@@ -89,10 +109,6 @@ return new class extends Migration
                   
             $table->text('justificativa_valor')
                   ->comment('Justificativa do valor estimado');
-                  
-            $table->enum('grau_prioridade', ['Baixa', 'Média', 'Alta', 'Urgente'])
-                  ->default('Média')
-                  ->comment('Grau de prioridade');
                   
             $table->decimal('valor_contrato_atualizado', 12, 2)
                   ->nullable()

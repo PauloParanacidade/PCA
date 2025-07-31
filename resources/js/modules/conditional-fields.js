@@ -16,12 +16,12 @@ export const ConditionalFields = {
             this.toggleVinculacao($(e.target).val() === 'Sim');
         });
 
-        // Contrato vigente
+        // Contrato vigente - CORRIGIDO
         $('#tem_contrato_vigente').on('change', (e) => {
-            this.toggleContratoVigente($(e.target).val() === 'Sim');
+            this.toggleContratoVigente($(e.target).val());
         });
 
-        // Prorrogação
+        // Prorrogação - CORRIGIDO
         $('#contrato_prorrogavel').on('change', (e) => {
             this.toggleProrrogacao($(e.target).val() === 'Sim');
         });
@@ -40,21 +40,32 @@ export const ConditionalFields = {
         }
     },
 
-    toggleContratoVigente: function(show) {
-        const campos = $('#campos_contrato');
-        const requiredFields = campos.find('input, select');
+    // CORRIGIDO - usar IDs corretos
+    toggleContratoVigente: function(valor) {
+        const camposContrato = $('#campos-contrato-vigente');
+        const campoMesInicio = $('#campo-mes-inicio-prestacao');
+        const requiredFields = camposContrato.find('input, select');
+        const mesInicioField = $('#mes_inicio_prestacao');
         
-        if (show) {
-            campos.slideDown(300);
+        if (valor === 'Sim') {
+            camposContrato.slideDown(300);
+            campoMesInicio.slideUp(300);
             requiredFields.attr('required', true);
-        } else {
-            campos.slideUp(300);
+            mesInicioField.removeAttr('required');
+        } else if (valor === 'Não') {
+            camposContrato.slideUp(300);
+            campoMesInicio.slideDown(300);
             requiredFields.removeAttr('required').val('');
+            mesInicioField.attr('required', true);
+        } else {
+            camposContrato.slideUp(300);
+            campoMesInicio.slideUp(300);
         }
     },
 
+    // CORRIGIDO - usar ID correto
     toggleProrrogacao: function(show) {
-        const campo = $('#campo_pretensao_prorrogacao');
+        const campo = $('#campo-pretensao-prorrogacao');
         const select = $('#renov_contrato');
         
         if (show) {
@@ -76,7 +87,7 @@ export const ConditionalFields = {
         // Inicializar contrato vigente
         const contratoVigente = $('#tem_contrato_vigente').val();
         if (contratoVigente) {
-            this.toggleContratoVigente(contratoVigente === 'Sim');
+            this.toggleContratoVigente(contratoVigente);
         }
 
         // Inicializar prorrogação
