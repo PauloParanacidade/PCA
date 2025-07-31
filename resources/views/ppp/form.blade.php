@@ -35,6 +35,7 @@
     @endif
         <input type="hidden" name="modo" value="{{ $isCreating ? 'criacao' : 'edicao' }}">
         
+
         {{-- Adicionar campo hidden com ID para JavaScript --}}
         @if(!$isCreating)
             <input type="hidden" id="ppp-id" value="{{ $ppp->id }}">

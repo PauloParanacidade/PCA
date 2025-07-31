@@ -45,21 +45,9 @@
                                 <i class="fas fa-circle mr-2"></i>
                                 {{ $ppp->status->nome ?? 'Status não definido' }}
                             </span>
-                            {{-- @if($ppp->current_approver)
-                                <span class="badge badge-info d-block mb-1">
-                                    <i class="fas fa-user mr-1"></i>
-                                    {{ $ppp->current_approver }}
-                                </span>
-                            @endif --}}
-                            <small class="text-white-100 d-block">
-                                Criado em {{ $ppp->created_at->format('d/m/Y H:i') }}
-                            </small>
                         </div>
-                        
                     </div>
-                    
                 </div>
-                
             </div>
         </div>
         
@@ -166,87 +154,120 @@
                         </button>
                     </div>
                 </div>
-                <div class="card-body py-3">
-                    <div class="info-group mb-2">
-                        <label class="info-label">Possui Contrato Vigente</label>
-                        <div class="info-value">
-                            <span class="badge {{ $ppp->tem_contrato_vigente === 'Sim' ? 'badge-success' : 'badge-secondary' }} badge-lg">
-                                {{ $ppp->tem_contrato_vigente ?? 'N/A' }}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    @if($ppp->tem_contrato_vigente === 'Sim')
-                    <div class="row mb-2">
-                        <div class="col-md-6">
-                            <div class="info-group">
-                                <label class="info-label">Número/Ano do contrato</label>
-                                <div class="info-value font-weight-bold">{{ $ppp->num_contrato ?? 'N/A' }}</div>
+                <div class="card-body py-4">
+                    @if ($ppp->tem_contrato_vigente)
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-group mb-4">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-file-contract text-warning me-2"></i> Objeto tem contrato vigente?</label>
+                                    <div class="info-value mt-2">
+                                        <span class="badge badge-success" style="font-size: 1.1rem; padding: 8px 16px;">Sim</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-group mb-4">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-hashtag text-primary me-2"></i> Número do Contrato</label>
+                                    <div class="info-value mt-2">
+                                        <strong style="font-size: 1.2rem;">{{ $ppp->num_contrato }}/{{ $ppp->ano_contrato }}</strong>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-md-6">
-                            <div class="info-group">
-                                <label class="info-label">Mês da vigência final prevista</label>
-                                <div class="info-value">
-                                    {{ $ppp->mes_vigencia_final ? \Carbon\Carbon::parse($ppp->mes_vigencia_final . '-01')->format('m/Y') : 'N/A' }}
+                            
+                            <div class="col-md-6">
+                                <div class="info-group mb-4">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-calendar-times text-danger me-2"></i> Vigência Final Prevista</label>
+                                    <div class="info-value mt-2">
+                                        @php
+                                        $mesesNomes = [
+                                            '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
+                                            '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
+                                            '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
+                                            '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
+                                        ];
+                                        $nomeDoMes = $mesesNomes[$ppp->mes_vigencia_final] ?? $ppp->mes_vigencia_final;
+                                        @endphp
+                                        <strong style="font-size: 1.2rem;">{{ $nomeDoMes }} de {{ $ppp->ano_vigencia_final }}</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-group mb-4">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-sync-alt text-warning me-2"></i> Contrato Prorrogável?</label>
+                                    <div class="info-value mt-2">
+                                        <span class="badge {{ $ppp->contrato_prorrogavel === 'Sim' ? 'badge-success' : 'badge-secondary' }}" style="font-size: 1.1rem; padding: 8px 16px;">
+                                            {{ $ppp->contrato_prorrogavel }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-md-6">
-                            <div class="info-group">
-                                <label class="info-label">Prorrogável</label>
-                                <div class="info-value">
-                                    <span class="badge {{ $ppp->contrato_prorrogavel === 'Sim' ? 'badge-info' : 'badge-secondary' }}">
-                                        {{ $ppp->contrato_prorrogavel ?? 'N/A' }}
-                                    </span>
+                        
+                        <div class="row">
+                            @if ($ppp->contrato_prorrogavel === 'Sim')
+                            <div class="col-md-6">
+                                <div class="info-group mb-4">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-redo text-success me-2"></i> Pretensão de Renovação</label>
+                                    <div class="info-value mt-2">
+                                        <span class="badge {{ $ppp->renov_contrato === 'Sim' ? 'badge-success' : 'badge-secondary' }}" style="font-size: 1.1rem; padding: 8px 16px;">
+                                            {{ $ppp->renov_contrato }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            
+                            <div class="col-md-6">
+                                <div class="info-group mb-4">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-calendar-check text-primary me-2"></i> Contrato Mais de Um Exercício</label>
+                                    <div class="info-value mt-2">
+                                        <span class="badge {{ $ppp->contrato_mais_um_exercicio === 'Sim' ? 'badge-success' : 'badge-secondary' }}" style="font-size: 1.1rem; padding: 8px 16px;">
+                                            {{ $ppp->contrato_mais_um_exercicio ?? 'Não' }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="info-group">
-                                <label class="info-label">Pretensão de Prorrogação</label>
-                                <div class="info-value">
-                                    <span class="badge {{ $ppp->renov_contrato === 'Sim' ? 'badge-success' : 'badge-secondary' }}">
-                                        {{ $ppp->renov_contrato ?? 'N/A' }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     @else
-                    @if($ppp->mes_inicio_prestacao)
-                    <div class="row mb-2 mt-3">
-                        <div class="col-md-12">
-                            <div class="info-group">
-                                <label class="info-label">Mês pretendido para início deste contrato novo</label>
-                                <div class="info-value">
-                                    @php
-                                    $mesesNomes = [
-                                    '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
-                                    '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
-                                    '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
-                                    '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
-                                    ];
-                                    @endphp
-                                    {{ $mesesNomes[$ppp->mes_inicio_prestacao] ?? $ppp->mes_inicio_prestacao }} de 2026
+                        <div class="text-center py-5">
+                            <div class="info-group mb-4">
+                                <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-file-contract text-warning me-2"></i> Objeto tem contrato vigente?</label>
+                                <div class="info-value mt-3">
+                                    <span class="badge badge-secondary" style="font-size: 1.1rem; padding: 8px 16px;">Não</span>
                                 </div>
                             </div>
+                            
+                            @if($ppp->mes_inicio_prestacao)
+                            <div class="mt-4">
+                                <h6 class="text-primary mb-3" style="font-size: 1.2rem;"><i class="fas fa-plus-circle mr-2"></i> Novo Contrato Planejado</h6>
+                                <div class="info-group">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;">Mês Pretendido para Início</label>
+                                    <div class="info-value mt-3">
+                                        @php
+                                        $mesesNomes = [
+                                            '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
+                                            '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
+                                            '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
+                                            '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
+                                        ];
+                                        $nomeDoMes = $mesesNomes[$ppp->mes_inicio_prestacao] ?? $ppp->mes_inicio_prestacao;
+                                        @endphp
+                                        <span class="badge badge-primary" style="font-size: 1.1rem; padding: 10px 20px;">
+                                            <i class="fas fa-calendar-check mr-2"></i>
+                                            {{ $nomeDoMes }} de {{ date('Y') + 1 }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-group mt-4">
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-calendar-check text-primary me-2"></i> Contrato Mais de Um Exercício</label>
+                                    <div class="info-value mt-2">
+                                        <span class="badge {{ $ppp->contrato_mais_um_exercicio === 'Sim' ? 'badge-success' : 'badge-secondary' }}" style="font-size: 1.1rem; padding: 8px 16px;">
+                                            {{ $ppp->contrato_mais_um_exercicio ?? 'Não' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
                         </div>
-                    </div>
-                    <div class="text-center py-2">
-                        <i class="fas fa-file text-muted" style="font-size: 2.5rem; position: relative;">
-                            <i class="fas fa-ban text-danger" style="position: absolute; top: -0.2rem; right: -0.5rem; font-size: 1.2rem;"></i>
-                        </i>
-                        <p class="text-muted mt-2 mb-0">Sem contrato vigente</p>
-                    </div>
-
-
-                    
-                    @endif
                     @endif
                 </div>
             </div>

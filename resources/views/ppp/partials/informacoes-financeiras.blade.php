@@ -1,4 +1,7 @@
 {{-- Seção 3: Informações Financeiras (Card Verde) --}}
+        {{-- Campo hidden para ano_pca (sempre ano atual + 1) --}}
+        <input type="hidden" name="ano_pca" value="{{ date('Y') + 1 }}">
+        
 <div class="col-12 mb-4">
     <div class="card card-outline card-success h-100">
         <div class="card-header bg-success">
