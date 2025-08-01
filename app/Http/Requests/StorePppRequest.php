@@ -64,8 +64,10 @@ class StorePppRequest extends FormRequest
             'num_contrato' => [
                 'required_if:tem_contrato_vigente,Sim',
                 'nullable',
-                'string',
-                'regex:/^[0-9]{4}$/', // Exatamente 4 dígitos numéricos
+                'integer', // Mudança: de 'string' para 'integer'
+                'min:1',   // Mudança: mínimo 1
+                'max:9999' // Mudança: máximo 9999
+                // Removida a regex restritiva: 'regex:/^[0-9]{4}$/'
             ],
             'ano_contrato' => [
                 'required_if:tem_contrato_vigente,Sim',
@@ -227,7 +229,9 @@ class StorePppRequest extends FormRequest
             'mes_inicio_prestacao.string' => 'O mês pretendido deve ser um texto válido.',
             'mes_inicio_prestacao.max' => 'O mês pretendido não pode ter mais de 10 caracteres.',
             'num_contrato.required_if' => 'O número do contrato é obrigatório quando há contrato vigente.',
-            'num_contrato.max' => 'O número do contrato não pode ter mais de 20 caracteres.',
+            'num_contrato.integer' => 'O número do contrato deve ser um número válido.',
+            'num_contrato.min' => 'O número do contrato deve ser no mínimo 1.',
+            'num_contrato.max' => 'O número do contrato deve ser no máximo 9999.',
             'ano_contrato.required_if' => 'O ano do contrato é obrigatório quando há contrato vigente.',
             'ano_contrato.integer' => 'O ano do contrato deve ser um número válido.',
             'ano_contrato.min' => 'O ano do contrato deve ser maior que 2000.',

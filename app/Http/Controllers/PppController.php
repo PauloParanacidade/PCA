@@ -107,10 +107,10 @@ class PppController extends Controller
                 $valorContratoAtualizado = $valorFloat;
             }
             
-            // Processar número do contrato (garantir formato 0001)
+            // Processar número do contrato - REMOVER formatação com zeros
             $numContrato = null;
             if ($request->filled('num_contrato')) {
-                $numContrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+                $numContrato = (int) $request->num_contrato; // Apenas converter para inteiro
             }
             
             $ppp = PcaPpp::create([
@@ -259,10 +259,11 @@ class PppController extends Controller
             $statusAnterior = $ppp->status_id;
             $ppp->fill($request->validated());
             
-            // Processar número do contrato (garantir formato 0001)
-            if ($request->filled('num_contrato')) {
-                $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
-            }
+            // // Processar número do contrato (garantir formato 0001)
+            // if ($request->filled('num_contrato')) {
+            //     // $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+            //     $ppp->num_contrato = preg_replace('/\D/', '', $request->num_contrato); // Remove apenas caracteres não numéricos
+            // }
 
             $ppp = $this->processMonetaryFields($request, $ppp);
 
@@ -298,7 +299,7 @@ class PppController extends Controller
                 
                 // Processar número do contrato (garantir formato 0001)
                 if ($request->filled('num_contrato')) {
-                    $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+                    // $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
                 }
                 
                 $ppp = $this->processMonetaryFields($request, $ppp);
@@ -335,7 +336,7 @@ class PppController extends Controller
         
         // Processar número do contrato (garantir formato 0001)
         if ($request->filled('num_contrato')) {
-            $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+            // $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
         }
         
         $ppp->save();

@@ -31,9 +31,9 @@
                     </label>
                     <div class="row align-items-start">
                         <div class="col-md-5">
-                            <input type="text" name="num_contrato" id="num_contrato" class="form-control contract-number"
+                            <input type="number" name="num_contrato" id="num_contrato" class="form-control contract-number"
                             value="{{ old('num_contrato', $ppp->num_contrato ?? '') }}" 
-                            placeholder="0001" autocomplete="off" maxlength="4" pattern="[0-9]{4}">
+                            placeholder="1">
                             <small class="form-text text-muted">Número do contrato</small>
                         </div>
                         
@@ -203,46 +203,38 @@
         const numContratoInput = document.getElementById('num_contrato');
         const anoContratoInput = document.getElementById('ano_contrato');
         
-        // Máscara para número do contrato (formato 0001)
+        // Máscara para número do contrato (formato 0001) - COMENTADO TEMPORARIAMENTE
         if (numContratoInput) {
-            numContratoInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, ''); // Remove não-numéricos
-                if (value.length > 4) {
-                    value = value.substring(0, 4);
-                }
-                // Só aplica o padding se o campo não estiver vazio
-                if (value.length > 0) {
-                    e.target.value = value.padStart(4, '0');
-                } else {
-                    e.target.value = '';
-                }
-            });
+            // TODO: Implementar máscara futuramente
+            // REMOVER o event listener keydown que bloqueia a digitação
+            // numContratoInput.addEventListener('keydown', function(e) {
+            //     const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+            //     if (allowedKeys.includes(e.key)) {
+            //         return;
+            //     }
+            //     if (/[0-9]/.test(e.key) && e.target.value.length < 4) {
+            //         return;
+            //     }
+            //     e.preventDefault();
+            // });
             
-            numContratoInput.addEventListener('keydown', function(e) {
-                // Permitir teclas de controle
-                const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
-                
-                // Se é uma tecla de controle, permitir
-                if (allowedKeys.includes(e.key)) {
-                    return;
-                }
-                
-                // Se é um número e o campo tem menos de 4 caracteres, permitir
-                if (/[0-9]/.test(e.key) && e.target.value.length < 4) {
-                    return;
-                }
-                
-                // Caso contrário, bloquear
-                e.preventDefault();
-            });
+            // Permitir digitação livre, mas formatar ao sair do campo (blur)
+            // numContratoInput.addEventListener('blur', function(e) {
+            //     let value = e.target.value.replace(/\D/g, ''); // Remove não-numéricos
+            //     if (value.length > 0) {
+            //         // Limita a 4 dígitos e completa com zeros à esquerda
+            //         value = value.substring(0, 4).padStart(4, '0');
+            //         e.target.value = value;
+            //     }
+            // });
             
-            // Permitir seleção e limpeza do campo
-            numContratoInput.addEventListener('focus', function(e) {
-                // Quando o campo recebe foco, selecionar todo o conteúdo para facilitar edição
-                setTimeout(() => {
-                    e.target.select();
-                }, 10);
-            });
+            // Opcional: limitar a 4 caracteres durante a digitação
+            // numContratoInput.addEventListener('input', function(e) {
+            //     let value = e.target.value;
+            //     if (value.length > 4) {
+            //         e.target.value = value.substring(0, 4);
+            //     }
+            // });
         }
         
         // Validação de ano mínimo para vigência final
