@@ -126,16 +126,12 @@
                             {{ $ppp->descricao ?? 'N/A' }}
                         </div>
                     </div>
-                    
-                    
-                    
                     <div class="info-group">
                         <label class="info-label">Justificativa da Necessidade</label>
                         <div class="info-value-text">
                             {{ $ppp->justificativa_pedido ?? 'N/A' }}
                         </div>
                     </div>
-                    
                 </div>
             </div>
         </div>
@@ -155,7 +151,7 @@
                     </div>
                 </div>
                 <div class="card-body py-4">
-                    @if ($ppp->tem_contrato_vigente)
+                    @if ($ppp->tem_contrato_vigente === 'Sim')
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="info-group mb-4">
@@ -217,7 +213,7 @@
                             
                             <div class="col-md-6">
                                 <div class="info-group mb-4">
-                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-calendar-check text-primary me-2"></i> Contrato Mais de Um Exercício</label>
+                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-calendar-check text-primary me-2"></i> Contrato com Mais de Um Exercício</label>
                                     <div class="info-value mt-2">
                                         <span class="badge {{ $ppp->contrato_mais_um_exercicio === 'Sim' ? 'badge-success' : 'badge-secondary' }}" style="font-size: 1.1rem; padding: 8px 16px;">
                                             {{ $ppp->contrato_mais_um_exercicio ?? 'Não' }}
@@ -253,15 +249,6 @@
                                         <span class="badge badge-primary" style="font-size: 1.1rem; padding: 10px 20px;">
                                             <i class="fas fa-calendar-check mr-2"></i>
                                             {{ $nomeDoMes }} de {{ date('Y') + 1 }}
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                <div class="info-group mt-4">
-                                    <label class="info-label" style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-calendar-check text-primary me-2"></i> Contrato Mais de Um Exercício</label>
-                                    <div class="info-value mt-2">
-                                        <span class="badge {{ $ppp->contrato_mais_um_exercicio === 'Sim' ? 'badge-success' : 'badge-secondary' }}" style="font-size: 1.1rem; padding: 8px 16px;">
-                                            {{ $ppp->contrato_mais_um_exercicio ?? 'Não' }}
                                         </span>
                                     </div>
                                 </div>

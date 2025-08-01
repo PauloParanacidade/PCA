@@ -159,7 +159,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <input type="text" class="form-control" value="de {{ date('Y') + 1 }}" readonly style="background-color: #f8f9fa;">
+                            <input type="text" class="form-control" value="de {{ now()->year + 1 }}" readonly style="background-color: #f8f9fa;">
                         </div>
                     </div>
                 </div>
@@ -462,5 +462,12 @@
             }
         }
         checkValorMaisUmExercicio();
+        
+        // Forçar atualização do campo de ano após inicialização
+        setTimeout(() => {
+            if (anoNovoContrato) {
+                anoNovoContrato.value = 'de ' + (new Date().getFullYear() + 1);
+            }
+        }, 100);
     });
 </script>
