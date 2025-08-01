@@ -83,7 +83,7 @@
 @endsection
 
 @section('css')
-<link rel="stylesheet" href="{{ asset('css/ppp-form.css') }}">
+@vite('resources/css/ppp-form.css')
 <style>
     .content-wrapper,
     .content,
