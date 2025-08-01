@@ -96,7 +96,20 @@ class StorePppRequest extends FormRequest
                     }
                 },
             ],
-            'contrato_prorrogavel' => 'required_if:tem_contrato_vigente,Sim|nullable|in:Sim,Não',
+            'contrato_prorrogavel' => [
+                'nullable',
+                'in:Sim,Não',
+                function ($attribute, $value, $fail) {
+                    $temContrato = $this->input('tem_contrato_vigente');
+                    $anoVigencia = $this->input('ano_vigencia_final');
+                    $anoPCA = date('Y') + 1; // 2026 (ano atual + 1)
+                    
+                    // Campo é obrigatório apenas se tem contrato E ano vigência = ano PCA
+                    if ($temContrato === 'Sim' && $anoVigencia == $anoPCA && empty($value)) {
+                        $fail('A informação sobre prorrogação é obrigatória quando o ano de vigência final é igual ao ano do PCA.');
+                    }
+                }
+            ],
             'renov_contrato' => 'required_if:contrato_prorrogavel,Sim|nullable|in:Sim,Não',
 
             // Informações financeiras (Card Verde) - Validação condicional
@@ -241,7 +254,7 @@ class StorePppRequest extends FormRequest
             'ano_vigencia_final.required_if' => 'O ano de vigência final é obrigatório quando há contrato vigente.',
             'ano_vigencia_final.min' => 'O ano de vigência final deve ser no mínimo ' . (date('Y') + 1) . '.',
             'ano_vigencia_final.max' => 'O ano de vigência final não pode ser superior a ' . (date('Y') + 10) . '.',
-            'contrato_prorrogavel.required_if' => 'A informação sobre prorrogação é obrigatória quando há contrato vigente.',
+            'contrato_prorrogavel.required' => 'A informação sobre prorrogação é obrigatória quando o ano de vigência final é igual ao ano do PCA.',
             'contrato_prorrogavel.in' => 'A prorrogação do contrato deve ser Sim ou Não.',
             'renov_contrato.required_if' => 'A pretensão de renovação é obrigatória quando há contrato vigente.',
             'renov_contrato.in' => 'A renovação do contrato deve ser Sim ou Não.',
