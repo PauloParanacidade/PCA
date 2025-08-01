@@ -7,6 +7,7 @@ import { ApiService } from './api-service.js';
  * Gerencia comportamento dos botões e submissão
  */
 export const FormButtons = {
+    isSubmitting: false, // Adicionar flag de controle
     init: function() {
         console.log('🚀 FormButtons.init() - Inicializando módulo de botões');
         this.bindButtonEvents();
@@ -59,6 +60,14 @@ export const FormButtons = {
 
     async handleSubmit(e, form) {
         console.log('🚀 FormButtons.handleSubmit() - Iniciando processamento do formulário');
+        
+        // Verificar se já está processando
+        if (this.isSubmitting) {
+            console.log('⚠️ Submissão já em andamento, ignorando clique duplo');
+            return false;
+        }
+        
+        this.isSubmitting = true; // Marcar como processando
         
         const submitBtn = form.find('button[type="submit"]');
         const isEdit = form.find('input[name="_method"][value="PUT"]').length > 0;
@@ -180,6 +189,8 @@ export const FormButtons = {
 
             submitBtn.prop('disabled', false)
                    .html('<i class="fas fa-paper-plane me-2"></i>Salvar e Enviar para Aprovação');
+        } finally {
+            this.isSubmitting = false; // Resetar flag independente do resultado
         }
 
         console.log('🏁 FormButtons.handleSubmit() - Finalizando processamento');

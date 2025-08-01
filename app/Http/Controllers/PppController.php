@@ -44,6 +44,23 @@ class PppController extends Controller
     public function store(StorePppRequest $request)
     {
         try {
+            // Verificar se já existe um PPP com os mesmos dados básicos criado recentemente
+            $existingPpp = PcaPpp::where('user_id', auth()->id())
+                ->where('nome_item', $request->nome_item)
+                ->where('created_at', '>=', now()->subMinutes(5)) // Últimos 5 minutos
+                ->first();
+                
+            if ($existingPpp) {
+                Log::warning('Tentativa de criação de PPP duplicado detectada', [
+                    'user_id' => auth()->id(),
+                    'nome_item' => $request->nome_item,
+                    'existing_ppp_id' => $existingPpp->id
+                ]);
+                
+                return redirect()->route('ppp.edit', $existingPpp->id)
+                    ->with('warning', 'PPP já existe. Redirecionando para edição.');
+            }
+            
             Log::info('🛠️ Ação detectada no store()', [
                 'request_input_acao' => $request->input('acao'),
                 'request_get_acao' => request('acao'),
