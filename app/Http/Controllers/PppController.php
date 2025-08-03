@@ -648,9 +648,10 @@ class PppController extends Controller
     }
     
     /**
-    * Método específico para secretária incluir PPP na tabela PCA
-    */
-    public function incluirNaPca($id)
+     * Método unificado para incluir PPP na tabela PCA
+     * Funciona tanto no contexto normal quanto durante reunião DIREX
+     */
+    public function incluirNaPca($id, $contexto = 'normal')
     {
         try {
             $ppp = PcaPpp::findOrFail($id);
@@ -661,16 +662,20 @@ class PppController extends Controller
                 return redirect()->back()->with('error', 'Acesso negado. Apenas a secretária pode incluir PPPs na tabela PCA.');
             }
             
+            // Definir configurações baseadas no contexto
+            $config = $this->getInclusaoPcaConfig($contexto, $ppp->status_id);
+            
             // Verificar se PPP está no status correto
-            if ($ppp->status_id !== 6) { // aprovado_final
-                return redirect()->back()->with('error', 'PPP deve estar com status "Aprovado Final" para ser incluído na tabela PCA.');
+            if (!in_array($ppp->status_id, $config['status_permitidos'])) {
+                return redirect()->back()->with('error', $config['erro_status']);
             }
             
             $comentario = request('comentario');
+            $statusAnterior = $ppp->status_id;
             
-            // Atualizar status para aprovado_direx
+            // Atualizar status
             $ppp->update([
-                'status_id' => 8, // aprovado_direx
+                'status_id' => $config['novo_status'],
                 'gestor_atual_id' => $usuarioLogado->id
             ]);
             
@@ -678,18 +683,45 @@ class PppController extends Controller
             $this->historicoService->registrarAcao(
                 $ppp,
                 'incluido_pca',
-                $comentario ?? 'PPP incluído na tabela PCA pela secretária',
-                6, // Status anterior: aprovado_final
-                8  // Status atual: aprovado_direx
+                $comentario ?? $config['comentario_padrao'],
+                $statusAnterior,
+                $config['novo_status']
             );
             
-            return redirect()->route('ppp.index')
-                ->with('success', 'PPP incluído na tabela PCA com sucesso!');
+            // Retorno baseado no contexto
+            $redirect = $contexto === 'direx' 
+                ? redirect()->back()->with('reuniao_direx_ativa', true)
+                : redirect()->route('ppp.index');
                 
+            return $redirect->with('success', 'PPP incluído na tabela PCA com sucesso!');
+            
         } catch (\Exception $e) {
             Log::error('Erro ao incluir PPP na PCA: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Erro ao incluir PPP na tabela PCA.');
         }
+    }
+    
+    /**
+     * Retorna configurações específicas para cada contexto de inclusão na PCA
+     */
+    private function getInclusaoPcaConfig($contexto, $statusAtual)
+    {
+        $configs = [
+            'normal' => [
+                'status_permitidos' => [6], // aprovado_final
+                'novo_status' => 8, // aguardando_direx
+                'erro_status' => 'PPP deve estar com status "Aprovado Final" para ser incluído na tabela PCA.',
+                'comentario_padrao' => 'PPP incluído na tabela PCA pela secretária'
+            ],
+            'direx' => [
+                'status_permitidos' => [8, 9, 10], // aguardando_direx, direx_avaliando, direx_editado
+                'novo_status' => 11, // aguardando_conselho
+                'erro_status' => 'PPP não está disponível para inclusão na PCA.',
+                'comentario_padrao' => 'PPP incluído na tabela PCA durante reunião da DIREX'
+            ]
+        ];
+        
+        return $configs[$contexto] ?? $configs['normal'];
     }
     
     /**
@@ -1216,49 +1248,7 @@ class PppController extends Controller
         }
     }
     
-    /**
-     * Inclui PPP na tabela PCA durante reunião DIREX
-     */
-    public function incluirNaPcaDirectx($id)
-    {
-        try {
-            $ppp = PcaPpp::findOrFail($id);
-            $usuarioLogado = Auth::user();
-            
-            if (!$usuarioLogado->hasRole('secretaria')) {
-                return redirect()->back()->with('error', 'Acesso negado.');
-            }
-            
-            // Verificar se PPP está no status correto
-            if (!in_array($ppp->status_id, [8, 9, 10])) { // aguardando_direx, direx_avaliando, direx_editado
-                return redirect()->back()->with('error', 'PPP não está disponível para inclusão na PCA.');
-            }
-            
-            $statusAnterior = $ppp->status_id;
-            
-            // Atualizar status para aguardando_conselho
-            $ppp->update([
-                'status_id' => 11, // aguardando_conselho
-                'gestor_atual_id' => $usuarioLogado->id
-            ]);
-            
-            // Registrar no histórico
-            $this->historicoService->registrarInclusaoPca(
-                $ppp,
-                'PPP incluído na tabela PCA durante reunião da DIREX',
-                $statusAnterior,
-                11
-            );
-            
-            return redirect()->back()
-                ->with('success', 'PPP incluído na tabela PCA com sucesso!')
-                ->with('reuniao_direx_ativa', true);
-                
-        } catch (\Exception $e) {
-            Log::error('Erro ao incluir PPP na PCA: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao incluir PPP na tabela PCA.');
-        }
-    }
+
     
     /**
      * Encerra reunião da DIREX

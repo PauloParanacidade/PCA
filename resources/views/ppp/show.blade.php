@@ -996,7 +996,8 @@
                 url: `{{ route('ppp.direx.incluir-pca', ':id') }}`.replace(':id', pppId),
                 type: 'POST',
                 data: {
-                    _token: '{{ csrf_token() }}'
+                    _token: '{{ csrf_token() }}',
+                    contexto: 'direx'  // Adicionar parâmetro de contexto
                 },
                 success: function(response) {
                     if (response.success) {

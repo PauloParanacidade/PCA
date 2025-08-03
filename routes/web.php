@@ -56,6 +56,11 @@ Route::middleware(['auth'])->group(function () {
     // Nova rota para secretária incluir na PCA
     Route::post('ppp/{ppp}/incluir-pca', [PppController::class, 'incluirNaPca'])->name('ppp.incluir-pca');
 
+    // Rota DIREX (agora usa o mesmo método com contexto)
+    Route::post('/ppp/{ppp}/direx/incluir-pca', function($ppp) {
+        return app(PppController::class)->incluirNaPca($ppp, 'direx');
+    })->name('ppp.direx.incluir-pca');
+
     Route::get('/ppp/{id}/historico', [PppController::class, 'historico'])->name('ppp.history');
     
     // === NOVAS ROTAS PARA FLUXO DIREX E CONSELHO ===
@@ -72,7 +77,9 @@ Route::middleware(['auth'])->group(function () {
     
     // Ações durante reunião DIREX
     Route::post('/ppp/{ppp}/direx/editar', [PppController::class, 'editarDuranteDirectx'])->name('ppp.direx.editar');
-    Route::post('/ppp/{ppp}/direx/incluir-pca', [PppController::class, 'incluirNaPcaDirectx'])->name('ppp.direx.incluir-pca');
+    Route::post('/ppp/{ppp}/direx/incluir-pca', function($id) {
+        return app(PppController::class)->incluirNaPca($id, 'direx');
+    })->name('ppp.direx.incluir-pca');
     Route::post('/ppp/direx/pausar', [PppController::class, 'pausarReuniaoDirectx'])->name('ppp.direx.pausar');
     Route::post('/ppp/direx/atualizar-status', [PppController::class, 'atualizarStatusDirectx'])->name('ppp.direx.atualizar-status');
     
