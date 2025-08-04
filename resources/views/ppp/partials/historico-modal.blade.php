@@ -1,3 +1,4 @@
+{{-- Conteúdo do Modal de Histórico (usado via AJAX ou renderização direta) --}}
 <div class="modal-header bg-light">
     <h5 class="modal-title">
         <i class="fas fa-history mr-2"></i>Histórico do PPP: {{ $ppp->nome_item }}

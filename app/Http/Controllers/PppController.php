@@ -107,10 +107,10 @@ class PppController extends Controller
                 $valorContratoAtualizado = $valorFloat;
             }
             
-            // Processar número do contrato - REMOVER formatação com zeros
+            // Processar número do contrato
             $numContrato = null;
             if ($request->filled('num_contrato')) {
-                $numContrato = (int) $request->num_contrato; // Apenas converter para inteiro
+                $numContrato = preg_replace('/\D/', '', $request->num_contrato);
             }
             
             $ppp = PcaPpp::create([
@@ -259,11 +259,10 @@ class PppController extends Controller
             $statusAnterior = $ppp->status_id;
             $ppp->fill($request->validated());
             
-            // // Processar número do contrato (garantir formato 0001)
-            // if ($request->filled('num_contrato')) {
-            //     // $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
-            //     $ppp->num_contrato = preg_replace('/\D/', '', $request->num_contrato); // Remove apenas caracteres não numéricos
-            // }
+            // Processar número do contrato
+            if ($request->filled('num_contrato')) {
+                $ppp->num_contrato = preg_replace('/\D/', '', $request->num_contrato);
+            }
 
             $ppp = $this->processMonetaryFields($request, $ppp);
 
@@ -297,9 +296,9 @@ class PppController extends Controller
                 // ✅ Salvar os dados do formulário ANTES de enviar
                 $ppp->fill($request->validated());
                 
-                // Processar número do contrato (garantir formato 0001)
+                // Processar número do contrato
                 if ($request->filled('num_contrato')) {
-                    // $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+                    $ppp->num_contrato = preg_replace('/\D/', '', $request->num_contrato);
                 }
                 
                 $ppp = $this->processMonetaryFields($request, $ppp);
@@ -334,9 +333,9 @@ class PppController extends Controller
 
         $ppp->fill($request->validated());
         
-        // Processar número do contrato (garantir formato 0001)
+        // Processar número do contrato
         if ($request->filled('num_contrato')) {
-            // $ppp->num_contrato = str_pad(preg_replace('/\D/', '', $request->num_contrato), 4, '0', STR_PAD_LEFT);
+            $ppp->num_contrato = preg_replace('/\D/', '', $request->num_contrato);
         }
         
         $ppp->save();
@@ -736,7 +735,10 @@ class PppController extends Controller
             ->orderBy('created_at')
             ->get();
             
-            return view('ppp.partials.historico-modal', compact('ppp', 'historicos'));
+            return response()->json([
+                'success' => true,
+                'html' => view('ppp.partials.historico', compact('ppp', 'historicos'))->render()
+            ]);
         } catch (\Throwable $ex) {
             return response()->json(['error' => 'Erro ao carregar histórico'], 500);
         }
@@ -1322,7 +1324,7 @@ class PppController extends Controller
             // Gerar Excel usando Maatwebsite\Excel
             $fileName = 'PCA_' . date('Y-m-d_H-i-s') . '.xlsx';
             
-            //return Excel::download(new PcaExport($ppps), $fileName);
+            // return Excel::download(new PcaExport($ppps), $fileName);
                 
         } catch (\Exception $e) {
             Log::error('Erro ao gerar Excel: ' . $e->getMessage());
@@ -1452,7 +1454,7 @@ class PppController extends Controller
             $usuarioLogado = Auth::user();
             
             if (!$usuarioLogado->hasRole('secretaria')) {
-                return redirect()->back()->with('error', 'Acesso negado.');
+                return response()->json(['error' => 'Acesso negado'], 403);
             }
             
             // Buscar histórico de ações da secretária
@@ -1468,7 +1470,10 @@ class PppController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
             
-            return view('ppp.partials.historico-secretaria-modal', compact('historicos'));
+            return response()->json([
+                'success' => true,
+                'html' => view('ppp.partials.historico-secretaria', compact('historicos'))->render()
+            ]);
             
         } catch (\Exception $e) {
             Log::error('Erro ao carregar histórico da secretária: ' . $e->getMessage());
