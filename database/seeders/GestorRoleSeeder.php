@@ -42,7 +42,7 @@ class GestorRoleSeeder extends Seeder
                 
             if ($user) {
                 // Atribuir role gestor se não tiver
-                if (!$user->hasRole('gestor') && !$user->hasRole('admin')) {
+                if (!$user->hasRole('gestor')) {
                     $user->roles()->attach($gestorRole->id);
                     Log::info("Role gestor atribuída para: {$user->name}");
                 }

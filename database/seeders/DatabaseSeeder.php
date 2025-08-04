@@ -14,10 +14,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            GestorRoleSeeder::class,
-            PPPStatusSeeder::class,
-            RoleSeeder::class,
-            UserRoleSeeder::class,
+            RoleSeeder::class,          // 1º - Criar roles primeiro
+            PPPStatusSeeder::class,     // 2º - Criar status
+            GestorRoleSeeder::class,    // 3º - Atribuir roles de gestor
+            UserRoleSeeder::class,      // 4º - Atribuir roles específicas
         ]);
     }
 }
