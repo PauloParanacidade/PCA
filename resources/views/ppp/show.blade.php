@@ -825,8 +825,13 @@
                                     @elseif($historico->status_atual == 3) bg-warning
                                     @elseif($historico->status_atual == 4) bg-orange
                                     @elseif($historico->status_atual == 5) bg-purple
-                                    @elseif($historico->status_atual == 6) bg-success
-                                    @elseif($historico->status_atual == 7) bg-danger
+                                    @elseif($historico->status_atual == 6) bg-danger
+                                    @elseif($historico->status_atual == 7) bg-teal
+                                    @elseif($historico->status_atual == 8) bg-primary
+                                    @elseif($historico->status_atual == 9) bg-info
+                                    @elseif($historico->status_atual == 10) bg-indigo
+                                    @elseif($historico->status_atual == 11) bg-purple
+                                    @elseif($historico->status_atual == 12) bg-pink
                                     @else bg-dark
                                     @endif"></div>
                         <div class="timeline-content">
@@ -841,9 +846,19 @@
                                 @elseif($historico->status_atual == 5)
                                 ✏️ Em Correção
                                 @elseif($historico->status_atual == 6)
-                                ✅ Aprovado Final
-                                @elseif($historico->status_atual == 7)
                                 ❌ Cancelado
+                                @elseif($historico->status_atual == 7)
+                                🏢 Aguardando DIREX
+                                @elseif($historico->status_atual == 8)
+                                🔍 DIREX Avaliando
+                                @elseif($historico->status_atual == 9)
+                                ✏️ DIREX Editado
+                                @elseif($historico->status_atual == 10)
+                                🏛️ Aguardando Conselho
+                                @elseif($historico->status_atual == 11)
+                                ✅ Conselho Aprovado
+                                @elseif($historico->status_atual == 12)
+                                ❌ Conselho Reprovado
                                 @else
                                 🔄 Status Alterado
                                 @endif
@@ -868,7 +883,11 @@
                                 <i class="fas fa-clock mr-1"></i>
                                 {{ $historico->created_at ? $historico->created_at->format('d/m/Y H:i') : 'Data não disponível' }}
                                 @if($historico->usuario)
-                                <br><i class="fas fa-user mr-1"></i>por {{ $historico->usuario->name }}
+                                <br><i class="fas fa-user mr-1"></i>por 
+                                @if($historico->usuario->department)
+                                    {{ $historico->usuario->department }} - 
+                                @endif
+                                {{ $historico->usuario->name }}
                                 @endif
                             </small>
                         </div>
