@@ -1025,9 +1025,9 @@ class PppController extends Controller
             return redirect()->back()->with('error', 'Você não tem permissão para reprovar PPPs.');
         }
         
-        // Verificar se o PPP está aguardando aprovação
-        if ($ppp->status_id !== 2) { // 2 = aguardando_aprovacao
-            return redirect()->back()->with('error', 'Este PPP não está aguardando aprovação.');
+        // Verificar se o PPP está disponível para reprovação
+        if (!in_array($ppp->status_id, [2, 3])) { // 2 = aguardando_aprovacao, 3 = em_avaliacao
+            return redirect()->back()->with('error', 'Este PPP não está disponível para reprovação.');
         }
         
         // Verificar se o usuário é o gestor responsável
