@@ -32,7 +32,13 @@
 
             {{-- Modo EDIÇÃO: botão condicional baseado no status --}}
             @if(!$isCreating && isset($ppp) && $ppp->id)
-                @if($ppp->status_id == 5) {{-- Status "em correção" --}}
+                {{-- Se status for "aguardando correção" (4) ou "em correção" (5) --}}
+                @if(in_array($ppp->status_id, [4, 5]))
+                    <button type="button" class="btn btn-primary btn-lg mx-2" data-toggle="modal" data-target="#modalRespCorrecao">
+                        <i class="fas fa-edit me-2"></i>
+                        Enviar Correção/Justificativa
+                    </button>
+                @elseif($ppp->status_id == 5) {{-- Status "em correção" (mantido para compatibilidade) --}}
                     <button type="submit" name="acao" value="enviar_aprovacao" class="btn btn-primary btn-lg mx-2">
                         <i class="fas fa-paper-plane me-2"></i>
                         Salvar e Enviar para Avaliação
@@ -47,3 +53,8 @@
         </div>
     </div>
 </div>
+
+{{-- Incluir a modal de correção se estiver no modo de edição e status adequado --}}
+@if(!$isCreating && isset($ppp) && $ppp->id && in_array($ppp->status_id, [4, 5]))
+    @include('ppp.partials.ModalRespCorrecao')
+@endif

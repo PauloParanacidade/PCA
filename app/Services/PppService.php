@@ -53,7 +53,7 @@ class PppService
                     $areasEspeciais = ['SUPEX', 'DOE', 'DOM'];
                     
                     if(in_array($departamento, $areasEspeciais)) {
-                        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->gestor_atual_id);
+                        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->user_id);
                         
                     } else if($gestorAtual->hasRole('daf')) {
                         $secretaria = $this->hierarquiaService->obterSecretaria();
@@ -151,11 +151,44 @@ class PppService
         /**
         * Reenvia PPP após correção
         */
+        /**
+         * Reenvia PPP após correção
+         */
         public function reenviarAposCorrecao(PcaPpp $ppp, ?string $comentario = null): bool
         {
             try {
-                // Identificar o próximo gestor na hierarquia
-                $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->user_id);
+                // ✅ CORREÇÃO: Usar a mesma lógica robusta do enviarParaAprovacao
+                $proximoGestor = null;
+                $gestorAtual = User::find($ppp->gestor_atual_id);
+                
+                if(!$gestorAtual) {
+                    $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
+                } else {
+                    $departamento = strtoupper($gestorAtual->department ?? '');
+                    $areasEspeciais = ['SUPEX', 'DOE', 'DOM'];
+                    
+                    if(in_array($departamento, $areasEspeciais)) {
+                        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->user_id);
+                        
+                    } else if($gestorAtual->hasRole('daf')) {
+                        $secretaria = $this->hierarquiaService->obterSecretaria();
+                        if ($secretaria) {
+                            $ppp->update([
+                                'status_id' => 7, // Aguardando DIREX
+                                'gestor_atual_id' => $secretaria->id,
+                            ]);
+                            $this->historicoService->registrarAprovacao(
+                                $ppp,
+                                ($comentario ?? 'PPP reenviado após correção pelo DAF') . ' - Encaminhado para avaliação da DIREX'
+                            );
+                            return true;
+                        } else {
+                            throw new \Exception('Secretária não encontrada no sistema.');
+                        }
+                    } else {
+                        $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
+                    }
+                }
                 
                 if (!$proximoGestor) {
                     throw new \Exception('Não foi possível identificar o próximo gestor.');

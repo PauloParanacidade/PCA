@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePppRequest;
+use App\Http\Requests\ResponderCorrecaoRequest;
 use App\Models\PcaPpp;
 use App\Models\PppHistorico;
 use App\Models\User;
@@ -465,19 +466,6 @@ class PppController extends Controller
             
             $ppps = $query->paginate(10)->withQueryString();
 
-            // -- INÍCIO DEBUG --
-// foreach ($ppps as $ppp) {
-//     $gestor = $ppp->gestorAtual; // relacionamento carregado em with()
-//     dd([
-//         'ppp_id'           => $ppp->id,
-//         'gestor_atual_id'  => $gestor?->id,
-//         'gestor_nome'      => $gestor?->name,
-//         'gestor_department'=> $gestor?->department,
-//         'gestor_managerDN' => $gestor?->manager,
-//     ]);
-// }
-// -- FIM DEBUG --
-            
             $ppps = $this->getNextApprover($ppps);
             
             return view('ppp.index', compact('ppps'));
@@ -599,21 +587,6 @@ class PppController extends Controller
                 $this->historicoService->registrarCorrecaoIniciada($ppp);
             }
             
-            // dd([
-            //     'ppp_id' => $ppp->id,
-            //     'ppp_status' => $ppp->status_id,
-            //     'ppp_criador' => $ppp->user->name ?? 'N/A',
-            //     'ppp_criador_department' => $ppp->user->department ?? 'N/A',
-            //     'usuario_logado' => $usuarioLogado->name,
-            //     'usuario_department' => $usuarioLogado->department ?? 'N/A',
-            //     'usuario_roles' => $usuarioLogado->roles->pluck('name')->toArray(), // CORRIGIDO: usar 'name' em vez de 'slug'
-            //     'proximoGestor' => $proximoGestor ? $proximoGestor->name : 'null',
-            //     'proximoGestor_roles' => $proximoGestor ? $proximoGestor->roles->pluck('name')->toArray() : [],
-            //     'ehProximoGestor' => $ehProximoGestor,
-            //     'ehGestor' => $ehGestor,
-            //     'navegacao' => $navegacao
-            // ]);
-            
             return view('ppp.show', compact('ppp', 'historicos', 'navegacao', 'ehProximoGestor', 'ehGestor'));
         } catch (\Exception $e) {
             Log::error('Erro ao visualizar PPP: ' . $e->getMessage());
@@ -622,6 +595,433 @@ class PppController extends Controller
     }
     
     /**
+    * Retorna o histórico do PPP via AJAX
+    */
+    public function historico($id)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
+            $historicos = PppHistorico::where('ppp_id', $ppp->id)
+            ->with(['statusAnterior', 'statusAtual', 'usuario'])
+            ->orderBy('created_at')
+            ->get();
+            
+            return response()->json([
+                'success' => true,
+                'html' => view('ppp.partials.historico', compact('ppp', 'historicos'))->render()
+            ]);
+        } catch (\Throwable $ex) {
+            return response()->json(['error' => 'Erro ao carregar histórico'], 500);
+        }
+    }
+    
+    public function edit($id)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id); //Carrega o PPP do banco de dados
+            
+            // DEBUG: Verificar dados do PPP
+            //dd($ppp);
+            
+        // Se o PPP ainda está em rascunho (status 1), manter comportamento de criação
+        if ($ppp->status_id == 1) {
+            $edicao = false;
+            $isCreating = true;
+        } else {
+            $edicao = true;
+            $isCreating = false;
+        }
+
+            return view('ppp.form', compact('ppp','edicao', 'isCreating'));
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao carregar PPP para edição:', [
+                'exception' => $ex,
+                'ppp_id' => $id,
+            ]);
+            Log::debug($ex->getTraceAsString());
+            return back()->withErrors(['msg' => 'Erro ao carregar PPP para edição.']);
+        }
+    }
+    
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $ppp = PcaPpp::findOrFail($id);
+            
+            // Validar comentário obrigatório
+            $request->validate([
+                'comentario' => 'required|string|min:10|max:1000'
+            ], [
+                'comentario.required' => 'O comentário é obrigatório para exclusão.',
+                'comentario.min' => 'O comentário deve ter pelo menos 10 caracteres.',
+                'comentario.max' => 'O comentário não pode exceder 1000 caracteres.'
+            ]);
+            
+            // Registrar no histórico antes da exclusão
+            \App\Models\PppHistorico::create([
+                'ppp_id' => $ppp->id,
+                'user_id' => auth()->id(),
+                'acao' => 'exclusao',
+                'justificativa' => $request->comentario,  // CORRIGIDO: comentario → justificativa
+                'status_anterior' => $ppp->status_id,     // CORRIGIDO: status_anterior_id → status_anterior
+                'status_atual' => $ppp->status_id,                   // CORRIGIDO: status_novo_id → status_atual
+            ]);
+            
+            // Executar soft delete
+            $ppp->delete();
+            
+            Log::info('PPP excluído com sucesso.', [
+                'ppp_id' => $id,
+                'user_id' => auth()->id(),
+                'comentario' => $request->comentario
+            ]);
+            
+            return redirect()->route('ppp.index')
+            ->with('success', 'PPP excluído com sucesso. O comentário foi registrado no histórico.');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Throwable $ex) {
+            Log::error('Erro ao excluir PPP: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'ppp_id' => $id,
+            ]);
+            
+            return back()->withErrors(['msg' => 'Erro ao excluir PPP: ' . $ex->getMessage()]);
+        }
+    }
+    
+    public function solicitarCorrecao(Request $request, PcaPpp $ppp)
+    {
+        $request->validate([
+            'motivo' => 'required|string|max:1000'
+        ]);
+        
+        try {
+            $this->pppService->solicitarCorrecao($ppp, $request->motivo);
+            
+            return redirect()->route('ppp.index')
+            ->with('success', 'Correção solicitada com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+            ->with('error', 'Erro ao solicitar correção: ' . $e->getMessage());
+        }
+    }
+    
+    public function enviarParaAprovacao($id, Request $request)
+{
+    $ppp = PcaPpp::findOrFail($id);
+
+    if ($ppp->user_id !== Auth::id()) {
+        abort(403, 'Você não tem permissão.');
+    }
+
+    try {
+        // 🔥 Aqui só delegamos ao service:
+        $this->pppService->enviarParaAprovacao(
+            $ppp,
+            $request->input('justificativa')
+        );
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'PPP enviado para aprovação com sucesso!'
+            ]);
+        }
+
+        return redirect()
+            ->route('ppp.index')
+            ->with('success', 'PPP enviado para aprovação com sucesso!');
+    } catch (\Throwable $e) {
+        Log::error('Erro ao enviar PPP: '.$e->getMessage(), ['ppp_id' => $id]);
+        return back()->withErrors(['msg' => 'Erro: ' . $e->getMessage()]);
+    }
+}
+    
+    public function aprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
+    {
+        $request->validate([
+            'comentario' => 'nullable|string|max:1000'
+        ]);
+        
+        if(!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
+            return redirect()->back()->with('error', 'Você não tem permissão para aprovar PPPs.');
+        }
+        
+        if (!in_array($ppp->status_id, [3])) { // 3 = em_avaliacao
+            return redirect()->back()->with('error', 'Este PPP não está disponível para aprovação.');
+        }
+        
+        if ($ppp->gestor_atual_id !== auth()->id()) {
+            return redirect()->back()->with('error', 'Você não é o gestor responsável por este PPP.');
+        }
+        
+        try {
+            $resultado = $pppService->enviarParaAprovacao($ppp, $request->input('comentario'));
+            
+            if ($resultado) return redirect()->route('ppp.index')->with('success', 'PPP aprovado com sucesso!');
+            
+            return redirect()->back()->with('error', 'Erro ao aprovar o PPP.');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao aprovar PPP: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+    * Reprova um PPP
+    */
+    public function reprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
+    {
+        // Verificar se o usuário tem permissão
+        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
+            return redirect()->back()->with('error', 'Você não tem permissão para reprovar PPPs.');
+        }
+        
+        // Verificar se o PPP está disponível para reprovação
+        if (!in_array($ppp->status_id, [2, 3])) { // 2 = aguardando_aprovacao, 3 = em_avaliacao
+            return redirect()->back()->with('error', 'Este PPP não está disponível para reprovação.');
+        }
+        
+        // Verificar se o usuário é o gestor responsável
+        if ($ppp->gestor_atual_id !== auth()->id()) {
+            return redirect()->back()->with('error', 'Você não é o gestor responsável por este PPP.');
+        }
+        
+        // Validar motivo obrigatório
+        $request->validate([
+            'motivo' => 'required|string|max:1000'
+        ], [
+            'motivo.required' => 'O motivo da reprovação é obrigatório.',
+            'motivo.max' => 'O motivo não pode exceder 1000 caracteres.'
+        ]);
+        
+        try {
+            // Usar o PppService para reprovar
+            $resultado = $pppService->reprovarPpp($ppp, $request->input('motivo'));
+            
+            if ($resultado) {
+                return redirect()->route('ppp.index')->with('success', 'PPP reprovado com sucesso! O PPP permanece disponível para consultas e edições futuras.');
+            } else {
+                return redirect()->back()->with('error', 'Erro ao reprovar o PPP.');
+            }
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao reprovar PPP: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+    * Verifica se o PPP deve ser salvo como rascunho
+    * baseado nos campos preenchidos (apenas card azul)
+    */
+    public function isRascunho($request)
+    {
+        // Campos obrigatórios do card azul (primeira etapa)
+        $camposCardAzul = [
+            'categoria',
+            'nome_item',
+            'descricao',
+            'quantidade',
+            'justificativa_pedido'
+        ];
+        
+        // Campos das etapas seguintes
+        $camposEtapasSeguintes = [
+            'natureza_objeto',
+            'grau_prioridade',
+            'estimativa_valor',
+            'justificativa_valor',
+            'origem_recurso',
+            'vinculacao_item',
+            'tem_contrato_vigente'
+        ];
+        
+        // Verifica se todos os campos do card azul estão preenchidos
+        foreach ($camposCardAzul as $campo) {
+            if (empty($request->input($campo))) {
+                return false; // Se algum campo obrigatório não estiver preenchido, não é rascunho válido
+            }
+        }
+        
+        // Verifica se pelo menos um campo das etapas seguintes está vazio ou com valor padrão
+        foreach ($camposEtapasSeguintes as $campo) {
+            $valor = $request->input($campo);
+            if (empty($valor) || in_array($valor, ['A definir', 'Valor a ser definido nas próximas etapas', '.'])) {
+                return true; // É um rascunho se algum campo das próximas etapas não foi preenchido
+            }
+        }
+        
+        return false; // Todos os campos estão preenchidos, não é rascunho
+    }
+
+    /**
+     * Lista apenas os PPPs criados pelo usuário logado
+     */
+    public function meusPpps(Request $request)
+    {
+        try {
+            Log::info('DEBUG Meus PPPs - Usuário atual', [
+                'user_id' => Auth::id(),
+                'user_name' => Auth::user()->name ?? 'N/A'
+            ]);
+            
+            $query = PcaPpp::query();
+            
+            // Filtrar apenas PPPs criados pelo usuário logado
+            $query->where('user_id', Auth::id());
+
+            $query->with([
+                'user',
+                'status',
+                'gestorAtual',
+                'historicos.usuario'
+            ])->orderBy('id', 'desc');
+            
+            // Filtro por status
+            if ($request->filled('status_id')) {
+                $query->where('status_id', $request->status_id);
+            }
+            
+            // Filtro por busca
+            if ($request->filled('busca')) {
+                $busca = $request->busca;
+                $query->where(function($q) use ($busca) {
+                    $q->where('nome_item', 'like', "%{$busca}%")
+                      ->orWhere('descricao', 'like', "%{$busca}%");
+                });
+            }
+            
+            $ppps = $query->paginate(10)->withQueryString();
+            
+            $ppps = $this->getNextApprover($ppps);
+            
+            return view('ppp.meus', compact('ppps'));
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao listar Meus PPPs: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao carregar a lista de Meus PPPs.');
+        }
+    }
+
+    /**
+     * Responder correção com justificativa
+     */
+    public function responderCorrecao(ResponderCorrecaoRequest $request, PcaPpp $ppp)
+    {
+        // DEBUG: Log de entrada
+        Log::info('🔍 DEBUG - Método responderCorrecao chamado', [
+            'ppp_id' => $ppp->id,
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+            'ppp_status' => $ppp->status_id,
+            'gestor_atual_id' => $ppp->gestor_atual_id
+        ]);
+        
+        // Verificar se o usuário é o responsável pela correção
+        if ($ppp->gestor_atual_id !== Auth::id()) {
+            Log::warning('❌ DEBUG - Usuário não autorizado', [
+                'gestor_atual_id' => $ppp->gestor_atual_id,
+                'auth_user_id' => Auth::id()
+            ]);
+            return redirect()->back()->with('error', 'Você não tem permissão para responder a correção deste PPP.');
+        }
+        
+        // Verificar se o PPP está no status correto (aguardando_correcao ou em_correcao)
+        if (!in_array($ppp->status_id, [4, 5])) { // 4: aguardando_correcao, 5: em_correcao
+            Log::warning('❌ DEBUG - Status incorreto', [
+                'status_atual' => $ppp->status_id,
+                'status_esperado' => [4, 5]
+            ]);
+            return redirect()->back()->with('error', 'PPP não está no status adequado para resposta de correção.');
+        }
+        
+        try {
+            Log::info('✅ DEBUG - Chamando pppService->reenviarAposCorrecao');
+            
+            $this->pppService->reenviarAposCorrecao(
+                $ppp,
+                $request->input('justificativa')
+            );
+            
+            Log::info('✅ DEBUG - Correção enviada com sucesso');
+            
+            return redirect()->route('ppp.meus')
+                ->with('success', 'Correção enviada com sucesso! PPP foi reenviado para aprovação.');
+        } catch (\Exception $e) {
+            Log::error('❌ DEBUG - Erro ao responder correção: ' . $e->getMessage(), [
+                'ppp_id' => $ppp->id,
+                'user_id' => Auth::id(),
+                'exception' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'Erro ao enviar correção: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Determina se o campo "Valor se +1 exercício" deve ser considerado
+     */
+    private function shouldShowValorMaisUmExercicio($request): bool
+    {
+        $temContrato = $request->input('tem_contrato_vigente');
+        
+        // Se não tem contrato, verificar se é mais de um exercício
+        if ($temContrato === 'Não') {
+            $contratoMaisUmExercicio = $request->input('contrato_mais_um_exercicio');
+            return $contratoMaisUmExercicio === 'Sim';
+        }
+        
+        if ($temContrato === 'Sim') {
+            $anoVigencia = $request->input('ano_vigencia_final');
+            $anoPCA = date('Y') + 1; // Usar ano dinâmico em vez de hardcoded
+            
+            if ($anoVigencia != $anoPCA) {
+                return false;
+            }
+            
+            $prorrogavel = $request->input('contrato_prorrogavel');
+            if ($prorrogavel === 'Não') {
+                return false;
+            }
+            
+            $vaiProrrogar = $request->input('renov_contrato');
+            if ($vaiProrrogar === 'Sim') {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public function dashboard()
+    {
+        $userId = Auth::id();
+
+    $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
+    $pppsMeus = $this->pppService->contarMeus($userId);
+
+    $usuario = Auth::user();
+
+    // Recuperar data da última atualização via GitHub com cache de 1 hora
+    $ultimaAtualizacao = Cache::remember('ultima_atualizacao_github', 3600, function () {
+        $response = Http::withToken(env('GITHUB_TOKEN'))
+            ->get('https://api.github.com/repos/PauloParanacidade/PCA/commits');
+
+        return $response->json()[0]['commit']['committer']['date'] ?? null;
+    });
+
+    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'usuario', 'ultimaAtualizacao'));
+
+    }
+
+    /**
+     * NOVOS MÉTODOS PARA FLUXO DIREX E CONSELHO
+     */
+
+     /**
     * Obtém informações de navegação para a secretária
     */
     private function obterNavegacaoSecretaria($pppAtualId)
@@ -722,389 +1122,6 @@ class PppController extends Controller
         
         return $configs[$contexto] ?? $configs['normal'];
     }
-    
-    /**
-    * Retorna o histórico do PPP via AJAX
-    */
-    public function historico($id)
-    {
-        try {
-            $ppp = PcaPpp::findOrFail($id);
-            $historicos = PppHistorico::where('ppp_id', $ppp->id)
-            ->with(['statusAnterior', 'statusAtual', 'usuario'])
-            ->orderBy('created_at')
-            ->get();
-            
-            return response()->json([
-                'success' => true,
-                'html' => view('ppp.partials.historico', compact('ppp', 'historicos'))->render()
-            ]);
-        } catch (\Throwable $ex) {
-            return response()->json(['error' => 'Erro ao carregar histórico'], 500);
-        }
-    }
-    
-    public function edit($id)
-    {
-        try {
-            $ppp = PcaPpp::findOrFail($id);
-        // Se o PPP ainda está em rascunho (status 1), manter comportamento de criação
-        if ($ppp->status_id == 1) {
-            $edicao = false;
-            $isCreating = true;
-        } else {
-            $edicao = true;
-            $isCreating = false;
-        }
-
-            return view('ppp.form', compact('ppp','edicao', 'isCreating'));
-        } catch (\Throwable $ex) {
-            Log::error('Erro ao carregar PPP para edição:', [
-                'exception' => $ex,
-                'ppp_id' => $id,
-            ]);
-            Log::debug($ex->getTraceAsString());
-            return back()->withErrors(['msg' => 'Erro ao carregar PPP para edição.']);
-        }
-    }
-    
-    
-    
-    public function destroy(Request $request, $id)
-    {
-        try {
-            $ppp = PcaPpp::findOrFail($id);
-            
-            // Validar comentário obrigatório
-            $request->validate([
-                'comentario' => 'required|string|min:10|max:1000'
-            ], [
-                'comentario.required' => 'O comentário é obrigatório para exclusão.',
-                'comentario.min' => 'O comentário deve ter pelo menos 10 caracteres.',
-                'comentario.max' => 'O comentário não pode exceder 1000 caracteres.'
-            ]);
-            
-            // Registrar no histórico antes da exclusão
-            \App\Models\PppHistorico::create([
-                'ppp_id' => $ppp->id,
-                'user_id' => auth()->id(),
-                'acao' => 'exclusao',
-                'justificativa' => $request->comentario,  // CORRIGIDO: comentario → justificativa
-                'status_anterior' => $ppp->status_id,     // CORRIGIDO: status_anterior_id → status_anterior
-                'status_atual' => $ppp->status_id,                   // CORRIGIDO: status_novo_id → status_atual
-            ]);
-            
-            // Executar soft delete
-            $ppp->delete();
-            
-            Log::info('PPP excluído com sucesso.', [
-                'ppp_id' => $id,
-                'user_id' => auth()->id(),
-                'comentario' => $request->comentario
-            ]);
-            
-            return redirect()->route('ppp.index')
-            ->with('success', 'PPP excluído com sucesso. O comentário foi registrado no histórico.');
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (\Throwable $ex) {
-            Log::error('Erro ao excluir PPP: ' . $ex->getMessage(), [
-                'exception' => $ex,
-                'ppp_id' => $id,
-            ]);
-            
-            return back()->withErrors(['msg' => 'Erro ao excluir PPP: ' . $ex->getMessage()]);
-        }
-    }
-    
-    public function solicitarCorrecao(Request $request, PcaPpp $ppp)
-    {
-        $request->validate([
-            'motivo' => 'required|string|max:1000'
-        ]);
-        
-        try {
-            $this->pppService->solicitarCorrecao($ppp, $request->motivo);
-            
-            return redirect()->route('ppp.index')
-            ->with('success', 'Correção solicitada com sucesso!');
-        } catch (\Exception $e) {
-            return redirect()->back()
-            ->with('error', 'Erro ao solicitar correção: ' . $e->getMessage());
-        }
-    }
-    
-       
-    /**
-    * Extrai a sigla da área do próprio usuário (campo department)
-    */
-    private function extrairSiglaArea($usuario)
-    {
-        return $usuario->department ?? 'N/A';
-    }
-    
-    /**
-    * Extrai a sigla da área do gestor a partir do campo manager
-    */
-    private function extrairSiglaAreaGestor($usuario)
-    {
-        $managerDN = $usuario->manager;
-        
-        if (!$managerDN) {
-            return 'N/A';
-        }
-        
-        // Extrair OU (Organizational Unit) do DN
-        // Formato: CN=Nome do Gestor,OU=Sigla da Área,DC=domain,DC=com
-        if (preg_match('/OU=([^,]+)/', $managerDN, $matches)) {
-            return trim($matches[1]);
-        }
-        
-        return 'N/A';
-    }
-    
-    public function enviarParaAprovacao($id, Request $request)
-{
-    $ppp = PcaPpp::findOrFail($id);
-
-    if ($ppp->user_id !== Auth::id()) {
-        abort(403, 'Você não tem permissão.');
-    }
-
-    try {
-        // 🔥 Aqui só delegamos ao service:
-        $this->pppService->enviarParaAprovacao(
-            $ppp,
-            $request->input('justificativa')
-        );
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'PPP enviado para aprovação com sucesso!'
-            ]);
-        }
-
-        return redirect()
-            ->route('ppp.index')
-            ->with('success', 'PPP enviado para aprovação com sucesso!');
-    } catch (\Throwable $e) {
-        Log::error('Erro ao enviar PPP: '.$e->getMessage(), ['ppp_id' => $id]);
-        return back()->withErrors(['msg' => 'Erro: ' . $e->getMessage()]);
-    }
-}
-    
-    public function aprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
-    {
-        $request->validate([
-            'comentario' => 'nullable|string|max:1000'
-        ]);
-        
-        if(!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
-            return redirect()->back()->with('error', 'Você não tem permissão para aprovar PPPs.');
-        }
-        
-        if (!in_array($ppp->status_id, [3])) { // 3 = em_avaliacao
-            return redirect()->back()->with('error', 'Este PPP não está disponível para aprovação.');
-        }
-        
-        if ($ppp->gestor_atual_id !== auth()->id()) {
-            return redirect()->back()->with('error', 'Você não é o gestor responsável por este PPP.');
-        }
-        
-        try {
-            $resultado = $pppService->enviarParaAprovacao($ppp, $request->input('comentario'));
-            
-            if ($resultado) return redirect()->route('ppp.index')->with('success', 'PPP aprovado com sucesso!');
-            
-            return redirect()->back()->with('error', 'Erro ao aprovar o PPP.');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao aprovar PPP: ' . $e->getMessage());
-        }
-    }
-    
-    // /**
-    // * Processa o envio para aprovação internamente
-    // */
-    // private function processarEnvioAprovacao(PcaPpp $ppp, Request $request): array
-    // {
-    //     try {
-    //         Log::info('🔄 processarEnvioAprovacao() - Iniciando processamento interno', [
-    //             'ppp_id' => $ppp->id,
-    //             'status_atual' => $ppp->status_id,
-    //             'gestor_atual' => $ppp->gestor_atual_id,
-    //             'user_solicitante' => Auth::id()
-    //         ]);
-            
-    //         // ✅ ALTERAÇÃO: Usar HierarquiaService em vez da lógica duplicada
-    //         $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
-            
-    //         Log::info('🔍 Resultado da busca por próximo gestor', [
-    //             'proximo_gestor_encontrado' => $proximoGestor ? true : false,
-    //             'proximo_gestor_id' => $proximoGestor ? $proximoGestor->id : null,
-    //             'proximo_gestor_nome' => $proximoGestor ? $proximoGestor->name : null
-    //         ]);
-            
-    //         if (!$proximoGestor) {
-    //             Log::error('❌ Próximo gestor não encontrado', [
-    //                 'ppp_id' => $ppp->id,
-    //                 'user_id' => Auth::id()
-    //             ]);
-    //             return [
-    //                 'success' => false,
-    //                 'message' => 'Não foi possível identificar o próximo gestor.'
-    //             ];
-    //         }
-            
-    //         Log::info('📝 Atualizando status do PPP', [
-    //             'ppp_id' => $ppp->id,
-    //             'status_de' => $ppp->status_id,
-    //             'status_para' => 2,
-    //             'gestor_de' => $ppp->gestor_atual_id,
-    //             'gestor_para' => $proximoGestor->id
-    //         ]);
-            
-    //         //dd(HierarquiaService->extrairSiglaAreaGestor($proximoGestor));
-            
-    //         $ppp->update([
-    //             'status_id' => 2, // aguardando_aprovacao
-    //             'gestor_atual_id' => $proximoGestor->id,            
-    //         ]);
-            
-    //         Log::info('✅ Status do PPP atualizado', [
-    //             'ppp_id' => $ppp->id,
-    //             'novo_status' => $ppp->fresh()->status_id,
-    //             'novo_gestor' => $ppp->fresh()->gestor_atual_id
-    //         ]);
-            
-    //         // Registrar no histórico
-    //         $this->historicoService->registrarEnvioAprovacao(
-    //             $ppp,
-    //             'PPP enviado para aprovação automaticamente após criação'
-    //         );
-            
-    //         Log::info('📋 Histórico registrado com sucesso', [
-    //             'ppp_id' => $ppp->id
-    //         ]);
-            
-    //         Log::info('✅ processarEnvioAprovacao() - Concluído com sucesso', [
-    //             'ppp_id' => $ppp->id,
-    //             'status_final' => $ppp->fresh()->status_id,
-    //             'gestor_final' => $ppp->fresh()->gestor_atual_id
-    //         ]);
-            
-    //         return [
-    //             'success' => true,
-    //             'message' => 'PPP enviado para aprovação com sucesso!'
-    //         ];
-            
-    //     } catch (\Throwable $ex) {
-    //         Log::error('💥 ERRO CRÍTICO em processarEnvioAprovacao()', [
-    //             'ppp_id' => $ppp->id,
-    //             'exception_message' => $ex->getMessage(),
-    //             'exception_file' => $ex->getFile(),
-    //             'exception_line' => $ex->getLine(),
-    //             'stack_trace' => $ex->getTraceAsString()
-    //         ]);
-            
-    //         return [
-    //             'success' => false,
-    //             'message' => $ex->getMessage()
-    //         ];
-    //     }
-    // }
-    /**
-    * Reprova um PPP
-    */
-    public function reprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
-    {
-        // Verificar se o usuário tem permissão
-        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
-            return redirect()->back()->with('error', 'Você não tem permissão para reprovar PPPs.');
-        }
-        
-        // Verificar se o PPP está disponível para reprovação
-        if (!in_array($ppp->status_id, [2, 3])) { // 2 = aguardando_aprovacao, 3 = em_avaliacao
-            return redirect()->back()->with('error', 'Este PPP não está disponível para reprovação.');
-        }
-        
-        // Verificar se o usuário é o gestor responsável
-        if ($ppp->gestor_atual_id !== auth()->id()) {
-            return redirect()->back()->with('error', 'Você não é o gestor responsável por este PPP.');
-        }
-        
-        // Validar motivo obrigatório
-        $request->validate([
-            'motivo' => 'required|string|max:1000'
-        ], [
-            'motivo.required' => 'O motivo da reprovação é obrigatório.',
-            'motivo.max' => 'O motivo não pode exceder 1000 caracteres.'
-        ]);
-        
-        try {
-            // Usar o PppService para reprovar
-            $resultado = $pppService->reprovarPpp($ppp, $request->input('motivo'));
-            
-            if ($resultado) {
-                return redirect()->route('ppp.index')->with('success', 'PPP reprovado com sucesso! O PPP permanece disponível para consultas e edições futuras.');
-            } else {
-                return redirect()->back()->with('error', 'Erro ao reprovar o PPP.');
-            }
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao reprovar PPP: ' . $e->getMessage());
-        }
-    }
-    
-    /**
-    * Verifica se o PPP deve ser salvo como rascunho
-    * baseado nos campos preenchidos (apenas card azul)
-    */
-    public function isRascunho($request)
-    {
-        // Campos obrigatórios do card azul (primeira etapa)
-        $camposCardAzul = [
-            'categoria',
-            'nome_item',
-            'descricao',
-            'quantidade',
-            'justificativa_pedido'
-        ];
-        
-        // Campos das etapas seguintes
-        $camposEtapasSeguintes = [
-            'natureza_objeto',
-            'grau_prioridade',
-            'estimativa_valor',
-            'justificativa_valor',
-            'origem_recurso',
-            'vinculacao_item',
-            'tem_contrato_vigente'
-        ];
-        
-        // Verifica se todos os campos do card azul estão preenchidos
-        foreach ($camposCardAzul as $campo) {
-            if (empty($request->input($campo))) {
-                return false; // Se algum campo obrigatório não estiver preenchido, não é rascunho válido
-            }
-        }
-        
-        // Verifica se pelo menos um campo das etapas seguintes está vazio ou com valor padrão
-        foreach ($camposEtapasSeguintes as $campo) {
-            $valor = $request->input($campo);
-            if (empty($valor) || in_array($valor, ['A definir', 'Valor a ser definido nas próximas etapas', '.'])) {
-                return true; // É um rascunho se algum campo das próximas etapas não foi preenchido
-            }
-        }
-        
-        return false; // Todos os campos estão preenchidos, não é rascunho
-    }
-
-    /**
-     * NOVOS MÉTODOS PARA FLUXO DIREX E CONSELHO
-     */
 
     /**
      * Inicia reunião da DIREX (Secretária)
@@ -1631,141 +1648,6 @@ class PppController extends Controller
             return response()->json(['success' => false, 'message' => 'Erro interno.'], 500);
         }
     }
-
-    /**
-     * Lista apenas os PPPs criados pelo usuário logado
-     */
-    public function meusPpps(Request $request)
-    {
-        try {
-            Log::info('DEBUG Meus PPPs - Usuário atual', [
-                'user_id' => Auth::id(),
-                'user_name' => Auth::user()->name ?? 'N/A'
-            ]);
-            
-            $query = PcaPpp::query();
-            
-            // Filtrar apenas PPPs criados pelo usuário logado
-            $query->where('user_id', Auth::id());
-
-            $query->with([
-                'user',
-                'status',
-                'gestorAtual',
-                'historicos.usuario'
-            ])->orderBy('id', 'desc');
-            
-            // Filtro por status
-            if ($request->filled('status_id')) {
-                $query->where('status_id', $request->status_id);
-            }
-            
-            // Filtro por busca
-            if ($request->filled('busca')) {
-                $busca = $request->busca;
-                $query->where(function($q) use ($busca) {
-                    $q->where('nome_item', 'like', "%{$busca}%")
-                      ->orWhere('descricao', 'like', "%{$busca}%");
-                });
-            }
-            
-            $ppps = $query->paginate(10)->withQueryString();
-            
-            $ppps = $this->getNextApprover($ppps);
-            
-            return view('ppp.meus', compact('ppps'));
-            
-        } catch (\Exception $e) {
-            Log::error('Erro ao listar Meus PPPs: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao carregar a lista de Meus PPPs.');
-        }
-    }
-
-    /**
-     * Reenvia PPP após correção
-     */
-    public function reenviarAposCorrecao(Request $request, PcaPpp $ppp)
-    {
-        // Verificar se o usuário é o responsável pela correção
-        if ($ppp->gestor_atual_id !== Auth::id()) {
-            return redirect()->back()->with('error', 'Você não tem permissão para reenviar este PPP.');
-        }
-        
-        // Verificar se o PPP está no status correto
-        if ($ppp->status_id !== 5) { // em_correcao
-            return redirect()->back()->with('error', 'PPP não está no status adequado para reenvio.');
-        }
-        
-        try {
-            $this->pppService->reenviarAposCorrecao(
-                $ppp,
-                $request->input('comentario')
-            );
-            
-            return redirect()->route('ppp.index')
-                ->with('success', 'PPP corrigido e reenviado para aprovação com sucesso!');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Erro ao reenviar PPP: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Determina se o campo "Valor se +1 exercício" deve ser considerado
-     */
-    private function shouldShowValorMaisUmExercicio($request): bool
-    {
-        $temContrato = $request->input('tem_contrato_vigente');
-        
-        // Se não tem contrato, verificar se é mais de um exercício
-        if ($temContrato === 'Não') {
-            $contratoMaisUmExercicio = $request->input('contrato_mais_um_exercicio');
-            return $contratoMaisUmExercicio === 'Sim';
-        }
-        
-        if ($temContrato === 'Sim') {
-            $anoVigencia = $request->input('ano_vigencia_final');
-            $anoPCA = date('Y') + 1; // Usar ano dinâmico em vez de hardcoded
-            
-            if ($anoVigencia != $anoPCA) {
-                return false;
-            }
-            
-            $prorrogavel = $request->input('contrato_prorrogavel');
-            if ($prorrogavel === 'Não') {
-                return false;
-            }
-            
-            $vaiProrrogar = $request->input('renov_contrato');
-            if ($vaiProrrogar === 'Sim') {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    public function dashboard()
-    {
-        $userId = Auth::id();
-
-    $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
-    $pppsMeus = $this->pppService->contarMeus($userId);
-
-    $usuario = Auth::user();
-
-    // Recuperar data da última atualização via GitHub com cache de 1 hora
-    $ultimaAtualizacao = Cache::remember('ultima_atualizacao_github', 3600, function () {
-        $response = Http::withToken(env('GITHUB_TOKEN'))
-            ->get('https://api.github.com/repos/PauloParanacidade/PCA/commits');
-
-        return $response->json()[0]['commit']['committer']['date'] ?? null;
-    });
-
-    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'usuario', 'ultimaAtualizacao'));
-
-    }
-
 }
 
 

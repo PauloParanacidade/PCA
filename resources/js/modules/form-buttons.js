@@ -271,3 +271,9 @@ export const FormButtons = {
 // Expor funções globalmente para compatibilidade com inline onclick
 window.carregarHistoricoPPP = FormButtons.carregarHistoricoPPP.bind(FormButtons);
 window.carregarHistorico = FormButtons.carregarHistorico.bind(FormButtons);
+
+// Excluir o modal de correção da interceptação global
+if (form.id === 'formRespCorrecao') {
+    console.log('📝 Modal de correção detectado - permitindo envio normal');
+    return true; // Permite o envio normal do formulário
+}
