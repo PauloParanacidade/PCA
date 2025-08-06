@@ -43,7 +43,7 @@
                         
                         <div class="col-md-6">
                             <input type="text" 
-                            {{ ($isCardAmarelo ?? false) ? '' : 'name="ano_contrato"' }}
+                            name="ano_contrato"
                             id="ano_contrato" 
                             class="form-control" 
                             placeholder="Ano (ex: 2024)" 

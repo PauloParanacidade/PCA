@@ -398,8 +398,8 @@
                 } elseif ($usuarioLogado->hasAnyRole(['daf', 'gestor'])) {
                     // DAF e gestores podem ver botões para PPPs aguardando aprovação ou em avaliação
                     $podeVerBotoes = in_array($ppp->status_id, [2, 3, 7, 8, 9]);
-                    // Gestores podem editar PPPs que podem visualizar
-                    $podeEditar = $podeVerBotoes;
+                    // Gestores podem editar PPPs que podem visualizar OU PPPs aguardando correção
+                    $podeEditar = $podeVerBotoes || in_array($ppp->status_id, [4, 5]); // Inclui aguardando_correcao e em_correcao
                 } else {
                     // MODIFICADO: Usuário padrão NÃO pode ver botões de validação
                     // Apenas pode editar seus próprios PPPs em rascunho ou aguardando correção

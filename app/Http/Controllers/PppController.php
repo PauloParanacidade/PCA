@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePppRequest;
 use App\Http\Requests\ResponderCorrecaoRequest;
+use App\Http\Requests\SolicitarCorrecaoRequest;
 use App\Models\PcaPpp;
 use App\Models\PppHistorico;
 use App\Models\User;
@@ -294,6 +295,8 @@ class PppController extends Controller
             }
         }
 
+
+
         if ($modo === 'edicao' && $acao === 'salvar') {
             $ppp = PcaPpp::findOrFail($id);
 
@@ -440,8 +443,6 @@ class PppController extends Controller
         
         return $ppp;
     }
-
-
 
     public function index(Request $request)
     {
@@ -1698,6 +1699,38 @@ class PppController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro ao atualizar status DIREX: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Erro interno.'], 500);
+        }
+    }
+
+    /**
+     * Solicitar correção de um PPP
+     */
+    public function solicitarCorrecao(SolicitarCorrecaoRequest $request, $id)
+    {
+        $ppp = PcaPpp::findOrFail($id);
+        
+        // Verificar se o usuário tem permissão para solicitar correção
+        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
+            return redirect()->back()->with('error', 'Você não tem permissão para solicitar correção.');
+        }
+        
+        // Verificar se o PPP está no status correto (aguardando_aprovacao ou em_avaliacao)
+        if (!in_array($ppp->status_id, [2, 3])) { // 2: aguardando_aprovacao, 3: em_avaliacao
+            return redirect()->back()->with('error', 'PPP não está no status adequado para solicitar correção.');
+        }
+        
+        try {
+            $this->pppService->solicitarCorrecao(
+                $ppp,
+                $request->input('motivo')
+            );
+            
+            return redirect()->route('ppp.index')
+                ->with('success', 'Correção solicitada com sucesso!');
+        } catch (\Exception $e) {
+            Log::error('❌ Erro ao solicitar correção: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Erro ao solicitar correção: ' . $e->getMessage());
         }
     }
 }
