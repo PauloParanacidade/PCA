@@ -38,7 +38,8 @@ class PppController extends Controller
     {
         return view('ppp.form', [
             'isCreating' => true,
-            'showAllCards' => true // Nova flag para mostrar todos os cards
+            'showAllCards' => true, // Nova flag para mostrar todos os cards
+            'isCardAmarelo' => true // Flag para identificar quando o card amarelo está sendo renderizado
         ]);
     }
     
@@ -679,7 +680,7 @@ class PppController extends Controller
             $isCreating = false;
         }
 
-            return view('ppp.form', compact('ppp','edicao', 'isCreating'));
+            return view('ppp.form', compact('ppp','edicao', 'isCreating') + ['isCardAmarelo' => true]);
         } catch (\Throwable $ex) {
             Log::error('Erro ao carregar PPP para edição:', [
                 'exception' => $ex,

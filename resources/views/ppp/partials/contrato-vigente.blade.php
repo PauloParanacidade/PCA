@@ -33,7 +33,7 @@
                         <div class="col-md-5">
                             <input type="number" name="num_contrato" id="num_contrato" class="form-control contract-number"
                             value="{{ old('num_contrato', $ppp->num_contrato ?? '') }}" 
-                            placeholder="1">
+                            placeholder="1" min="1" max="9999">
                             <small class="form-text text-muted">Número do contrato</small>
                         </div>
                         
@@ -42,11 +42,16 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <input type="number" name="ano_contrato" id="ano_contrato" class="form-control" 
-                            placeholder="Ano" min="2000" max="{{ date('Y') + 10 }}"
-                            value="{{ old('ano_contrato', $ppp->ano_contrato ?? '') }}">
+                            <input type="text" 
+                            {{ ($isCardAmarelo ?? false) ? '' : 'name="ano_contrato"' }}
+                            id="ano_contrato" 
+                            class="form-control" 
+                            placeholder="Ano (ex: 2024)" 
+                            value="{{ old('ano_contrato', ($isCardAmarelo ?? false) ? '' : ($ppp->ano_contrato ?? '')) }}"
+                            data-default-value="{{ date('Y') - 1 }}">
                             <small class="form-text text-muted">Ano da criação do contrato</small>
                         </div>
+                        
                     </div>
                 </div>
                 
@@ -83,14 +88,12 @@
                             <small class="form-text text-muted">Mês de vigência final</small>
                         </div>
                         <div class="col-md-6">
-                            <input type="number"
+                            <input type="text"
                             name="ano_vigencia_final"
                             id="ano_vigencia_final"
                             class="form-control"
-                            placeholder="Ano"
-                            min="{{ date('Y') + 1 }}"
-                            max="{{ date('Y') + 10 }}"
-                            value="{{ old('ano_vigencia_final', $ppp->ano_vigencia_final ?? date('Y') + 1) }}">
+                            placeholder="Ano (ex: 2026)"
+                            value="{{ old('ano_vigencia_final', $isCardAmarelo ? '' : ($ppp->ano_vigencia_final ?? date('Y') + 1)) }}">
                             <small class="form-text text-muted">Ano de vigência final</small>
                         </div>
                     </div>
@@ -237,29 +240,35 @@
             // });
         }
         
-        // Validação de ano mínimo para vigência final
+        // Comportamento do ano de vigência final
         if (anoVigenciaInput) {
-            const anoMinimo = new Date().getFullYear() + 1;
-            
+            // Permitir apenas números (validação será feita no backend)
             anoVigenciaInput.addEventListener('input', function(e) {
-                const valor = parseInt(e.target.value);
-                if (valor && valor < anoMinimo) {
-                    e.target.setCustomValidity(`O ano de vigência final deve ser no mínimo ${anoMinimo}`);
-                } else {
-                    e.target.setCustomValidity('');
+                // Remover caracteres não numéricos
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                // Limitar a 4 dígitos
+                if (e.target.value.length > 4) {
+                    e.target.value = e.target.value.slice(0, 4);
                 }
             });
         }
         
-        // Validação de ano do contrato
+        // Comportamento do ano do contrato
         if (anoContratoInput) {
+            // Controlar comportamento ao focar no campo
+            anoContratoInput.addEventListener('focus', function(e) {
+                if (e.target.value === '' && e.target.dataset.defaultValue) {
+                    e.target.value = e.target.dataset.defaultValue;
+                }
+            });
+            
+            // Permitir apenas números (validação será feita no backend)
             anoContratoInput.addEventListener('input', function(e) {
-                const valor = parseInt(e.target.value);
-                const anoAtual = new Date().getFullYear();
-                if (valor && (valor < 2000 || valor > anoAtual + 10)) {
-                    e.target.setCustomValidity(`O ano do contrato deve estar entre 2000 e ${anoAtual + 10}`);
-                } else {
-                    e.target.setCustomValidity('');
+                // Remover caracteres não numéricos
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                // Limitar a 4 dígitos
+                if (e.target.value.length > 4) {
+                    e.target.value = e.target.value.slice(0, 4);
                 }
             });
         }
