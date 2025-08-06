@@ -9,13 +9,15 @@ use Illuminate\Support\Facades\Log;
 
 class StorePppRequest extends FormRequest
 {
-    public function authorize(): bool
+    public function authorize()
     {
+        Log::info('🔍 StorePppRequest authorize() chamado');
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
+        Log::info('🔍 StorePppRequest rules() chamado');
         $currentYear = date('Y');
         $minVigenciaYear = $currentYear + 1; // Ano do PCA + 1
         

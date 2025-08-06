@@ -267,7 +267,18 @@ class HierarquiaService
      */
     public function obterGestorComTratamentoEspecial($user): ?User
     {
-        $usuario = $user instanceof User ? $user : User::find($user);
+        // ✅ MELHORAR a validação do usuário
+        if (is_numeric($user)) {
+            $usuario = User::find($user);
+        } elseif ($user instanceof User) {
+            $usuario = $user;
+        } else {
+            Log::warning('❌ Parâmetro inválido em obterGestorComTratamentoEspecial', [
+                'user_type' => gettype($user),
+                'user_value' => $user
+            ]);
+            return null;
+        }
     
         if (!$usuario) {
             Log::warning('❌ Usuário não encontrado em obterGestorComTratamentoEspecial');

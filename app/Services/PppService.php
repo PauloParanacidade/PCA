@@ -151,64 +151,121 @@ class PppService
         /**
         * Reenvia PPP após correção
         */
-        /**
-         * Reenvia PPP após correção
-         */
         public function reenviarAposCorrecao(PcaPpp $ppp, ?string $comentario = null): bool
         {
             try {
+                // 🔍 DEBUG: Log inicial
+                Log::info('🚀 DEBUG - Iniciando reenviarAposCorrecao', [
+                    'ppp_id' => $ppp->id,
+                    'status_atual' => $ppp->status_id,
+                    'gestor_atual_id' => $ppp->gestor_atual_id,
+                    'user_id' => $ppp->user_id,
+                    'comentario' => $comentario,
+                    'auth_user_id' => Auth::id()
+                ]);
+                
                 // ✅ CORREÇÃO: Usar a mesma lógica robusta do enviarParaAprovacao
                 $proximoGestor = null;
                 $gestorAtual = User::find($ppp->gestor_atual_id);
                 
+                Log::info('🔍 DEBUG - Gestor atual encontrado', [
+                    'gestor_atual' => $gestorAtual ? [
+                        'id' => $gestorAtual->id,
+                        'name' => $gestorAtual->name,
+                        'department' => $gestorAtual->department,
+                        'roles' => $gestorAtual->getRoleNames()->toArray()
+                    ] : 'null'
+                ]);
+                
                 if(!$gestorAtual) {
+                    Log::info('🔍 DEBUG - Gestor atual não encontrado, buscando próximo gestor para Auth::user()');
                     $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
                 } else {
                     $departamento = strtoupper($gestorAtual->department ?? '');
                     $areasEspeciais = ['SUPEX', 'DOE', 'DOM'];
                     
+                    Log::info('🔍 DEBUG - Verificando departamento', [
+                        'departamento' => $departamento,
+                        'areas_especiais' => $areasEspeciais,
+                        'is_area_especial' => in_array($departamento, $areasEspeciais),
+                        'has_role_daf' => $gestorAtual->hasRole('daf')
+                    ]);
+                    
                     if(in_array($departamento, $areasEspeciais)) {
+                        Log::info('🔍 DEBUG - Área especial detectada, buscando gestor com tratamento especial');
                         $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->user_id);
                         
                     } else if($gestorAtual->hasRole('daf')) {
+                        Log::info('🔍 DEBUG - DAF detectado, buscando secretária');
                         $secretaria = $this->hierarquiaService->obterSecretaria();
                         if ($secretaria) {
+                            Log::info('🔍 DEBUG - Secretária encontrada, atualizando para DIREX', [
+                                'secretaria_id' => $secretaria->id,
+                                'secretaria_name' => $secretaria->name
+                            ]);
+                            
                             $ppp->update([
                                 'status_id' => 7, // Aguardando DIREX
                                 'gestor_atual_id' => $secretaria->id,
                             ]);
+                            
+                            Log::info('✅ DEBUG - PPP atualizado para DIREX, registrando histórico');
+                            
                             $this->historicoService->registrarAprovacao(
                                 $ppp,
                                 ($comentario ?? 'PPP reenviado após correção pelo DAF') . ' - Encaminhado para avaliação da DIREX'
                             );
+                            
+                            Log::info('✅ DEBUG - Histórico registrado, retornando true');
                             return true;
                         } else {
+                            Log::error('❌ DEBUG - Secretária não encontrada');
                             throw new \Exception('Secretária não encontrada no sistema.');
                         }
                     } else {
+                        Log::info('🔍 DEBUG - Departamento normal, buscando próximo gestor');
                         $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
                     }
                 }
                 
+                Log::info('🔍 DEBUG - Próximo gestor identificado', [
+                    'proximo_gestor' => $proximoGestor ? [
+                        'id' => $proximoGestor->id,
+                        'name' => $proximoGestor->name,
+                        'department' => $proximoGestor->department,
+                        'roles' => $proximoGestor->getRoleNames()->toArray()
+                    ] : 'null'
+                ]);
+                
                 if (!$proximoGestor) {
+                    Log::error('❌ DEBUG - Próximo gestor não encontrado');
                     throw new \Exception('Não foi possível identificar o próximo gestor.');
                 }
                 
                 // Garantir que o próximo gestor tenha o papel de gestor
+                Log::info('🔍 DEBUG - Garantindo papel de gestor');
                 $proximoGestor->garantirPapelGestor();
                 
                 // Atualizar PPP: status volta para aguardando_aprovacao
+                Log::info('🔍 DEBUG - Atualizando PPP para aguardando_aprovacao');
                 $ppp->update([
                     'status_id' => 2, // aguardando_aprovacao
                     'gestor_atual_id' => $proximoGestor->id,
                 ]);
                 
+                Log::info('✅ DEBUG - PPP atualizado, registrando no histórico');
+                
                 // Registrar no histórico
                 $this->historicoService->registrarCorrecaoEnviada($ppp, $comentario);
                 
+                Log::info('✅ DEBUG - Histórico registrado, processo concluído com sucesso');
+                
                 return true;
             } catch (\Throwable $ex) {
-                Log::error('Erro ao reenviar PPP após correção: ' . $ex->getMessage());
+                Log::error('❌ DEBUG - Erro no reenviarAposCorrecao: ' . $ex->getMessage(), [
+                    'ppp_id' => $ppp->id,
+                    'trace' => $ex->getTraceAsString()
+                ]);
                 throw $ex;
             }
         }

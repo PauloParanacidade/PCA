@@ -21,10 +21,20 @@
 
             {{-- Modo CRIAÇÃO: botão "Salvar e Enviar para Avaliação" --}}
             @if($isCreating)
+                @php
+                    Log::info('🔍 DEBUG Botão Salvar e Enviar:', [
+                        'isCreating' => $isCreating,
+                        'ppp_exists' => isset($ppp),
+                        'ppp_id' => isset($ppp) ? $ppp->id : 'null',
+                        'ppp_status_id' => isset($ppp) ? $ppp->status_id : 'null',
+                        'should_show' => (isset($ppp) && $ppp->id && $ppp->status_id == 1)
+                    ]);
+                @endphp
+                
                 <button type="submit" id="btn-salvar-enviar" name="acao" value="enviar_aprovacao"
                     class="btn btn-primary btn-lg mx-2"
-                    {{-- Mostrar botão se PPP existe e está em rascunho --}}
-                    style="{{ (isset($ppp) && $ppp->id && $ppp->status_id == 1) ? 'display: inline-block;' : 'display: none;' }}">
+                    style="{{ (isset($ppp) && $ppp->id && $ppp->status_id == 1) ? 'display: inline-block;' : 'display: none;' }}"
+                    onclick="console.log('🖱️ Botão Enviar Correção/Justificativa clicado!'); return true;">
                     <i class="fas fa-paper-plane me-2"></i>
                     Salvar e Enviar para Avaliação
                 </button>

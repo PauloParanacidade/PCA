@@ -76,8 +76,7 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
             </div>
         </div>
     </div>
-    
-    {{-- Incluir botões da partial --}}
+    {{-- Incluir botões da partial FORA do formulário principal --}}
     @include('ppp.partials.botoes-acao')
 </form>
 @endsection
@@ -177,6 +176,7 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
         // ===================================
         
         const isCreating = {{ $isCreating ? 'true' : 'false' }};
+        console.log('isCreating:', isCreating);
         const btnAvancar = document.getElementById('btn-avancar-card-azul');
         const btnSalvarEnviar = document.getElementById('btn-salvar-enviar');
         // const btnCancelar = document.getElementById('btn-cancelar');
@@ -185,19 +185,23 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
         // ===================================
         // FUNÇÃO PARA DEFINIR O STORE PARA AVANÇAR E UPDATE PARA SALVAR E ENVIAR PARA AVALIAÇÃO
         // ===================================
-        
-        btnAvancar.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            if (!validarCamposCardAzul()) {
-                mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
-                return;
-            }
-            
-            if (isCreating) {
+        console.log('btnAvancar:', btnAvancar);
+        if (btnAvancar) {
+            btnAvancar.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (!validarCamposCardAzul()) {
+                    console.log('validarCamposCardAzul:', validarCamposCardAzul());
+                    mostrarNotificacao('Por favor, preencha todos os campos obrigatórios do card azul antes de continuar.', 'error');
+                    return;
+                }
+                let formData = new FormData(form);
+                if (isCreating) {
+                    console.log('isCreating:', isCreating);
                 // Criar FormData com os dados do formulário
-                const formData = new FormData(form);
+                
                 formData.append('acao', 'salvar_rascunho');
+                }
                 
                 // Fazer requisição AJAX para salvar o rascunho
                 fetch(form.action, {
@@ -283,8 +287,9 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
                     console.error('Erro na requisição:', error);
                     mostrarNotificacao('Erro ao salvar rascunho. Tente novamente.', 'error');
                 });
-            } 
-        });
+            });
+        } 
+        
         
         
         // ===================================
@@ -418,13 +423,6 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
                 `;
             
             document.body.appendChild(notificacao);
-            
-            // Auto remover após 5 segundos
-            setTimeout(() => {
-                if (notificacao.parentNode) {
-                    notificacao.remove();
-                }
-            }, 5000);
         }
         
         
@@ -530,7 +528,7 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
         // ===================================
         
         let formAlterado = false;
-        const formulario = document.querySelector('form');
+        const formulario = document.getElementById('form-ppp'); // Mudança: usar ID específico em vez de seletor genérico
         
         if (formulario) {
             // Monitorar mudanças no formulário
@@ -573,7 +571,7 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
         }
     });
     
-    $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function() {
         // Inicializar tooltips do Bootstrap
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {

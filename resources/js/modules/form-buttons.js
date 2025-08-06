@@ -58,7 +58,12 @@ export const FormButtons = {
         }, 1000);
     },
 
-    async handleSubmit(e, form) {
+    // Adicionar no início do handleSubmit
+    handleSubmit: async function(e, submitBtn) {
+        console.log('🖱️ BOTÃO CLICADO - handleSubmit iniciado');
+        console.log('📝 Evento:', e);
+        console.log('🔘 Botão:', submitBtn);
+        
         console.log('🚀 FormButtons.handleSubmit() - Iniciando processamento do formulário');
         
         // Verificar se já está processando
@@ -69,7 +74,9 @@ export const FormButtons = {
         
         this.isSubmitting = true; // Marcar como processando
         
-        const submitBtn = form.find('button[type="submit"]');
+        // ✅ CORREÇÃO: Obter o formulário do evento e redeclarar submitBtn corretamente
+        const form = $(e.target);
+        const actualSubmitBtn = form.find('button[type="submit"]');
         const isEdit = form.find('input[name="_method"][value="PUT"]').length > 0;
         
         console.log('📊 Dados do formulário:', {
@@ -83,12 +90,14 @@ export const FormButtons = {
         if (camposVazios.length > 0) {
             console.error('❌ Validação falhou - Campos obrigatórios vazios:', camposVazios);
             alert('Campos obrigatórios não preenchidos: ' + camposVazios.join(', '));
+            this.isSubmitting = false; // ✅ CORREÇÃO: Resetar flag em caso de erro
             return false;
         }
         
         console.log('✅ Validação passou - Todos os campos obrigatórios preenchidos');
         
-        submitBtn.prop('disabled', true)
+        // ✅ CORREÇÃO: Usar actualSubmitBtn em vez de submitBtn
+        actualSubmitBtn.prop('disabled', true)
                .html('<i class="fas fa-spinner fa-spin me-2"></i>Enviando para aprovação...');
         
         try {
@@ -187,7 +196,8 @@ export const FormButtons = {
             console.error('💥 Stack trace:', error.stack);
             alert('Erro ao processar solicitação: ' + error.message);
 
-            submitBtn.prop('disabled', false)
+            // ✅ CORREÇÃO: Usar actualSubmitBtn
+            actualSubmitBtn.prop('disabled', false)
                    .html('<i class="fas fa-paper-plane me-2"></i>Salvar e Enviar para Aprovação');
         } finally {
             this.isSubmitting = false; // Resetar flag independente do resultado
@@ -272,8 +282,8 @@ export const FormButtons = {
 window.carregarHistoricoPPP = FormButtons.carregarHistoricoPPP.bind(FormButtons);
 window.carregarHistorico = FormButtons.carregarHistorico.bind(FormButtons);
 
-// Excluir o modal de correção da interceptação global
-if (form.id === 'formRespCorrecao') {
-    console.log('📝 Modal de correção detectado - permitindo envio normal');
-    return true; // Permite o envio normal do formulário
-}
+// // Excluir o modal de correção da interceptação global
+// if (form.id === 'formRespCorrecao') {
+//     console.log('📝 Modal de correção detectado - permitindo envio normal');
+//     return true; // Permite o envio normal do formulário
+// }

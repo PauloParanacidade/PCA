@@ -44,6 +44,15 @@ class PppController extends Controller
     
     public function store(StorePppRequest $request)
     {
+        // ADICIONE ESTAS LINHAS NO INÍCIO
+        Log::info('🚨 MÉTODO STORE CHAMADO!', [
+            'timestamp' => now(),
+            'acao' => $request->input('acao'),
+            'all_data' => $request->all(),
+            'method' => $request->method(),
+            'url' => $request->url()
+        ]);
+        
         try {
             // Verificar se já existe um PPP com os mesmos dados básicos criado recentemente
             $existingPpp = PcaPpp::where('user_id', auth()->id())
@@ -234,6 +243,7 @@ class PppController extends Controller
 
     public function update(StorePppRequest $request, $id)
     {
+        //dd("estou no update");
         // DEBUG: Verificar dados recebidos
         Log::info('📝 Dados recebidos no update:', [
             'acao' => $request->input('acao'),
@@ -910,6 +920,27 @@ class PppController extends Controller
      */
     public function responderCorrecao(ResponderCorrecaoRequest $request, PcaPpp $ppp)
     {
+        // 🔍 DEBUG: dd() para verificar se o método está sendo chamado
+        dd([
+        'metodo_chamado' => 'responderCorrecao',
+        'timestamp' => now()->format('Y-m-d H:i:s'),
+        'request_method' => request()->method(),
+        'request_url' => request()->fullUrl(),
+        'request_all' => $request->all(),
+        'ppp_data' => [
+            'id' => $ppp->id,
+            'status_id' => $ppp->status_id,
+            'gestor_atual_id' => $ppp->gestor_atual_id,
+            'user_id' => $ppp->user_id
+        ],
+        'auth_user' => [
+            'id' => Auth::id(),
+            'name' => Auth::user()->name,
+            'department' => Auth::user()->department
+        ],
+        'route_params' => request()->route()->parameters()
+    ]);
+        
         // DEBUG: Log de entrada
         Log::info('🔍 DEBUG - Método responderCorrecao chamado', [
             'ppp_id' => $ppp->id,

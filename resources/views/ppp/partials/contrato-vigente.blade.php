@@ -90,7 +90,7 @@
                             placeholder="Ano"
                             min="{{ date('Y') + 1 }}"
                             max="{{ date('Y') + 10 }}"
-                            value="{{ old('ano_vigencia_final', $ppp->ano_vigencia_final ?? '') }}">
+                            value="{{ old('ano_vigencia_final', $ppp->ano_vigencia_final ?? date('Y') + 1) }}">
                             <small class="form-text text-muted">Ano de vigência final</small>
                         </div>
                     </div>
@@ -454,12 +454,5 @@
             }
         }
         checkValorMaisUmExercicio();
-        
-        // Forçar atualização do campo de ano após inicialização
-        setTimeout(() => {
-            if (anoNovoContrato) {
-                anoNovoContrato.value = 'de ' + (new Date().getFullYear() + 1);
-            }
-        }, 100);
     });
 </script>

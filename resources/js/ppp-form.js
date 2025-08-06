@@ -36,8 +36,4 @@ const PPPForm = {
     }
 };
 
-// $(function() {
-//     PPPForm.init();
-// });
-
 export default PPPForm;

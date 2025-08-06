@@ -105,7 +105,7 @@
             </div>
         </div>
 
-        @if(!isset($ppp) || !$ppp->id)  {{-- Só na criação --}}
+        @if($isCreating)  {{-- Usar $isCreating em vez de verificar se $ppp existe --}}
             <div class="d-flex justify-content-end mt-3">
                 <button type="button" id="btn-avancar-card-azul" class="btn btn-primary btn-lg">
                     <i class="fas fa-arrow-right me-2"></i>

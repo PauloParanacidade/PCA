@@ -916,7 +916,6 @@
 @section('js')
 @vite('resources/js/ppp-form.js')
 <script>
-    <script>
         $(document).ready(function() {
             // Verificar se estamos em modo reunião DIREX
             const modoReuniaoDirectx = {{ $modoReuniaoDirectx ? 'true' : 'false' }};
