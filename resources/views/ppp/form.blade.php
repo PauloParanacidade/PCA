@@ -185,7 +185,7 @@ $anoAtual = old('ano_vigencia_final', $ppp->ano_vigencia_final ?? $anoPadrao);
         // ===================================
         // FUNÇÃO PARA DEFINIR O STORE PARA AVANÇAR E UPDATE PARA SALVAR E ENVIAR PARA AVALIAÇÃO
         // ===================================
-        console.log('btnAvancar:', btnAvancar);
+        console.log('btnAvancar:', btnAvancar,'botão não irá aparecer pois não estamos criando um rascunho de PPP');
         if (btnAvancar) {
             btnAvancar.addEventListener('click', function(e) {
                 e.preventDefault();

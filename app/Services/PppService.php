@@ -173,7 +173,7 @@ class PppService
                         'id' => $gestorAtual->id,
                         'name' => $gestorAtual->name,
                         'department' => $gestorAtual->department,
-                        'roles' => $gestorAtual->getRoleNames()->toArray()
+                        'roles' => $gestorAtual->roles->pluck('name')->toArray()
                     ] : 'null'
                 ]);
                 
@@ -233,7 +233,7 @@ class PppService
                         'id' => $proximoGestor->id,
                         'name' => $proximoGestor->name,
                         'department' => $proximoGestor->department,
-                        'roles' => $proximoGestor->getRoleNames()->toArray()
+                        'roles' => $proximoGestor->roles->pluck('name')->toArray()
                     ] : 'null'
                 ]);
                 

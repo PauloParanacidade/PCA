@@ -254,7 +254,7 @@ class PppController extends Controller
         
         $usuario = auth()->user();
         $acao    = $request->input('acao'); // 'salvar' ou 'enviar_aprovacao'
-        $modo    = $request->input('modo'); // 'edicao' ou 'criacao'
+        $modo    = $request->input('modo'); // 'edicao', 'criacao' ou 'correcao'
 
         Log::info('🛠️ Ação detectada no update()', [
             'ppp_id' => $id,
@@ -263,6 +263,35 @@ class PppController extends Controller
             'data'   => $request->all()
         ]);
         //dd($request->all());
+
+        // NOVO: Tratar modo 'correcao'
+        if ($modo === 'correcao') {
+            $ppp = PcaPpp::findOrFail($id);
+            
+            // Verificar se o usuário é o responsável pela correção
+            if ($ppp->gestor_atual_id !== Auth::id()) {
+                return redirect()->back()->with('error', 'Você não tem permissão para responder a correção deste PPP.');
+            }
+            
+            // Verificar se o PPP está no status correto (aguardando_correcao ou em_correcao)
+            if (!in_array($ppp->status_id, [4, 5])) { // 4: aguardando_correcao, 5: em_correcao
+                return redirect()->back()->with('error', 'PPP não está no status adequado para resposta de correção.');
+            }
+            
+            try {
+                $this->pppService->reenviarAposCorrecao(
+                    $ppp,
+                    $request->input('justificativa')
+                );
+                
+                return redirect()->route('ppp.meus')
+                    ->with('success', 'Correção enviada com sucesso! PPP foi reenviado para aprovação.');
+            } catch (\Exception $e) {
+                Log::error('❌ Erro ao responder correção: ' . $e->getMessage());
+                return redirect()->back()
+                    ->with('error', 'Erro ao enviar correção: ' . $e->getMessage());
+            }
+        }
 
         if ($modo === 'edicao' && $acao === 'salvar') {
             $ppp = PcaPpp::findOrFail($id);
@@ -630,8 +659,16 @@ class PppController extends Controller
         try {
             $ppp = PcaPpp::findOrFail($id); //Carrega o PPP do banco de dados
             
-            // DEBUG: Verificar dados do PPP
-            //dd($ppp);
+            // DEBUG temporário
+            // dd([
+            //     'Estou no método edit',
+            //     'ppp_id' => $ppp->id,
+            //     'status_id' => $ppp->status_id,
+            //     'gestor_atual_id' => $ppp->gestor_atual_id,
+            //     'auth_user_id' => Auth::id(),
+            //     'status_correto' => in_array($ppp->status_id, [4, 5]),
+            //     'eh_gestor' => $ppp->gestor_atual_id === Auth::id()
+            // ]);
             
         // Se o PPP ainda está em rascunho (status 1), manter comportamento de criação
         if ($ppp->status_id == 1) {
@@ -698,23 +735,6 @@ class PppController extends Controller
             ]);
             
             return back()->withErrors(['msg' => 'Erro ao excluir PPP: ' . $ex->getMessage()]);
-        }
-    }
-    
-    public function solicitarCorrecao(Request $request, PcaPpp $ppp)
-    {
-        $request->validate([
-            'motivo' => 'required|string|max:1000'
-        ]);
-        
-        try {
-            $this->pppService->solicitarCorrecao($ppp, $request->motivo);
-            
-            return redirect()->route('ppp.index')
-            ->with('success', 'Correção solicitada com sucesso!');
-        } catch (\Exception $e) {
-            return redirect()->back()
-            ->with('error', 'Erro ao solicitar correção: ' . $e->getMessage());
         }
     }
     

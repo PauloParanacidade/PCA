@@ -44,7 +44,7 @@
             @if(!$isCreating && isset($ppp) && $ppp->id)
                 {{-- Se status for "aguardando correção" (4) ou "em correção" (5) --}}
                 @if(in_array($ppp->status_id, [4, 5]))
-                    <button type="button" class="btn btn-primary btn-lg mx-2" data-toggle="modal" data-target="#modalRespCorrecao">
+                    <button type="button" class="btn btn-primary btn-lg mx-2" data-toggle="modal" data-target="#modalRespCorrecao" id="btn-enviar-correcao">
                         <i class="fas fa-edit me-2"></i>
                         Enviar Correção/Justificativa
                     </button>
