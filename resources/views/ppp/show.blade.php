@@ -396,12 +396,18 @@
                     $podeVerBotoes = in_array($ppp->status_id, [8, 9, 10]); // aguardando_direx, direx_avaliando, direx_editado
                     $podeEditar = $modoReuniaoDirectx && $ppp->status_id == 9; // Só pode editar se estiver avaliando na reunião
                 } elseif ($usuarioLogado->hasAnyRole(['daf', 'gestor'])) {
-                    // DAF e gestores podem ver botões para PPPs aguardando aprovação ou em avaliação
-                    $podeVerBotoes = in_array($ppp->status_id, [2, 3, 7, 8, 9]);
-                    // Gestores podem editar PPPs que podem visualizar OU PPPs aguardando correção
-                    $podeEditar = $podeVerBotoes || in_array($ppp->status_id, [4, 5]); // Inclui aguardando_correcao e em_correcao
+                    // REGRA IMPORTANTE: Se o gestor é o CRIADOR do PPP, ele deve ter acesso de usuário comum
+                    if ($ppp->user_id == $usuarioLogado->id) {
+                        // Gestor criador do PPP: acesso de usuário comum
+                        $podeVerBotoes = false; // Nunca mostra botões de validação para seus próprios PPPs
+                        $podeEditar = in_array($ppp->status_id, [1, 4, 5]); // rascunho, aguardando_correcao, em_correcao
+                    } else {
+                        // Gestor avaliando PPP de outros: acesso de gestor
+                        $podeVerBotoes = in_array($ppp->status_id, [2, 3, 7, 8, 9]);
+                        $podeEditar = $podeVerBotoes || in_array($ppp->status_id, [4, 5]); // Inclui aguardando_correcao e em_correcao
+                    }
                 } else {
-                    // MODIFICADO: Usuário padrão NÃO pode ver botões de validação
+                    // Usuário padrão NÃO pode ver botões de validação
                     // Apenas pode editar seus próprios PPPs em rascunho ou aguardando correção
                     $podeVerBotoes = false; // Nunca mostra botões de validação
                     $podeEditar = $ppp->user_id == $usuarioLogado->id && in_array($ppp->status_id, [1, 4, 5]); // rascunho, aguardando_correcao, em_correcao

@@ -53,6 +53,11 @@
                         <i class="fas fa-paper-plane me-2"></i>
                         Salvar e Enviar para Avaliação
                     </button>
+                @elseif($ppp->status_id == 1) {{-- Status rascunho no modo edição: deve mostrar "Salvar e Enviar para Avaliação" --}}
+                    <button type="submit" name="acao" value="enviar_aprovacao" class="btn btn-primary btn-lg mx-2">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Salvar e Enviar para Avaliação
+                    </button>
                 @else
                     <button type="submit" name="acao" value="salvar" class="btn btn-success btn-lg mx-2">
                         <i class="fas fa-save me-2"></i>

@@ -672,14 +672,10 @@ class PppController extends Controller
             //     'eh_gestor' => $ppp->gestor_atual_id === Auth::id()
             // ]);
             
-        // Se o PPP ainda está em rascunho (status 1), manter comportamento de criação
-        if ($ppp->status_id == 1) {
-            $edicao = false;
-            $isCreating = true;
-        } else {
-            $edicao = true;
-            $isCreating = false;
-        }
+        // No modo de edição, sempre definir isCreating como false
+        // O botão "Avançar" só deve aparecer na criação inicial
+        $edicao = true;
+        $isCreating = false;
 
             return view('ppp.form', compact('ppp','edicao', 'isCreating') + ['isCardAmarelo' => true]);
         } catch (\Throwable $ex) {

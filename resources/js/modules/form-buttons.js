@@ -107,16 +107,21 @@ export const FormButtons = {
             console.log('🔑 Token CSRF para requisição:', csrfToken ? 'PRESENTE' : 'AUSENTE');
             
             if (isEdit) {
-                console.log('✏️ Modo EDIÇÃO detectado - Enviando para aprovação diretamente');
+                console.log('✏️ Modo EDIÇÃO detectado - Salvando dados e enviando para aprovação');
                 
                 const pppId = form.attr('action').split('/').pop();
                 console.log('🆔 PPP ID extraído:', pppId);
                 
-                const url = `/ppp/${pppId}/enviar-aprovacao`;
-                console.log('🌐 URL da requisição:', url);
+                // ✅ CORREÇÃO: Adicionar acao=enviar_aprovacao ao FormData para modo edição
+                formData.append('acao', 'enviar_aprovacao');
+                console.log('📝 Parâmetro acao=enviar_aprovacao adicionado ao FormData para edição');
+                
+                // ✅ CORREÇÃO: Usar a rota de update em vez da rota específica de envio
+                const url = form.attr('action'); // Usar a action do formulário (rota update)
+                console.log('🌐 URL da requisição (update):', url);
                 
                 const response = await fetch(url, {
-                    method: 'POST',
+                    method: 'POST', // O Laravel vai processar como PUT devido ao _method
                     body: formData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -150,9 +155,9 @@ export const FormButtons = {
             } else {
                 console.log('🆕 Modo CRIAÇÃO detectado - Salvando e enviando para aprovação');
                 
-                // ✅ CORREÇÃO: Enviar 'SIM' em vez de '1'
-                formData.append('enviar_aprovacao', 'SIM');
-                console.log('📝 Parâmetro enviar_aprovacao=SIM adicionado ao FormData');
+                // ✅ CORREÇÃO: Enviar 'acao' = 'enviar_aprovacao' (não 'enviar_aprovacao' = 'SIM')
+                formData.append('acao', 'enviar_aprovacao');
+                console.log('📝 Parâmetro acao=enviar_aprovacao adicionado ao FormData');
                 
                 const createUrl = '/ppp';
                 console.log('🌐 URL de criação:', createUrl);
