@@ -596,7 +596,7 @@ class PppController extends Controller
             $usuarioLogado = Auth::user();
             
             // CORRIGIDO: Para determinar próximo gestor, considerar o usuário logado se ele for gestor
-            $usuarioParaAnalise = $usuarioLogado->hasRole(['dom', 'supex', 'doe']) ? $usuarioLogado : $ppp->user;
+            $usuarioParaAnalise = $usuarioLogado->hasRole(['dom', 'supex', 'doe', 'secretaria']) ? $usuarioLogado : $ppp->user;
             $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($usuarioParaAnalise);
             $ehProximoGestor = $proximoGestor && $proximoGestor->id === $usuarioLogado->id;
             
@@ -773,11 +773,11 @@ class PppController extends Controller
             'comentario' => 'nullable|string|max:1000'
         ]);
         
-        if(!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
+        if(!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
             return redirect()->back()->with('error', 'Você não tem permissão para aprovar PPPs.');
         }
         
-        if (!in_array($ppp->status_id, [3])) { // 3 = em_avaliacao
+        if (!in_array($ppp->status_id, [2, 3])) { // 2 = aguardando_aprovacao, 3 = em_avaliacao
             return redirect()->back()->with('error', 'Este PPP não está disponível para aprovação.');
         }
         
@@ -803,7 +803,7 @@ class PppController extends Controller
     public function reprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
     {
         // Verificar se o usuário tem permissão
-        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
+        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
             return redirect()->back()->with('error', 'Você não tem permissão para reprovar PPPs.');
         }
         
@@ -1706,7 +1706,7 @@ class PppController extends Controller
         $ppp = PcaPpp::findOrFail($id);
         
         // Verificar se o usuário tem permissão para solicitar correção
-        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor'])) {
+        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
             return redirect()->back()->with('error', 'Você não tem permissão para solicitar correção.');
         }
         

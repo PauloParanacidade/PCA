@@ -161,7 +161,7 @@ class User extends Authenticatable implements LdapAuthenticatable
 public function garantirPapelGestor(): void
 {
     // Verificar se já tem algum role de gestão
-    if (!$this->hasAnyRole(['admin', 'daf', 'gestor'])) {
+    if (!$this->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
         // Buscar o role 'gestor'
         $gestorRole = \App\Models\Role::where('name', 'gestor')->first();
         

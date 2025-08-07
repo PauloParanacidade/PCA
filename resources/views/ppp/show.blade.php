@@ -394,7 +394,7 @@
                     // Secretária pode ver botões para PPPs aguardando DIREX ou em reunião DIREX
                     $podeVerBotoes = in_array($ppp->status_id, [8, 9, 10]); // aguardando_direx, direx_avaliando, direx_editado
                     $podeEditar = $modoReuniaoDirectx && $ppp->status_id == 9; // Só pode editar se estiver avaliando na reunião
-                } elseif ($usuarioLogado->hasAnyRole(['daf', 'gestor'])) {
+                } elseif ($usuarioLogado->hasAnyRole(['daf', 'gestor', 'secretaria'])) {
                     // REGRA IMPORTANTE: Se o gestor é o CRIADOR do PPP, ele deve ter acesso de usuário comum
                     if ($ppp->user_id == $usuarioLogado->id) {
                         // Gestor criador do PPP: acesso de usuário comum

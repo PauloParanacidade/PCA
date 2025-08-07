@@ -129,10 +129,10 @@ class HierarquiaService
             return true;
         }
 
-        // SEGUNDA VERIFICAÇÃO: Exceções DOM, SUPEX, DOE
-        // DOM pode gerenciar PPPs de subordinados até 2 níveis hierárquicos
-        if ($gestor->hasRole(['dom', 'supex', 'doe'])) {
-            Log::info('🔍 DEBUG ehGestorDe - Verificando exceção DOM/SUPEX/DOE', [
+        // SEGUNDA VERIFICAÇÃO: Exceções DOM, SUPEX, DOE, SECRETARIA
+        // DOM, SUPEX, DOE e SECRETARIA podem gerenciar PPPs de subordinados até 2 níveis hierárquicos
+        if ($gestor->hasRole(['dom', 'supex', 'doe', 'secretaria'])) {
+            Log::info('🔍 DEBUG ehGestorDe - Verificando exceção DOM/SUPEX/DOE/SECRETARIA', [
                 'gestor_role' => $gestor->roles->pluck('name')->toArray()
             ]);
             

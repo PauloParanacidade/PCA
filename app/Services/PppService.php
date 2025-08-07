@@ -46,9 +46,46 @@ class PppService
             try {
                 $proximoGestor = null;
                 $gestorAtual = User::find($ppp->gestor_atual_id);
+                $usuarioLogado = Auth::user();
+                $criadorPpp = User::find($ppp->user_id);
+                
                 if(!$gestorAtual) {
-                    $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
+                    // PPP sendo enviado pela primeira vez - verificar se o criador é DOM, DOE, DAF ou SUPEX
+                    $departamentoCriador = strtoupper($criadorPpp->department ?? '');
+                    $areasEspeciaisParaSecretaria = ['DOM', 'DOE', 'DAF', 'SUPEX'];
+                    
+                    Log::info('🔍 DEBUG - PPP sendo enviado pela primeira vez', [
+                        'criador_id' => $criadorPpp->id,
+                        'criador_name' => $criadorPpp->name,
+                        'criador_department' => $departamentoCriador,
+                        'areas_especiais' => $areasEspeciaisParaSecretaria,
+                        'deve_ir_para_secretaria' => in_array($departamentoCriador, $areasEspeciaisParaSecretaria)
+                    ]);
+                    
+                    if(in_array($departamentoCriador, $areasEspeciaisParaSecretaria)) {
+                        // Usuário DOM, DOE, DAF ou SUPEX criando PPP - direcionar para secretária
+                        $secretaria = $this->hierarquiaService->obterSecretaria();
+                        if ($secretaria) {
+                            $ppp->update([
+                                'status_id' => 7, // aguardando_direx
+                                'gestor_atual_id' => $secretaria->id,
+                            ]);
+                            $this->historicoService->registrarEnvioAprovacao(
+                                $ppp,
+                                ($justificativa ?? 'PPP criado por usuário ' . $departamentoCriador) . ' - Encaminhado diretamente para avaliação da DIREX'
+                            );
+                            
+                            Log::info('✅ PPP de usuário ' . $departamentoCriador . ' enviado diretamente para secretária');
+                            return true;
+                        } else {
+                            throw new \Exception('Secretária não encontrada no sistema.');
+                        }
+                    } else {
+                        // Fluxo normal para outros usuários
+                        $proximoGestor = $this->hierarquiaService->obterProximoGestor($usuarioLogado);
+                    }
                 } else {
+                    // PPP já tem gestor atual - verificar fluxo de aprovação
                     $departamento = strtoupper($gestorAtual->department ?? '');
                     $areasEspeciais = ['SUPEX', 'DOE', 'DOM'];
                     
@@ -59,32 +96,34 @@ class PppService
                         $secretaria = $this->hierarquiaService->obterSecretaria();
                         if ($secretaria) {
                             $ppp->update([
-                                'status_id' => 7, // Aguardando DIREX
+                                'status_id' => 7, // aguardando_direx
                                 'gestor_atual_id' => $secretaria->id,
                             ]);
                             $this->historicoService->registrarAprovacao(
                                 $ppp,
-                                ($comentario ?? 'PPP aprovado pelo DAF') . ' - Encaminhado para avaliação da DIREX'
+                                ($justificativa ?? 'PPP aprovado pelo DAF') . ' - Encaminhado para avaliação da DIREX'
                             );
                             return true;
                         } else {
                             throw new \Exception('Secretária não encontrada no sistema.');
                         }
                     } else {
-                        $proximoGestor = $this->hierarquiaService->obterProximoGestor(Auth::user());
+                        $proximoGestor = $this->hierarquiaService->obterProximoGestor($usuarioLogado);
                     }
                 }
+                
                 if (!$proximoGestor) {
                     throw new \Exception('Não foi possível identificar o próximo gestor.');
                 }
+                
                 // Garantir que o próximo gestor tenha o papel de gestor
                 $proximoGestor->garantirPapelGestor();
+                
                 // Atualizar PPP
                 $ppp->update([
                     'status_id' => 2, // aguardando_aprovacao
                     'gestor_atual_id' => $proximoGestor->id,
                 ]);
-                
                 
                 // Registrar no histórico
                 $this->historicoService->registrarEnvioAprovacao(
