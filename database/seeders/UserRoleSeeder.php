@@ -23,14 +23,14 @@ class UserRoleSeeder extends Seeder
         // Lista de admins
         $adminUsers = [
             'Paulo Rogério de Souza Filho',
-            'Camila Mileke Scucato',
-            'Anibal Andre Antunes Mendes',
-            'Maximiliano William Alves',
+            // 'Camila Mileke Scucato',
+            // 'Anibal Andre Antunes Mendes',
+            // 'Maximiliano William Alves',
             'Ramon Kowalski Jordão',
-            'Aluisio Clementino Soares',
-            'Thais Fernanda Ortega Santos',
-            'Francisco Luís dos Santos',
-            'Mario Luis Braz Junior'
+            // 'Aluisio Clementino Soares',
+            // 'Thais Fernanda Ortega Santos',
+            // 'Francisco Luís dos Santos',
+            // 'Mario Luis Braz Junior'
         ];
 
         foreach ($adminUsers as $name) {
