@@ -2,13 +2,12 @@
 
 @section('title', 'Visualizar PPP')
 
-@section('content_header')
+@section('content_header_content')
 @if (session('error'))
 <div class="alert alert-danger">
     {{ session('error') }}
 </div>
 @endif
-
 @endsection
 
 @section('content')

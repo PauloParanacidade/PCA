@@ -61,6 +61,6 @@ class ImpersonateController extends Controller
         // Faz login como o usuário original
         Auth::login($originalUser);
 
-        return redirect()->route('dashboard')->with('success', 'Você retornou ao seu usuário original.');
+        return redirect()->route('admin.users.roles')->with('success', 'Você retornou ao seu usuário original.');
     }
 }

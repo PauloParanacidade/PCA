@@ -2,7 +2,7 @@
 
 @section('title', 'Gerenciamento de Permissões')
 
-@section('content_header')
+@section('content_header_content')
     <div class="row mb-2">
         <div class="col-sm-6">
             <h1>Gerenciamento de Permissões</h1>

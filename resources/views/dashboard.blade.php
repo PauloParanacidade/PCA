@@ -1,8 +1,8 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte-custom')
 
 @section('title', 'Bem-vindo')
 
-@section('content_header')
+@section('content_header_content')
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center flex-wrap">
         <h1 class="mb-2 mb-md-0">Bem-vindo(a), <strong>{{ Auth::user()->name }}</strong></h1>
         <small class="text-muted font-italic">{{ Auth::user()->department ?? 'Setor não informado' }}</small>

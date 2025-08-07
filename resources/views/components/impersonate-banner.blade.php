@@ -10,7 +10,7 @@
             <i class="fas fa-user-secret mr-2"></i>
             <strong>Modo Impersonate Ativo:</strong>
             Você está impersonando <strong>{{ $currentUser->name }}</strong> 
-            ({{ $currentUser->email }})
+            ({{ $currentUser->department ?? 'Departamento N/A' }})
             <span class="text-muted">| Usuário original: {{ $originalUser->name }}</span>
         </div>
         
