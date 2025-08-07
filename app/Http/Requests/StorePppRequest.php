@@ -75,16 +75,12 @@ class StorePppRequest extends FormRequest
                 'required_if:tem_contrato_vigente,Sim',
                 'nullable',
                 'integer',
+                'digits:4',
                 'min:2000',
                 'max:' . $currentYear,
                 function ($attribute, $value, $fail) use ($currentYear) {
                     if ($value === null && $this->input('tem_contrato_vigente') === 'Sim') {
-                        $fail('Formato de ano inválido.');
-                        return;
-                    }
-                    
-                    if ($value && ($value < 2000 || $value > 9999)) {
-                        $fail('Formato de ano inválido.');
+                        $fail('O ano do contrato é obrigatório.');
                         return;
                     }
                     
@@ -99,16 +95,12 @@ class StorePppRequest extends FormRequest
                 'required_if:tem_contrato_vigente,Sim',
                 'nullable',
                 'integer',
+                'digits:4',
                 'min:' . $minVigenciaYear,
                 'max:' . ($currentYear + 10),
                 function ($attribute, $value, $fail) use ($minVigenciaYear, $currentYear) {
                     if ($value === null && $this->input('tem_contrato_vigente') === 'Sim') {
-                        $fail('Formato de ano inválido.');
-                        return;
-                    }
-                    
-                    if ($value && ($value < 2000 || $value > 9999)) {
-                        $fail('Formato de ano inválido.');
+                        $fail('O ano de vigência final é obrigatório.');
                         return;
                     }
                     
@@ -269,11 +261,14 @@ class StorePppRequest extends FormRequest
             'num_contrato.max' => 'O número do contrato deve ser no máximo 9999.',
             'ano_contrato.required_if' => 'O ano do contrato é obrigatório quando há contrato vigente.',
             'ano_contrato.integer' => 'O ano do contrato deve ser um número válido.',
-            'ano_contrato.min' => 'O ano do contrato deve ser maior que 2000.',
+            'ano_contrato.digits' => 'O ano do contrato deve ter exatamente 4 dígitos.',
+            'ano_contrato.min' => 'O ano do contrato deve ser no mínimo 2000.',
             'ano_contrato.max' => 'O ano do contrato deve ser igual ou inferior ao ano atual (' . date('Y') . ').',
             'mes_vigencia_final.required_if' => 'O mês de vigência final é obrigatório quando há contrato vigente.',
             'mes_vigencia_final.max' => 'O mês de vigência final não pode ter mais de 10 caracteres.',
             'ano_vigencia_final.required_if' => 'O ano de vigência final é obrigatório quando há contrato vigente.',
+            'ano_vigencia_final.integer' => 'O ano de vigência final deve ser um número válido.',
+            'ano_vigencia_final.digits' => 'O ano de vigência final deve ter exatamente 4 dígitos.',
             'ano_vigencia_final.min' => 'O ano de vigência final deve ser no mínimo ' . (date('Y') + 1) . '.',
             'ano_vigencia_final.max' => 'O ano de vigência final não pode ser superior a ' . (date('Y') + 10) . '.',
             'contrato_prorrogavel.required' => 'A informação sobre prorrogação é obrigatória quando o ano de vigência final é igual ao ano do PCA.',
@@ -346,7 +341,6 @@ class StorePppRequest extends FormRequest
     /**
      * Preparar dados para validação
      * Converter valores monetários formatados para numéricos
-     * Converter anos de 2 dígitos para 4 dígitos
      */
     protected function prepareForValidation()
     {
@@ -360,18 +354,6 @@ class StorePppRequest extends FormRequest
                 // Converter R$ 1.234,56 para 1234.56
                 $numericValue = $this->convertMoneyToNumeric($data[$field]);
                 $data[$field] = $numericValue;
-            }
-        }
-        
-        // Campos de ano que precisam ser convertidos de 2 para 4 dígitos
-        $yearFields = ['ano_contrato', 'ano_vigencia_final', 'ano_pca'];
-        
-        foreach ($yearFields as $field) {
-            if (isset($data[$field]) && !empty($data[$field])) {
-                $convertedYear = $this->convertYearToFourDigits($data[$field]);
-                if ($convertedYear !== null) {
-                    $data[$field] = $convertedYear;
-                }
             }
         }
         
@@ -395,38 +377,5 @@ class StorePppRequest extends FormRequest
         return (float) $numericValue;
     }
 
-    /**
-     * Converter ano de 2 dígitos para 4 dígitos
-     * Ex: 24 -> 2024, 25 -> 2025, 99 -> 2099, 00 -> 2000
-     */
-    private function convertYearToFourDigits($year)
-    {
-        if (empty($year)) {
-            return null;
-        }
-        
-        $year = (string) $year;
-        
-        // Se já tem 4 dígitos, verificar se é válido
-        if (strlen($year) == 4) {
-            $yearInt = (int) $year;
-            if ($yearInt >= 2000 && $yearInt <= 9999) {
-                return $yearInt;
-            }
-            return null; // Ano inválido
-        }
-        
-        // Se tem 2 dígitos, converter para 4
-        if (strlen($year) == 2 && ctype_digit($year)) {
-            return 2000 + (int) $year;
-        }
-        
-        // Se tem 1 dígito, adicionar zero à frente e converter
-        if (strlen($year) == 1 && ctype_digit($year)) {
-            return 2000 + (int) $year;
-        }
-        
-        // Formato inválido
-        return null;
-    }
+
 }

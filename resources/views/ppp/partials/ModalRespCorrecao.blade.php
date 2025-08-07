@@ -58,7 +58,7 @@
                         <i class="fas fa-times mr-2"></i>
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="btn-enviar-correcao-modal">
                         <i class="fas fa-paper-plane mr-2"></i>
                         Enviar Correção
                     </button>
@@ -67,3 +67,40 @@
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Submissão do formulário de correção
+     $('#modalRespCorrecao form').on('submit', function(e) {
+         // Validação simples de anos
+         const anoContrato = $('#ano_contrato').val();
+         const anoVigencia = $('#ano_vigencia_final').val();
+         const anoAtual = new Date().getFullYear();
+         
+         if (anoContrato && (anoContrato.length !== 4 || isNaN(anoContrato) || parseInt(anoContrato) < 2000 || parseInt(anoContrato) > anoAtual + 50)) {
+             e.preventDefault();
+             alert('Ano inválido');
+             $('#modalRespCorrecao').modal('hide');
+             $('#ano_contrato').focus();
+             return false;
+         }
+         
+         if (anoVigencia && (anoVigencia.length !== 4 || isNaN(anoVigencia) || parseInt(anoVigencia) < 2000 || parseInt(anoVigencia) > anoAtual + 50)) {
+             e.preventDefault();
+             alert('Ano inválido');
+             $('#modalRespCorrecao').modal('hide');
+             $('#ano_vigencia_final').focus();
+             return false;
+         }
+         
+         const btn = $('#btn-enviar-correcao-modal');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...');
+    });
+    
+    // Contador de caracteres
+    $('#justificativa').on('input', function() {
+        const count = $(this).val().length;
+        $('#charCount').text(count);
+    });
+});
+</script>

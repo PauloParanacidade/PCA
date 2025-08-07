@@ -40,27 +40,25 @@
                         <i class="fas fa-calendar-plus text-success me-1"></i>
                         Valor Total até o final do contrato <span class="text-danger">*</span>
                         <i class="fas fa-question-circle text-muted ms-1"
-                        tabindex="0"
-                        role="button"
-                        data-bs-toggle="popover"
-                        data-bs-trigger="focus"
-                        data-bs-placement="top"
-                        data-bs-html="true"
-                        title="Informe o valor total estimado
+                            tabindex="0"
+                            role="button"
+                            data-bs-toggle="popover"
+                            data-bs-trigger="focus"
+                            data-bs-placement="top"
+                            data-bs-html="true"
+                            title="Informe o valor total estimado
 para toda a vigência do contrato, somando 
 o exercício atual e os anos seguintes.
 Este campo se aplica apenas a contratos 
 com duração superior a um exercício."
-                        data-bs-content="">
-                    </i>
-                    
-                </label>
+                            data-bs-content="">
+                        </i>
+                    </label>
+                    <input type="text" name="valor_contrato_atualizado" id="valor_contrato_atualizado" class="form-control form-control-lg money-field"
+                    value="{{ old('valor_contrato_atualizado', isset($ppp->valor_contrato_atualizado) ? 'R$ ' . number_format($ppp->valor_contrato_atualizado, 2, ',', '.') : '') }}" 
+                    placeholder="R$ 0,00" autocomplete="off">
+                </div>
                 
-                <input type="text" name="valor_contrato_atualizado" id="valor_contrato_atualizado" class="form-control form-control-lg money-field"
-                value="{{ old('valor_contrato_atualizado', isset($ppp->valor_contrato_atualizado) ? 'R$ ' . number_format($ppp->valor_contrato_atualizado, 2, ',', '.') : '') }}" 
-                placeholder="R$ 0,00" autocomplete="off">
-            </div>
-            
             <div class="col-12 mb-3">
                 <label class="form-label fw-bold">
                     <i class="fas fa-clipboard-list text-success me-1"></i>
@@ -133,6 +131,12 @@ com duração superior a um exercício."
         // Escutar evento do card amarelo
         document.addEventListener('valorMaisUmExercicioChange', function(event) {
             const shouldShow = event.detail.shouldShow;
+            
+            // Verificar se os elementos existem
+            if (!campoValorMaisUm || !inputValorMaisUm) {
+                console.warn('Elementos do campo valor mais um exercício não encontrados');
+                return;
+            }
             
             if (shouldShow) {
                 // Mostrar com animação

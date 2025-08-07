@@ -194,17 +194,23 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Seletores principais (ordem lógica)
         const selectContrato = document.getElementById('tem_contrato_vigente');
         const camposContrato = document.getElementById('campos-contrato-vigente');
         const camposSemContrato = document.getElementById('campos-sem-contrato');
+        
+        // Prorrogação e renovação
         const campoProrrogavel = document.getElementById('campo-prorrogavel');
         const campoPretensao = document.getElementById('campo-pretensao-prorrogacao');
         const selectProrrogavel = document.getElementById('contrato_prorrogavel');
         const renovContratoSelect = document.getElementById('renov_contrato');
-        const anoVigenciaInput = document.querySelector('input[name="ano_vigencia_final"]');
-        const contratoMaisExercicioSelect = document.getElementById('contrato_mais_um_exercicio');
+        
+        // Informações do contrato
         const numContratoInput = document.getElementById('num_contrato');
         const anoContratoInput = document.getElementById('ano_contrato');
+        const anoVigenciaInput = document.querySelector('input[name="ano_vigencia_final"]');
+        const contratoMaisExercicioSelect = document.getElementById('contrato_mais_um_exercicio');
+        
         
         // Máscara para número do contrato (formato 0001) - COMENTADO TEMPORARIAMENTE
         if (numContratoInput) {
@@ -240,9 +246,36 @@
             // });
         }
         
+
+        
+        // Função para validar ano de 4 dígitos
+        function validateYearInput(input) {
+            const value = input.value;
+            const currentYear = new Date().getFullYear();
+            const isValid = value.length === 4 && !isNaN(value) && parseInt(value) >= 2000 && parseInt(value) <= currentYear + 50;
+            
+            // Remover classes anteriores
+            input.classList.remove('is-valid', 'is-invalid');
+            
+            // Remover feedback anterior
+            const existingFeedback = input.parentNode.querySelector('.invalid-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
+            if (value && !isValid) {
+                input.classList.add('is-invalid');
+                const feedback = document.createElement('div');
+                feedback.className = 'invalid-feedback';
+                feedback.textContent = 'Ano inválido';
+                input.parentNode.appendChild(feedback);
+            } else if (value && isValid) {
+                input.classList.add('is-valid');
+            }
+        }
+        
         // Comportamento do ano de vigência final
         if (anoVigenciaInput) {
-            // Permitir apenas números (validação será feita no backend)
             anoVigenciaInput.addEventListener('input', function(e) {
                 // Remover caracteres não numéricos
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
@@ -250,6 +283,12 @@
                 if (e.target.value.length > 4) {
                     e.target.value = e.target.value.slice(0, 4);
                 }
+                // Validar em tempo real
+                validateYearInput(e.target);
+            });
+            
+            anoVigenciaInput.addEventListener('blur', function(e) {
+                validateYearInput(e.target);
             });
         }
         
@@ -262,7 +301,6 @@
                 }
             });
             
-            // Permitir apenas números (validação será feita no backend)
             anoContratoInput.addEventListener('input', function(e) {
                 // Remover caracteres não numéricos
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
@@ -270,6 +308,12 @@
                 if (e.target.value.length > 4) {
                     e.target.value = e.target.value.slice(0, 4);
                 }
+                // Validar em tempo real
+                validateYearInput(e.target);
+            });
+            
+            anoContratoInput.addEventListener('blur', function(e) {
+                validateYearInput(e.target);
             });
         }
         
@@ -391,59 +435,111 @@
             });
         }
         
-        // Função para verificar se deve mostrar o campo "Valor Total até o final do contrato" - CORRIGIDA
+        // Função para verificar se deve mostrar o campo "Valor Total até o final do contrato" - VERSÃO ROBUSTA
         function checkValorMaisUmExercicio() {
+            // Garantir que todos os elementos existem antes de prosseguir
+            if (!selectContrato) {
+                console.warn('selectContrato não encontrado');
+                // ✅ MESMO SEM ELEMENTOS, disparar evento para garantir comunicação
+                document.dispatchEvent(new CustomEvent('valorMaisUmExercicioChange', {
+                    detail: { shouldShow: false }
+                }));
+                return;
+            }
+            
             const temContrato = selectContrato.value;
             let shouldShow = false;
             
-            if (temContrato === 'Não') {
+            const anoVigencia = anoVigenciaInput ? parseInt(anoVigenciaInput.value) : null;
+            const anoPCA = new Date().getFullYear() + 1; // Ano do PCA (2026)
+            
+            // ✅ REGRA PRINCIPAL: Se ano final > ano PCA → sempre mostrar campo
+            if (anoVigencia && !isNaN(anoVigencia) && anoVigencia > anoPCA) {
+                shouldShow = true;
+            } else if (temContrato === 'Não') {
                 // Se não tem contrato, verificar se será executado por mais de 1 exercício
-                const maisUmExercicio = contratoMaisExercicioSelect.value;
+                const maisUmExercicio = contratoMaisExercicioSelect ? contratoMaisExercicioSelect.value : '';
                 shouldShow = (maisUmExercicio === 'Sim');
                 
-            } else if (temContrato === 'Sim') {
-                // Se tem contrato, verificar toda a lógica conforme instruções
-                const anoVigencia = anoVigenciaInput ? parseInt(anoVigenciaInput.value) : null;
-                const anoPCA = new Date().getFullYear() + 1; // Ano do PCA
+            } else if (temContrato === 'Sim' && anoVigencia && anoVigencia === anoPCA) {
+                // Se tem contrato e ano final = ano PCA, verificar prorrogação
+                const prorrogavel = selectProrrogavel ? selectProrrogavel.value : '';
                 
-                // Se ano final do contrato é o mesmo ano do PCA
-                if (anoVigencia === anoPCA) {
-                    const prorrogavel = selectProrrogavel.value;
-                    
-                    if (prorrogavel === 'Sim') {
-                        const vaiProrrogar = renovContratoSelect.value;
-                        // Só mostrar se irá prorrogar = Sim
-                        shouldShow = (vaiProrrogar === 'Sim');
-                    } else if (prorrogavel === 'Não') {
-                        // Se prorrogável = Não, campo fica oculto
-                        shouldShow = false;
-                    }
-                } else {
-                    // Se ano final ≠ ano PCA, campo fica oculto
+                if (prorrogavel === 'Sim') {
+                    const vaiProrrogar = renovContratoSelect ? renovContratoSelect.value : '';
+                    // Só mostrar se irá prorrogar = Sim
+                    shouldShow = (vaiProrrogar === 'Sim');
+                } else if (prorrogavel === 'Não') {
                     shouldShow = false;
                 }
             }
+            // Nota: Se tem contrato e ano final < ano PCA, shouldShow permanece false
             
-            // Disparar evento customizado para o card verde
-            const event = new CustomEvent('valorMaisUmExercicioChange', {
+            // ✅ SEMPRE disparar evento customizado, mesmo com cards bloqueados
+            document.dispatchEvent(new CustomEvent('valorMaisUmExercicioChange', {
                 detail: { shouldShow: shouldShow }
-            });
-            document.dispatchEvent(event);
+            }));
+            
+            // ✅ FORÇAR execução direta no card verde se estiver disponível
+            const campoValorMaisUm = document.getElementById('campo-valor-mais-um-exercicio');
+            if (campoValorMaisUm) {
+                if (shouldShow) {
+                    campoValorMaisUm.style.display = 'block';
+                    const inputValorMaisUm = document.getElementById('valor_contrato_atualizado');
+                    if (inputValorMaisUm) {
+                        inputValorMaisUm.setAttribute('required', 'required');
+                    }
+                } else {
+                    campoValorMaisUm.style.display = 'none';
+                    const inputValorMaisUm = document.getElementById('valor_contrato_atualizado');
+                    if (inputValorMaisUm) {
+                        inputValorMaisUm.removeAttribute('required');
+                        inputValorMaisUm.value = '';
+                    }
+                }
+            }
         }
         
-        // Event listeners
+        
+        // Event listeners - VERSÃO ROBUSTA que funciona mesmo com cards bloqueados
         if (selectContrato) {
-            selectContrato.addEventListener('change', toggleCamposContrato);
+            selectContrato.addEventListener('change', function() {
+                toggleCamposContrato();
+                // Forçar verificação após mudança no contrato
+                setTimeout(checkValorMaisUmExercicio, 100);
+            });
         }
         
         if (anoVigenciaInput) {
-            anoVigenciaInput.addEventListener('change', function() {
+            // Múltiplos eventos para garantir que a função seja chamada
+            anoVigenciaInput.addEventListener('input', function () {
                 checkMostrarProrrogavel();
+                checkValorMaisUmExercicio(); // ✅ forçar reavaliação ao digitar
+            });
+            
+            anoVigenciaInput.addEventListener('keyup', function () {
+                checkMostrarProrrogavel();
+                checkValorMaisUmExercicio(); // ✅ forçar reavaliação ao digitar
+            });
+            
+            anoVigenciaInput.addEventListener('change', function () {
+                checkMostrarProrrogavel();
+                checkValorMaisUmExercicio(); // ✅ forçar reavaliação ao sair do campo
+            });
+            
+            anoVigenciaInput.addEventListener('blur', function () {
+                checkMostrarProrrogavel();
+                checkValorMaisUmExercicio(); // ✅ forçar reavaliação ao sair do campo
             });
         }
         
+        
         if (selectProrrogavel) {
-            selectProrrogavel.addEventListener('change', toggleCampoPretensao);
+            selectProrrogavel.addEventListener('change', function() {
+                toggleCampoPretensao();
+                // Forçar verificação após mudança na prorrogação
+                setTimeout(checkValorMaisUmExercicio, 100);
+            });
         }
         
         if (renovContratoSelect) {
@@ -454,6 +550,25 @@
             contratoMaisExercicioSelect.addEventListener('change', checkValorMaisUmExercicio);
         }
         
+        // ✅ SOLUÇÃO: Observar mudanças no DOM para detectar quando cards são desbloqueados
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    // Se um card foi desbloqueado, reexecutar a verificação
+                    if (target.classList.contains('card-bloqueado') && !target.classList.contains('bloqueado')) {
+                        setTimeout(checkValorMaisUmExercicio, 200);
+                    }
+                }
+            });
+        });
+        
+        // Observar mudanças nos cards
+        const cardAmarelo = document.getElementById('card-amarelo');
+        const cardVerde = document.getElementById('card-verde');
+        if (cardAmarelo) observer.observe(cardAmarelo, { attributes: true });
+        if (cardVerde) observer.observe(cardVerde, { attributes: true });
+        
         // Inicializar estados baseado nos valores atuais
         toggleCamposContrato();
         if (selectContrato.value === 'Sim' && anoVigenciaInput && anoVigenciaInput.value) {
@@ -463,5 +578,19 @@
             }
         }
         checkValorMaisUmExercicio();
+        
+        // ✅ SOLUÇÃO ADICIONAL: Verificar periodicamente se os cards foram desbloqueados
+        let verificacaoInterval = setInterval(function() {
+            const cardVerde = document.getElementById('card-verde');
+            if (cardVerde && !cardVerde.classList.contains('bloqueado')) {
+                checkValorMaisUmExercicio();
+                clearInterval(verificacaoInterval); // Parar verificação após cards desbloqueados
+            }
+        }, 500); // Verificar a cada 500ms
+        
+        // Limpar interval após 10 segundos para evitar loop infinito
+        setTimeout(function() {
+            clearInterval(verificacaoInterval);
+        }, 10000);
     });
 </script>

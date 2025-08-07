@@ -96,6 +96,27 @@ export const FormButtons = {
         
         console.log('✅ Validação passou - Todos os campos obrigatórios preenchidos');
         
+        // Validação simples de anos - apenas verificar se são 4 dígitos válidos
+        const anoContrato = $('#ano_contrato').val();
+        const anoVigencia = $('#ano_vigencia_final').val();
+        const anoAtual = new Date().getFullYear();
+        
+        if (anoContrato && (anoContrato.length !== 4 || isNaN(anoContrato) || parseInt(anoContrato) < 2000 || parseInt(anoContrato) > anoAtual + 50)) {
+            console.error('❌ Validação de ano do contrato falhou:', anoContrato);
+            alert('Ano inválido');
+            $('#ano_contrato').focus();
+            this.isSubmitting = false;
+            return false;
+        }
+        
+        if (anoVigencia && (anoVigencia.length !== 4 || isNaN(anoVigencia) || parseInt(anoVigencia) < 2000 || parseInt(anoVigencia) > anoAtual + 50)) {
+            console.error('❌ Validação de ano de vigência falhou:', anoVigencia);
+            alert('Ano inválido');
+            $('#ano_vigencia_final').focus();
+            this.isSubmitting = false;
+            return false;
+        }
+        
         // ✅ CORREÇÃO: Usar actualSubmitBtn em vez de submitBtn
         actualSubmitBtn.prop('disabled', true)
                .html('<i class="fas fa-spinner fa-spin me-2"></i>Enviando para aprovação...');
