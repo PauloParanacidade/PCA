@@ -1,65 +1,26 @@
-@extends('layouts.adminlte-custom')
+@extends('ppp.layouts.lista-base', [
+    'pageTitle' => 'Meus PPPs',
+    'cardTitle' => 'Meus PPPs',
+    'cardIcon' => 'fas fa-user-edit',
+    'cardHeaderClass' => 'bg-gradient-success'
+])
 
-@section('title', 'Meus PPPs')
+@section('header-actions')
+    <a href="{{ route('ppp.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus mr-1"></i>Novo PPP
+    </a>
+@stop
 
-@section('content_header')
-    @parent
-    <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-list mr-2"></i>Meus PPPs</h1>
+@section('card-actions')
+    @if($ppps->count() == 0)
         <a href="{{ route('ppp.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus mr-1"></i>Novo PPP
+            <i class="fas fa-plus mr-1"></i>Criar Primeiro PPP
         </a>
-    </div>
-@endsection
-
-@section('content')
-<div class="container-fluid">
-    <!-- Alertas -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
     @endif
+@stop
 
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
-            @foreach($errors->all() as $error)
-                {{ $error }}<br>
-            @endforeach
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    <!-- Card Principal -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-list mr-2"></i>Listagem de PPPs
-                <small class="ml-2">({{ $ppps->total() }} {{ $ppps->total() == 1 ? 'item' : 'itens' }})</small>
-            </h5>
-            @if($ppps->count() == 0)
-                <a href="{{ route('ppp.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus mr-1"></i>Criar Primeiro PPP
-                </a>
-            @endif
-        </div>
-        <div class="card-body p-0">
-            @if($ppps->count() > 0)
+@section('tabela-content')
+@if($ppps->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-hover table-striped mb-0">
                         <thead class="thead-light text-center">
@@ -148,14 +109,7 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- Paginação -->
-                @if($ppps->hasPages())
-                    <div class="card-footer">
-                        {{ $ppps->links('custom.pagination') }}
-                    </div>
-                @endif
-            @else
+ @else
                 <div class="text-center py-5">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Nenhum PPP encontrado</h5>
@@ -164,11 +118,10 @@
                         <i class="fas fa-plus mr-2"></i>Criar Meu Primeiro PPP
                     </a>
                 </div>
-            @endif
-        </div>
-    </div>
-</div>
+ @endif
+@stop
 
+@section('modals')
 <!-- Modais de Histórico -->
 <!-- Modal único reutilizável para histórico -->
 <div class="modal fade" id="historicoModal" tabindex="-1" role="dialog" aria-labelledby="historicoModalLabel" aria-hidden="true">
@@ -308,9 +261,9 @@
         </div>
     </div>
 </div>
-@endsection
+@stop
 
-@section('css')
+@section('extra-css')
 <style>
     .card {
         border: none;
@@ -411,11 +364,10 @@
         background-color: #6f42c1 !important;
     }
 </style>
-@endsection
+@stop
 
-@section('js')
-    @vite('resources/js/ppp-form.js')
-    <script>
+@section('extra-js')
+<script>
         // ===================================
         // VARIÁVEIS GLOBAIS
         // ===================================
@@ -499,5 +451,5 @@
             // Log de inicialização completa
             console.log('✅ Inicialização da página concluída');
         });
-    </script>
-@endsection
+</script>
+@stop

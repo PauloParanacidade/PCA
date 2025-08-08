@@ -1,163 +1,129 @@
-@extends('layouts.adminlte-custom')
+@extends('ppp.layouts.lista-base', [
+    'pageTitle' => 'PPPs para Avaliação',
+    'cardTitle' => 'PPPs para Avaliação',
+    'cardIcon' => 'fas fa-clipboard-check',
+    'cardHeaderClass' => 'bg-gradient-primary'
+])
 
-@section('title', 'PPPs para Avaliar')
+@section('header-actions')
+    @if(auth()->user()->hasAnyRole(['secretaria']))
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary" id="btnIniciarReuniaoSecretaria" style="display: none;">
+                <i class="fas fa-play mr-1"></i> Iniciar Reunião DIREX
+            </button>
+            <button type="button" class="btn btn-outline-warning" id="btnRetomarReuniaoSecretaria" style="display: none;">
+                <i class="fas fa-play-circle mr-1"></i> Retomar Reunião DIREX
+            </button>
+            <button type="button" class="btn btn-outline-success" id="btnGerarExcelSecretaria">
+                <i class="fas fa-file-excel mr-1"></i> Gerar Excel
+            </button>
+            <button type="button" class="btn btn-outline-danger" id="btnGerarPdfSecretaria">
+                <i class="fas fa-file-pdf mr-1"></i> Gerar PDF
+            </button>
+        </div>
+    @endif
+@stop
 
-@section('content_header')
-    @parent
-    <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-user-check mr-2"></i>PPPs para Avaliar</h1>
+@section('tabela-content')
+@if($ppps->count() > 0)
+    <div class="table-responsive">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="thead-light text-center">
+                <tr>
+                    <th width="2%">#</th>
+                    <th width="32%">Nome do Item</th>
+                    <th width="12%">Prioridade</th>
+                    <th width="12%">Área Solicitante</th>
+                    <th width="15%">Responsável Anterior</th>
+                    <th width="15%">Status</th>
+                    <th width="12%">Valor Estimado</th>
+                    <th width="18%" class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($ppps as $ppp)
+                    <tr class="ppp-row text-center" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
+                        <td class="align-middle font-weight-bold">{{ $ppp->id }}</td> 
+                        <td class="align-middle">  {{-- Coluna Nome do Item --}}
+                            <div class="d-flex flex-column">
+                                <span class="font-weight-bold">{{ $ppp->nome_item }}</span>
+                                @if($ppp->descricao)
+                                    <small class="text-muted">{{ Str::limit($ppp->descricao, 50) }}</small>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="align-middle"> {{-- Coluna Prioridade --}}
+                            @if($ppp->grau_prioridade)
+                                <span class="badge 
+                                    @if($ppp->grau_prioridade === 'Alta' || $ppp->grau_prioridade === 'Urgente') badge-danger
+                                    @elseif($ppp->grau_prioridade === 'Média') badge-warning
+                                    @else badge-success
+                                    @endif">
+                                    @if($ppp->grau_prioridade === 'Alta' || $ppp->grau_prioridade === 'Urgente') 🔴
+                                    @elseif($ppp->grau_prioridade === 'Média') 🟡
+                                    @else 🟢
+                                    @endif
+                                    {{ $ppp->grau_prioridade }}
+                                </span>
+                            @else
+                                <span class="badge badge-secondary">N/A</span>
+                            @endif
+                        </td>
+                        <td class="align-middle"> {{-- Coluna Sigla da Área solicitante --}}
+                            <span class="badge badge-secondary">
+                                {{ $ppp->user->department ?? 'Área N/A' }}
+                            </span>
+                        </td>
+                        <td class="align-middle"> {{-- Coluna Responsável Anterior --}}
+                            <span class="badge badge-info">
+                                {{ $ppp->sender_name ?? 'N/A' }}
+                            </span>
+                        </td>
+                        <td class="align-middle"> {{-- Coluna Status --}}
+                            <div class="d-flex flex-column">
+                                <span class="badge badge-info mb-1">
+                                    @if($ppp->status)
+                                        <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
+                                    @else
+                                        <i class="fas fa-info-circle mr-1"></i>Status não definido
+                                    @endif
+                                </span>
+                                <small class="text-muted">
+                                    {{ $ppp->ultima_mudanca_status ? $ppp->ultima_mudanca_status->format('d/m/Y H:i') : 'N/A' }}
+                                </small>
+                            </div>
+                        </td>
+                        <td class="align-middle"> {{-- Coluna Valor estimado --}}
+                            <span class="text-success font-weight-bold">
+                                R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
+                            </span>
+                        </td>
+                        <td class="align-middle text-center"> {{-- Coluna Ações --}}
+                            <div class="btn-group" role="group">
+                                <a href="{{ route('ppp.show', $ppp->id) }}" class="btn btn-sm btn-outline-info" title="Visualizar" onclick="event.stopPropagation();">
+                                    <i class="fas fa-eye"></i>  {{-- Ver o PPP --}}
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="event.stopPropagation(); confirmarExclusao({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')" title="Remover">
+                                    <i class="fas fa-trash"></i> {{-- Apagar o PPP --}}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
-@endsection
-
-@section('content')
-<div class="container-fluid">
-    <!-- Alertas -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
-            @foreach($errors->all() as $error)
-                {{ $error }}<br>
-            @endforeach
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    <!-- Card Principal -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-list mr-2"></i>Listagem de PPPs
-                <small class="ml-2">({{ $ppps->total() }} {{ $ppps->total() == 1 ? 'item' : 'itens' }})</small>
-            </h5>
-        </div>
-        <div class="card-body p-0">
-            @if($ppps->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
-                        <thead class="thead-light text-center">
-                            <tr>
-                                <th width="2%">#</th>
-                                <th width="32%">Nome do Item</th>
-                                <th width="12%">Prioridade</th>
-                                <th width="12%">Área Solicitante</th>
-                                <th width="15%">Responsável Anterior</th>
-                                <th width="15%">Status</th>
-                                <th width="12%">Valor Estimado</th>
-                                <th width="18%" class="text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($ppps as $ppp)
-                                <tr class="ppp-row text-center" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
-                                    <td class="align-middle font-weight-bold">{{ $ppp->id }}</td> 
-                                    <td class="align-middle">  {{-- Coluna Nome do Item --}}
-                                        <div class="d-flex flex-column">
-                                            <span class="font-weight-bold">{{ $ppp->nome_item }}</span>
-                                            @if($ppp->descricao)
-                                                <small class="text-muted">{{ Str::limit($ppp->descricao, 50) }}</small>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="align-middle"> {{-- Coluna Prioridade --}}
-                                        @if($ppp->grau_prioridade)
-                                            <span class="badge 
-                                                @if($ppp->grau_prioridade === 'Alta' || $ppp->grau_prioridade === 'Urgente') badge-danger
-                                                @elseif($ppp->grau_prioridade === 'Média') badge-warning
-                                                @else badge-success
-                                                @endif">
-                                                @if($ppp->grau_prioridade === 'Alta' || $ppp->grau_prioridade === 'Urgente') 🔴
-                                                @elseif($ppp->grau_prioridade === 'Média') 🟡
-                                                @else 🟢
-                                                @endif
-                                                {{ $ppp->grau_prioridade }}
-                                            </span>
-                                        @else
-                                            <span class="badge badge-secondary">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="align-middle"> {{-- Coluna Sigla da Área solicitante --}}
-                                        <span class="badge badge-secondary">
-                                            {{ $ppp->user->department ?? 'Área N/A' }}
-                                        </span>
-                                    </td>
-                                    <td class="align-middle"> {{-- Coluna Responsável Anterior --}}
-                                        <span class="badge badge-info">
-                                            {{ $ppp->sender_name ?? 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td class="align-middle"> {{-- Coluna Status --}}
-                                        <div class="d-flex flex-column">
-                                            <span class="badge badge-info mb-1">
-                                                @if($ppp->status)
-                                                    <i class="fas fa-info-circle mr-1"></i>{{ $ppp->status->nome }}
-                                                @else
-                                                    <i class="fas fa-info-circle mr-1"></i>Status não definido
-                                                @endif
-                                            </span>
-                                            <small class="text-muted">
-                                                {{ $ppp->ultima_mudanca_status ? $ppp->ultima_mudanca_status->format('d/m/Y H:i') : 'N/A' }}
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle"> {{-- Coluna Valor estimado --}}
-                                        <span class="text-success font-weight-bold">
-                                            R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
-                                        </span>
-                                    </td>
-                                    <td class="align-middle text-center"> {{-- Coluna Ações --}}
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('ppp.show', $ppp->id) }}" class="btn btn-sm btn-outline-info" title="Visualizar" onclick="event.stopPropagation();">
-                                                <i class="fas fa-eye"></i>  {{-- Ver o PPP --}}
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="event.stopPropagation(); confirmarExclusao({{ $ppp->id }}, '{{ addslashes($ppp->nome_item) }}')" title="Remover">
-                                                <i class="fas fa-trash"></i> {{-- Apagar o PPP --}}
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Paginação -->
-                @if($ppps->hasPages())
-                    <div class="card-footer">
-                        {{ $ppps->links('custom.pagination') }}
-                    </div>
-                @endif
-            @else
-                <div class="text-center py-5">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Nenhum PPP encontrado</h5>
-                    <p class="text-muted mb-4">Você ainda não tem nenhum PPP para avaliar.</p>
-                </div>
-            @endif
-        </div>
+@else
+    <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Nenhum PPP encontrado</h5>
+        <p class="text-muted mb-4">Você ainda não tem nenhum PPP para avaliar.</p>
     </div>
-</div>
+@endif
+@stop
 
+@section('modals')
 <!-- Modal de Confirmação para Iniciar Reunião DIREX -->
 <div class="modal fade" id="modalConfirmarDirectx" tabindex="-1" role="dialog" aria-labelledby="modalConfirmarDirectxLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
@@ -354,9 +320,9 @@
         </div>
     </div>
 </div>
-@endsection
+@stop
 
-@section('css')
+@section('extra-css')
 <style>
     .filters-form {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -588,11 +554,10 @@
         z-index: 10;
     }
 </style>
-@endsection
+@stop
 
-@section('js')
-    @vite('resources/js/ppp-form.js')
-    <script>
+@section('extra-js')
+<script>
         // ===================================
         // VARIÁVEIS GLOBAIS
         // ===================================
@@ -995,5 +960,5 @@
             // Log de inicialização completa
             console.log('✅ Inicialização da página concluída');
         });
-    </script>
-@endsection
+ </script>
+@stop

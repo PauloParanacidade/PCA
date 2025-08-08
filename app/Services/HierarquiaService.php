@@ -307,4 +307,80 @@ class HierarquiaService
         // Caso contrário, retorna fluxo normal
         return $usuario;
     }
+
+    /**
+     * Obtém a árvore hierárquica de usuários subordinados ao usuário fornecido
+     * Retorna array de IDs dos usuários que estão na hierarquia
+     */
+    public function obterArvoreHierarquica(User $user): array
+    {
+        try {
+            Log::info('🌳 HierarquiaService.obterArvoreHierarquica() - INICIANDO', [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_department' => $user->department ?? 'N/A'
+            ]);
+
+            $usuariosArvore = [$user->id]; // Incluir o próprio usuário
+            
+            // Buscar todos os usuários que têm este usuário como gestor (direto ou indireto)
+            $subordinados = $this->buscarSubordinados($user);
+            
+            foreach ($subordinados as $subordinado) {
+                $usuariosArvore[] = $subordinado->id;
+                
+                // Buscar subordinados dos subordinados (recursivo até 3 níveis)
+                $subSubordinados = $this->buscarSubordinados($subordinado, 2);
+                foreach ($subSubordinados as $subSubordinado) {
+                    if (!in_array($subSubordinado->id, $usuariosArvore)) {
+                        $usuariosArvore[] = $subSubordinado->id;
+                    }
+                }
+            }
+            
+            Log::info('✅ Árvore hierárquica obtida com sucesso', [
+                'total_usuarios' => count($usuariosArvore),
+                'usuarios_ids' => $usuariosArvore
+            ]);
+            
+            return array_unique($usuariosArvore);
+            
+        } catch (\Throwable $ex) {
+            Log::error('❌ Erro ao obter árvore hierárquica: ' . $ex->getMessage());
+            return [$user->id]; // Retorna pelo menos o próprio usuário
+        }
+    }
+
+    /**
+     * Busca subordinados diretos de um usuário
+     */
+    private function buscarSubordinados(User $gestor, int $maxNiveis = 1): array
+    {
+        $subordinados = [];
+        
+        try {
+            // Buscar usuários que têm este gestor no campo manager
+            $usuarios = User::where('active', true)
+                ->whereNotNull('manager')
+                ->get();
+                
+            foreach ($usuarios as $usuario) {
+                if ($this->ehGestorDe($gestor, $usuario)) {
+                    $subordinados[] = $usuario;
+                }
+            }
+            
+            Log::info('🔍 Subordinados encontrados', [
+                'gestor_id' => $gestor->id,
+                'gestor_name' => $gestor->name,
+                'total_subordinados' => count($subordinados),
+                'subordinados_ids' => array_map(fn($u) => $u->id, $subordinados)
+            ]);
+            
+        } catch (\Throwable $ex) {
+            Log::error('❌ Erro ao buscar subordinados: ' . $ex->getMessage());
+        }
+        
+        return $subordinados;
+    }
 }

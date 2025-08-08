@@ -1051,6 +1051,7 @@ class PppController extends Controller
 
     $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
     $pppsMeus = $this->pppService->contarMeus($userId);
+    $pppsAcompanhar = $this->pppService->contarAcompanhar($userId);
 
     $usuario = Auth::user();
 
@@ -1062,7 +1063,7 @@ class PppController extends Controller
         return $response->json()[0]['commit']['committer']['date'] ?? null;
     });
 
-    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'usuario', 'ultimaAtualizacao'));
+    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'pppsAcompanhar', 'usuario', 'ultimaAtualizacao'));
 
     }
 
@@ -1727,6 +1728,84 @@ class PppController extends Controller
             Log::error('❌ Erro ao solicitar correção: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Erro ao solicitar correção: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * PPPs para Acompanhar - Lista PPPs da árvore hierárquica do usuário
+     */
+    public function acompanhar(Request $request)
+    {
+        try {
+            Log::info('DEBUG PPPs para Acompanhar - Usuário atual', [
+                'user_id' => Auth::id(),
+                'user_name' => Auth::user()->name ?? 'N/A',
+                'department' => Auth::user()->department ?? 'N/A'
+            ]);
+            
+            $user = Auth::user();
+            
+            // Verificar se é SUPEX ou DAF - podem ver todos os PPPs
+            if (in_array($user->department, ['SUPEX', 'DAF'])) {
+                Log::info('Usuário SUPEX/DAF - acesso a todos os PPPs');
+                $query = PcaPpp::query();
+            } else {
+                // Buscar PPPs da árvore hierárquica
+                $usuariosArvore = $this->hierarquiaService->obterArvoreHierarquica($user);
+                
+                Log::info('Usuários da árvore hierárquica', [
+                    'total_usuarios' => count($usuariosArvore),
+                    'usuarios_ids' => $usuariosArvore
+                ]);
+                
+                $query = PcaPpp::query()
+                    ->where(function($q) use ($usuariosArvore) {
+                        // PPPs criados por usuários da árvore
+                        $q->whereIn('user_id', $usuariosArvore)
+                          // OU PPPs que passaram por usuários da árvore como gestores
+                          ->orWhereExists(function ($subQuery) use ($usuariosArvore) {
+                              $subQuery->select(DB::raw(1))
+                                  ->from('ppp_gestores_historico')
+                                  ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
+                                  ->whereIn('ppp_gestores_historico.gestor_id', $usuariosArvore);
+                          });
+                    });
+            }
+            
+            $query->with([
+                'user',
+                'status',
+                'gestorAtual',
+                'historicos.usuario'
+            ])->orderBy('id', 'desc');
+            
+            // Filtro por status
+            if ($request->filled('status_filter')) {
+                $query->where('status_id', $request->status_filter);
+            }
+            
+            // Filtro por busca
+            if ($request->filled('search')) {
+                $busca = $request->search;
+                $query->where(function($q) use ($busca) {
+                    $q->where('nome_item', 'like', "%{$busca}%")
+                      ->orWhere('descricao_item', 'like', "%{$busca}%")
+                      ->orWhere('descricao', 'like', "%{$busca}%");
+                });
+            }
+            
+            $ppps = $query->paginate(10)->withQueryString();
+            
+            $ppps = $this->getNextApprover($ppps);
+            
+            // Buscar todos os status para o filtro
+            $statuses = \App\Models\PppStatus::orderBy('nome')->get();
+            
+            return view('ppp.acompanhar', compact('ppps', 'statuses'));
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao listar PPPs para Acompanhar: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs para Acompanhar.');
         }
     }
 }

@@ -333,6 +333,11 @@ return [
             'icon' => 'fas fa-fw fa-list',
         ],
         [
+            'text' => 'PPPs para Acompanhar',
+            'url'  => 'ppp/acompanhar',
+            'icon' => 'fas fa-fw fa-eye',
+        ],
+        [
             'text' => 'Usuários',
             'icon' => 'fas fa-fw fa-users',
             'can'  => 'admin',

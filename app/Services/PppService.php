@@ -328,4 +328,31 @@ class PppService
             return PcaPpp::where('user_id', $userId)
             ->count();
         }
+        
+        public function contarAcompanhar(int $userId): int
+        {
+            $user = User::find($userId);
+            
+            if (!$user) {
+                return 0;
+            }
+            
+            // Verificar se é SUPEX ou DAF - podem ver todos os PPPs
+            if (in_array($user->department, ['SUPEX', 'DAF'])) {
+                return PcaPpp::count();
+            }
+            
+            // Buscar PPPs da árvore hierárquica
+            $hierarquiaService = app(\App\Services\HierarquiaService::class);
+            $usuariosArvore = $hierarquiaService->obterArvoreHierarquica($user);
+            
+            return PcaPpp::where(function($q) use ($usuariosArvore) {
+                // PPPs criados por usuários da árvore
+                $q->whereIn('user_id', $usuariosArvore)
+                  // OU PPPs que passaram por usuários da árvore como gestores
+                  ->orWhereHas('gestoresHistorico', function($subQuery) use ($usuariosArvore) {
+                      $subQuery->whereIn('gestor_id', $usuariosArvore);
+                  });
+            })->count();
+        }
     }

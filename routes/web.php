@@ -44,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
     
     // Nova rota para "Meus PPPs" - PPPs criados pelo usuário
     Route::get('ppp/meus', [PppController::class, 'meusPpps'])->name('ppp.meus');
+    
+    // Nova rota para "PPPs para Acompanhar" - PPPs para monitoramento
+    Route::get('ppp/acompanhar', [PppController::class, 'acompanhar'])->name('ppp.acompanhar');
+    
     Route::post('ppp/{ppp}/reenviar-apos-correcao', [PppController::class, 'reenviarAposCorrecao'])->name('ppp.reenviar-apos-correcao');
     
     Route::resource('ppp', PppController::class);
