@@ -90,7 +90,8 @@ class PppService
                     $areasEspeciais = ['SUPEX', 'DOE', 'DOM'];
                     
                     if(in_array($departamento, $areasEspeciais)) {
-                        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->user_id);
+                        // ✅ CORREÇÃO: Para SUPEX, DOM, DOE → sempre vai para DAF
+                        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($gestorAtual);
                         
                     } else if($gestorAtual->hasRole('daf')) {
                         $secretaria = $this->hierarquiaService->obterSecretaria();
@@ -232,7 +233,8 @@ class PppService
                     
                     if(in_array($departamento, $areasEspeciais)) {
                         Log::info('🔍 DEBUG - Área especial detectada, buscando gestor com tratamento especial');
-                        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($ppp->user_id);
+                        // ✅ CORREÇÃO: Para SUPEX, DOM, DOE → sempre vai para DAF
+                        $proximoGestor = $this->hierarquiaService->obterGestorComTratamentoEspecial($gestorAtual);
                         
                     } else if($gestorAtual->hasRole('daf')) {
                         Log::info('🔍 DEBUG - DAF detectado, buscando secretária');

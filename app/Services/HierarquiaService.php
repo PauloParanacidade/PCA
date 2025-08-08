@@ -285,27 +285,35 @@ class HierarquiaService
             return null;
         }
     
-        // Se for SUPEX, DOE ou DOM → retorna direto o DAF
-        $departamento = strtoupper($usuario->department ?? '');
-        $areasEspeciais = ['SUPEX', 'DOE', 'DOM'];
+        Log::info('🔍 DEBUG obterGestorComTratamentoEspecial - Iniciando', [
+            'user_id' => $usuario->id,
+            'user_name' => $usuario->name,
+            'user_department' => $usuario->department ?? 'N/A'
+        ]);
     
-        if (in_array($departamento, $areasEspeciais)) {
-            Log::info("🔁 Fluxo especial ativado para {$departamento}, redirecionando para DAF");
-    
-            // Buscar usuários com role 'daf' OU 'admin' que tenham department 'DAF'
-            return User::where('active', true)
-                ->where(function($query) {
-                    $query->where('department', 'DAF')
-                          ->orWhere('department', 'daf');
-                })
-                ->whereHas('roles', function ($query) {
-                    $query->whereIn('name', ['daf', 'admin']);
-                })
-                ->first();
+        // ✅ CORREÇÃO: Este método deve sempre retornar o DAF para áreas especiais
+        // Buscar usuários com role 'daf' que tenham department 'DAF'
+        $daf = User::where('active', true)
+            ->where(function($query) {
+                $query->where('department', 'DAF')
+                      ->orWhere('department', 'daf');
+            })
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('name', ['daf', 'admin']);
+            })
+            ->first();
+            
+        if ($daf) {
+            Log::info('✅ DAF encontrado para tratamento especial', [
+                'daf_id' => $daf->id,
+                'daf_name' => $daf->name,
+                'daf_department' => $daf->department
+            ]);
+            return $daf;
         }
-
-        // Caso contrário, retorna fluxo normal
-        return $usuario;
+        
+        Log::warning('❌ DAF não encontrado para tratamento especial');
+        throw new Exception('DAF não encontrado no sistema para aprovação de áreas especiais');
     }
 
     /**
