@@ -265,42 +265,8 @@
 
 @section('extra-css')
 <style>
-    .card {
-        border: none;
-        border-radius: 15px;
-        overflow: hidden;
-    }
-    
-    .card-header {
-        border-bottom: none;
-        padding: 20px;
-    }
-    
-    .bg-gradient-info {
-        background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
-    }
-    
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        color: #495057;
-        background-color: #f8f9fa;
-    }
-    
-    .table-hover tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.05);
-    }
-    
-    .ppp-row:hover {
-        background-color: rgba(0, 123, 255, 0.1) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
-    }
-    
-    .btn-group .btn {
-        margin: 0 1px;
-    }
+    /* Estilos específicos da página Meus PPPs */
+    /* Estilos comuns (card, table, etc.) estão no layout base */
     
     .timeline {
         position: relative;
@@ -371,52 +337,10 @@
         // ===================================
         // VARIÁVEIS GLOBAIS
         // ===================================
-        let pppParaExcluir = {
-            id: null,
-            nome: null
-        };
+        // Variável pppParaExcluir agora está definida no layout base
         
         // ===================================
-        // FUNÇÕES DE EXCLUSÃO
-        // ===================================
-        
-        function confirmarExclusao(id, nomeItem) {
-            // Armazenar dados do PPP
-            pppParaExcluir.id = id;
-            pppParaExcluir.nome = nomeItem;
-            
-            // Limpar campos da modal anterior
-            document.getElementById('comentarioExclusao').value = '';
-            document.getElementById('comentarioExclusao').classList.remove('is-invalid');
-            document.getElementById('nomeItemExclusaoComentario').textContent = nomeItem;
-            
-            // Abrir primeira modal
-            $('#comentarioExclusaoModal').modal('show');
-        }
-
-        function validarComentarioEProsseguir() {
-            const comentario = document.getElementById('comentarioExclusao').value.trim();
-            
-            if (!comentario) {
-                document.getElementById('comentarioExclusao').classList.add('is-invalid');
-                return;
-            }
-            
-            // Fechar primeira modal
-            $('#comentarioExclusaoModal').modal('hide');
-            
-            // Aguardar fechamento e abrir segunda modal
-            $('#comentarioExclusaoModal').on('hidden.bs.modal', function() {
-                document.getElementById('nomeItemConfirmacaoFinal').textContent = pppParaExcluir.nome;
-                document.getElementById('comentarioRegistrado').textContent = comentario;
-                document.getElementById('comentarioExclusaoHidden').value = comentario;
-                document.getElementById('formExclusaoFinal').action = `/ppp/${pppParaExcluir.id}`;
-                $('#confirmacaoFinalExclusaoModal').modal('show');
-                
-                // Remover listener para evitar múltiplas execuções
-                $(this).off('hidden.bs.modal');
-            });
-        }
+        // Funções confirmarExclusao e validarComentarioEProsseguir agora estão padronizadas no layout base
 
         // ===================================
         // INICIALIZAÇÃO
@@ -436,17 +360,11 @@
             const totalPpps = $('.ppp-row').length;
             console.log('- Total de PPPs na tabela:', totalPpps);
             
-            // Auto-hide apenas alerts de sucesso/erro, não os informativos
-            setTimeout(function() {
-                $('.alert-success, .alert-danger, .alert-warning').not('.alert-info').fadeOut('slow');
-            }, 5000);
+            // Auto-hide alerts padronizado (função do layout base)
+            inicializarAutoHideAlertas();
             
-            // Clique em qualquer parte da linha do PPP para visualizar
-            $('.ppp-row').click(function() {
-                var pppId = $(this).data('ppp-id');
-                console.log('🔗 Redirecionando para PPP:', pppId);
-                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
-            });
+            // Inicializar clique padronizado nas linhas da tabela (função do layout base)
+            inicializarCliqueTabelaPpp();
             
             // Log de inicialização completa
             console.log('✅ Inicialização da página concluída');

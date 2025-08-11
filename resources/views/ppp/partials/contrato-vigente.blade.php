@@ -33,7 +33,7 @@
                         <div class="col-md-5">
                             <input type="number" name="num_contrato" id="num_contrato" class="form-control contract-number"
                             value="{{ old('num_contrato', $ppp->num_contrato ?? '') }}" 
-                            placeholder="1" min="1" max="9999">
+                            placeholder="Ex: 0015" min="0" max="9999">
                             <small class="form-text text-muted">Número do contrato</small>
                         </div>
                         
@@ -46,7 +46,7 @@
                             name="ano_contrato"
                             id="ano_contrato" 
                             class="form-control" 
-                            placeholder="Ano (ex: 2024)" 
+                            placeholder="Ex: 2024 (4 dígitos)" 
                             value="{{ old('ano_contrato', ($isCardAmarelo ?? false) ? '' : ($ppp->ano_contrato ?? '')) }}"
                             data-default-value="{{ date('Y') - 1 }}">
                             <small class="form-text text-muted">Ano da criação do contrato</small>
@@ -92,7 +92,7 @@
                             name="ano_vigencia_final"
                             id="ano_vigencia_final"
                             class="form-control"
-                            placeholder="Ano (ex: 2026)"
+                            placeholder="Ex: 2026 (4 dígitos)"
                             value="{{ old('ano_vigencia_final', $isCardAmarelo ? '' : ($ppp->ano_vigencia_final ?? date('Y') + 1)) }}">
                             <small class="form-text text-muted">Ano de vigência final</small>
                         </div>

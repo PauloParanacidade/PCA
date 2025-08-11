@@ -561,10 +561,7 @@
         // ===================================
         // VARIÁVEIS GLOBAIS
         // ===================================
-        let pppParaExcluir = {
-            id: null,
-            nome: null
-        };
+        // Variável pppParaExcluir agora está definida no layout base
         
         let estadoReuniao = {
             ativa: false,
@@ -622,7 +619,7 @@
                         
                         // Redirecionar para o primeiro PPP
                         if (response.primeiro_ppp_id) {
-                            window.location.href = `{{ route('ppp.show', ':id') }}`.replace(':id', response.primeiro_ppp_id);
+                            redirecionarParaPpp(response.primeiro_ppp_id);
                         }
                     } else {
                         mostrarAlerta(response.message, 'warning');
@@ -643,7 +640,7 @@
             atualizarEstadoReuniao(true, pppAtual);
             
             if (pppAtual) {
-                window.location.href = `{{ route('ppp.show', ':id') }}`.replace(':id', pppAtual);
+                redirecionarParaPpp(pppAtual);
             } else {
                 mostrarAlerta('Reunião retomada. Navegue pelos PPPs usando os botões de navegação.', 'info');
             }
@@ -825,78 +822,9 @@
             }
         }
         
-        /**
-         * Mostrar alerta
-         */
-        function mostrarAlerta(mensagem, tipo = 'info') {
-            const alertClass = `alert-${tipo}`;
-            const iconClass = {
-                'success': 'fas fa-check-circle',
-                'danger': 'fas fa-exclamation-circle',
-                'warning': 'fas fa-exclamation-triangle',
-                'info': 'fas fa-info-circle'
-            }[tipo] || 'fas fa-info-circle';
-            
-            const alertHtml = `
-                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                    <i class="${iconClass} mr-2"></i>${mensagem}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            `;
-            
-            // Remover alertas existentes e adicionar novo
-            $('.container-fluid .alert').remove();
-            $('.container-fluid').prepend(alertHtml);
-            
-            // Auto-hide após 5 segundos
-            setTimeout(() => {
-                $('.alert').fadeOut('slow');
-            }, 5000);
-        }
+        // Função mostrarAlerta agora está padronizada no layout base
 
-        // ===================================
-        // FUNÇÕES ORIGINAIS DO SISTEMA
-        // ===================================
-        
-        function confirmarExclusao(id, nomeItem) {
-            // Armazenar dados do PPP
-            pppParaExcluir.id = id;
-            pppParaExcluir.nome = nomeItem;
-            
-            // Limpar campos da modal anterior
-            document.getElementById('comentarioExclusao').value = '';
-            document.getElementById('comentarioExclusao').classList.remove('is-invalid');
-            document.getElementById('nomeItemExclusaoComentario').textContent = nomeItem;
-            
-            // Abrir primeira modal
-            $('#comentarioExclusaoModal').modal('show');
-        }
-
-        function validarComentarioEProsseguir() {
-            const comentario = document.getElementById('comentarioExclusao').value.trim();
-            
-            if (!comentario) {
-                document.getElementById('comentarioExclusao').classList.add('is-invalid');
-                return;
-            }
-            
-            // Fechar primeira modal
-            $('#comentarioExclusaoModal').modal('hide');
-            
-            // Aguardar fechamento e abrir segunda modal
-            $('#comentarioExclusaoModal').on('hidden.bs.modal', function() {
-                document.getElementById('nomeItemConfirmacaoFinal').textContent = pppParaExcluir.nome;
-                document.getElementById('comentarioRegistrado').textContent = comentario;
-                document.getElementById('comentarioExclusaoHidden').value = comentario;
-                document.getElementById('formExclusaoFinal').action = `/ppp/${pppParaExcluir.id}`;
-                $('#confirmacaoFinalExclusaoModal').modal('show');
-                
-                // Remover listener para evitar múltiplas execuções
-                $(this).off('hidden.bs.modal');
-            });
-        }
+        // Funções confirmarExclusao e validarComentarioEProsseguir agora estão padronizadas no layout base
 
         // ===================================
         // INICIALIZAÇÃO
@@ -916,22 +844,10 @@
             const totalPpps = $('.ppp-row').length;
             console.log('- Total de PPPs na tabela:', totalPpps);
             
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').fadeOut('slow');
-            }, 5000);
+            // Auto-hide de alertas agora é gerenciado pelo layout base
             
-            // Clique em qualquer parte da linha do PPP para visualizar
-            $('.ppp-row').click(function() {
-                // Verificar se tabela está desabilitada
-                if ($('#tabelaPpps').hasClass('tabela-desabilitada')) {
-                    return false;
-                }
-                
-                var pppId = $(this).data('ppp-id');
-                console.log('🔗 Redirecionando para PPP:', pppId);
-                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
-            });
+            // Inicializar clique padronizado nas linhas da tabela (função do layout base)
+            inicializarCliqueTabelaPpp();
             
             // Inicializar estado da secretária se aplicável
             @if(Auth::user()->hasRole('secretaria'))

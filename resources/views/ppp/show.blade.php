@@ -1172,30 +1172,7 @@
             $('#loadingOverlay').remove();
         }
         
-        function mostrarAlerta(mensagem, tipo = 'info') {
-            const alertClass = `alert-${tipo}`;
-            const iconClass = {
-                'success': 'fa-check-circle',
-                'danger': 'fa-exclamation-triangle',
-                'warning': 'fa-exclamation-circle',
-                'info': 'fa-info-circle'
-            }[tipo] || 'fa-info-circle';
-            const alerta = `
-                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                    <i class="fas ${iconClass} mr-2"></i>
-                    ${mensagem}
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
-                </div>
-            `;
-            $('.content-header').after(alerta);
-            
-            // Auto-remover após 5 segundos
-            setTimeout(() => {
-                $('.alert').fadeOut();
-            }, 5000);
-        }
+        // Função mostrarAlerta agora está padronizada no layout base
     </script>
     
     <style>

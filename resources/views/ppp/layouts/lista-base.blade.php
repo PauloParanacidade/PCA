@@ -266,6 +266,94 @@
         }
         
         // ===================================
+        // FUNÇÕES PADRONIZADAS
+        // ===================================
+        
+        /**
+         * Função padronizada para redirecionamento para visualização de PPP
+         * Centralizada conforme diretrizes de padronização
+         */
+        function redirecionarParaPpp(pppId) {
+            if (!pppId) {
+                console.error('❌ ID do PPP não fornecido para redirecionamento');
+                return false;
+            }
+            
+            console.log('🔗 Redirecionando para PPP:', pppId);
+            window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
+        }
+        
+        /**
+         * Função padronizada para inicializar clique nas linhas da tabela PPP
+         */
+        function inicializarCliqueTabelaPpp() {
+            $('.ppp-row').off('click.ppp-redirect').on('click.ppp-redirect', function() {
+                // Verificar se tabela está desabilitada
+                if ($('#tabelaPpps').hasClass('tabela-desabilitada')) {
+                    return false;
+                }
+                
+                var pppId = $(this).data('ppp-id');
+                redirecionarParaPpp(pppId);
+            });
+        }
+        
+        /**
+         * Função padronizada para exibir alertas do sistema
+         * Centralizada conforme diretrizes de padronização
+         */
+        function mostrarAlerta(mensagem, tipo = 'info') {
+            if (!mensagem) {
+                console.error('❌ Mensagem não fornecida para o alerta');
+                return;
+            }
+            
+            // Remover alertas existentes
+            $('.alert-dynamic').remove();
+            
+            // Mapear tipos de alerta
+            const tiposValidos = {
+                'success': { classe: 'alert-success', icone: 'fas fa-check-circle' },
+                'danger': { classe: 'alert-danger', icone: 'fas fa-exclamation-circle' },
+                'warning': { classe: 'alert-warning', icone: 'fas fa-exclamation-triangle' },
+                'info': { classe: 'alert-info', icone: 'fas fa-info-circle' }
+            };
+            
+            const tipoConfig = tiposValidos[tipo] || tiposValidos['info'];
+            
+            // Criar HTML do alerta
+            const alertaHtml = `
+                <div class="alert ${tipoConfig.classe} alert-dismissible fade show alert-dynamic" role="alert">
+                    <i class="${tipoConfig.icone} mr-2"></i>${mensagem}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            
+            // Inserir no início do container
+            $('.container-fluid').prepend(alertaHtml);
+            
+            // Auto-hide após 5 segundos (exceto info)
+            if (tipo !== 'info') {
+                setTimeout(function() {
+                    $('.alert-dynamic').fadeOut('slow');
+                }, 5000);
+            }
+            
+            console.log(`📢 Alerta exibido [${tipo}]:`, mensagem);
+        }
+        
+        /**
+         * Função padronizada para auto-hide de alertas
+         */
+        function inicializarAutoHideAlertas() {
+            setTimeout(function() {
+                $('.alert-success, .alert-danger, .alert-warning').not('.alert-info').fadeOut('slow');
+            }, 5000);
+        }
+        
+        // ===================================
         // INICIALIZAÇÃO
         // ===================================
         
@@ -283,22 +371,11 @@
             const totalPpps = $('.ppp-row').length;
             console.log('- Total de PPPs na tabela:', totalPpps);
             
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert-success, .alert-danger, .alert-warning').not('.alert-info').fadeOut('slow');
-            }, 5000);
+            // Auto-hide alerts padronizado
+            inicializarAutoHideAlertas();
             
-            // Clique em qualquer parte da linha do PPP para visualizar
-            $('.ppp-row').click(function() {
-                // Verificar se tabela está desabilitada
-                if ($('#tabelaPpps').hasClass('tabela-desabilitada')) {
-                    return false;
-                }
-                
-                var pppId = $(this).data('ppp-id');
-                console.log('🔗 Redirecionando para PPP:', pppId);
-                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
-            });
+            // Inicializar clique padronizado nas linhas da tabela
+            inicializarCliqueTabelaPpp();
             
             // Log de inicialização completa
             console.log('✅ Inicialização da lista PPP concluída');
