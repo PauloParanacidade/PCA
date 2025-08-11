@@ -320,8 +320,9 @@ class PppService
                 return 0;
             }
             
-            return PcaPpp::where('status_id', 2)
+            return PcaPpp::whereIn('status_id', [2, 3, 4, 5]) // aguardando_aprovacao, em_avaliacao, aguardando_correcao, em_correcao
                 ->where('gestor_atual_id', $userId)
+                ->where('user_id', '!=', $userId) // Excluir PPPs criados pelo próprio usuário
                 ->count();
         }
         

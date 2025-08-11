@@ -15,9 +15,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [PppController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
 // Rota de Stop Impersonate - FORA do middleware admin
 Route::post('/admin/stop-impersonate', [ImpersonateController::class, 'stopImpersonate'])

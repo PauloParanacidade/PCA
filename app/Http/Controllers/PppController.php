@@ -481,7 +481,8 @@ class PppController extends Controller
             } else {
             // CORRIGIDO: Para "PPPs para Avaliar" - apenas PPPs onde o usuário é gestor, excluindo os que ele criou
             $query->where('gestor_atual_id', Auth::id())
-                  ->where('user_id', '!=', Auth::id()); // Excluir PPPs criados pelo próprio usuário
+                  ->where('user_id', '!=', Auth::id()) // Excluir PPPs criados pelo próprio usuário
+                  ->whereIn('status_id', [2, 3, 4, 5]); // aguardando_aprovacao, em_avaliacao, aguardando_correcao, em_correcao
         }
 
         $query->with([
