@@ -55,7 +55,7 @@
                 </thead>
                 <tbody>
                     @foreach($ppps as $ppp)
-                        <tr>
+                        <tr class="ppp-row" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
                             <td>
                                 <strong>{{ $ppp->nome_item }}</strong>
                                 @if($ppp->descricao_item)
@@ -87,13 +87,14 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" 
-                                            onclick="visualizarPpp({{ $ppp->id }})" 
-                                            title="Visualizar PPP">
+                                    <a href="{{ route('ppp.show', $ppp->id) }}?origem=visao-geral" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       onclick="event.stopPropagation()" 
+                                       title="Visualizar PPP">
                                         <i class="fas fa-eye"></i>
-                                    </button>
+                                    </a>
                                     <button type="button" class="btn btn-sm btn-outline-info" 
-                                            onclick="abrirHistorico({{ $ppp->id }})" 
+                                            onclick="event.stopPropagation(); abrirHistorico({{ $ppp->id }})" 
                                             title="Ver Histórico">
                                         <i class="fas fa-history"></i>
                                     </button>

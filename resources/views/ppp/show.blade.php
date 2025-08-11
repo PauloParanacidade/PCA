@@ -641,7 +641,7 @@
 </div>
 @endif
 
-<a href="{{ route('ppp.meus') }}" class="btn btn-outline-secondary btn-lg">
+<a href="{{ $urlRetorno }}" class="btn btn-outline-secondary btn-lg">
     <i class="fas fa-arrow-left mr-2"></i>
     Retornar
 </a>

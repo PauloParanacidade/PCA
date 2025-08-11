@@ -3,6 +3,9 @@
 @section('title', $pageTitle ?? 'PPPs')
 
 @section('content_header')
+    {{-- Banner de Impersonação --}}
+    <x-impersonate-banner />
+    
     <div class="d-flex justify-content-between align-items-center">
         <h1>{{ $pageTitle ?? 'PPPs' }}</h1>
         @yield('header-actions')
@@ -279,8 +282,20 @@
                 return false;
             }
             
-            console.log('🔗 Redirecionando para PPP:', pppId);
-            window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
+            // Determinar origem baseada na URL atual
+            let origem = 'meus'; // padrão
+            const currentPath = window.location.pathname;
+            
+            if (currentPath.includes('/ppp/visao-geral')) {
+                origem = 'visao-geral';
+            } else if (currentPath.includes('/ppp/index') || currentPath.includes('/ppp?')) {
+                origem = 'index';
+            } else if (currentPath.includes('/ppp/meus')) {
+                origem = 'meus';
+            }
+            
+            console.log('🔗 Redirecionando para PPP:', pppId, 'origem:', origem);
+            window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId) + '?origem=' + origem;
         }
         
         /**

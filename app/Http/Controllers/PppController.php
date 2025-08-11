@@ -608,7 +608,7 @@ class PppController extends Controller
         return $ppp->user ? ($ppp->user->name . ' - ' . ($ppp->user->department ?? 'N/A')) : 'Criador N/A';
     }
     
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
             $ppp = PcaPpp::with(['user', 'status', 'gestorAtual'])->findOrFail($id);
@@ -647,7 +647,10 @@ class PppController extends Controller
                 $this->historicoService->registrarCorrecaoIniciada($ppp);
             }
             
-            return view('ppp.show', compact('ppp', 'historicos', 'navegacao', 'ehProximoGestor', 'ehGestor'));
+            // NOVO: Determinar URL de retorno baseada na origem
+            $urlRetorno = $this->determinarUrlRetorno($request);
+            
+            return view('ppp.show', compact('ppp', 'historicos', 'navegacao', 'ehProximoGestor', 'ehGestor', 'urlRetorno'));
         } catch (\Exception $e) {
             Log::error('Erro ao visualizar PPP: ' . $e->getMessage());
             return redirect()->route('ppp.index')->with('error', 'Erro ao carregar PPP.');
@@ -1084,6 +1087,41 @@ class PppController extends Controller
 
     return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'pppsVisaoGeral', 'usuario', 'ultimaAtualizacao'));
 
+    }
+
+    /**
+     * Determina a URL de retorno baseada na página de origem
+     */
+    private function determinarUrlRetorno(Request $request)
+    {
+        // Verificar se há um parâmetro 'origem' na URL
+        if ($request->has('origem')) {
+            switch ($request->get('origem')) {
+                case 'visao-geral':
+                    return route('ppp.visao-geral');
+                case 'index':
+                    return route('ppp.index');
+                case 'meus':
+                    return route('ppp.meus');
+                default:
+                    break;
+            }
+        }
+        
+        // Verificar o HTTP_REFERER para determinar a origem
+        $referer = $request->header('referer');
+        if ($referer) {
+            if (str_contains($referer, '/ppp/visao-geral')) {
+                return route('ppp.visao-geral');
+            } elseif (str_contains($referer, '/ppp/index') || str_contains($referer, '/ppp?')) {
+                return route('ppp.index');
+            } elseif (str_contains($referer, '/ppp/meus')) {
+                return route('ppp.meus');
+            }
+        }
+        
+        // Fallback padrão: Meus PPPs
+        return route('ppp.meus');
     }
 
     /**
