@@ -273,7 +273,34 @@ O sistema de views PPP segue uma arquitetura modular baseada em componentes reut
     * **Histórico** (específico da secretária)
   * Também pode **criar PPPs normalmente**, como qualquer funcionário
 
-#### 11.2 Campo `manager`
+#### 11.2 Regras de Visualização na "Visão Geral" - ATUALIZADO
+
+**Visualização Completa (Todos os PPPs da Empresa)**:
+* **Critério**: Usuários autenticados que possuem `department` igual a **SUPEX** ou **DAF**, ou que possuem role **Admin**
+* **Escopo**: Visualizam todos os PPPs da empresa, independentemente de:
+  * Quem criou o PPP
+  * Qual avaliador atual
+  * Status do PPP
+  * Hierarquia organizacional
+
+**Visualização Hierárquica (PPPs da Hierarquia Descendente)**:
+* **Critério**: Usuários com role **Gestor**
+* **Escopo**: Visualizam apenas:
+  * PPPs criados por usuários em sua hierarquia descendente
+  * Seus próprios PPPs
+  * Independentemente do avaliador atual ou status
+* **Detalhamento da Hierarquia**:
+  * Baseada no campo `manager` dos usuários
+  * Busca recursiva de subordinados diretos e indiretos
+  * Inclui todos os níveis hierárquicos abaixo do gestor
+
+**Implementação Técnica**:
+* Verificação de `department` para acesso completo (SUPEX/DAF)
+* Verificação de role `Gestor` para acesso hierárquico
+* Queries otimizadas para consultas hierárquicas
+* Cache implementado para melhor performance
+
+#### 11.3 Campo `manager`
 * Utilizado para **identificar o gestor imediato** e seu setor
 * Extraído no momento do login
 * Usado para **definir o próximo avaliador** do PPP

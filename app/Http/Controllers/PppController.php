@@ -449,9 +449,12 @@ class PppController extends Controller
         try {
             Log::info('DEBUG PPP Index - Usuário atual', [
                 'user_id' => Auth::id(),
-                'user_name' => Auth::user()->name ?? 'N/A'
+                'user_name' => Auth::user()->name ?? 'N/A',
+                'department' => Auth::user()->department ?? 'N/A',
+                'roles' => Auth::user()->getRoleNames()->toArray()
             ]);
             
+            $user = Auth::user();
             $query = PcaPpp::query();
             
             if ($request->filled('tipo_visualizacao')) {
@@ -479,11 +482,33 @@ class PppController extends Controller
                     break;
                 }
             } else {
-            // CORRIGIDO: Para "PPPs para Avaliar" - apenas PPPs onde o usuário é gestor, excluindo os que ele criou
-            $query->where('gestor_atual_id', Auth::id())
-                  ->where('user_id', '!=', Auth::id()) // Excluir PPPs criados pelo próprio usuário
-                  ->whereIn('status_id', [2, 3, 4, 5]); // aguardando_aprovacao, em_avaliacao, aguardando_correcao, em_correcao
-        }
+                // PPPs para Avaliar - aplicar regras de visualização baseadas em department e role
+                if (in_array($user->department, ['SUPEX', 'DAF']) || $user->hasRole('admin')) {
+                    // Usuários SUPEX/DAF/Admin podem avaliar todos os PPPs pendentes da empresa
+                    Log::info('Usuário SUPEX/DAF/Admin - acesso a todos os PPPs para avaliar');
+                    $query->whereIn('status_id', [2, 3, 4, 5]); // aguardando_aprovacao, em_avaliacao, aguardando_correcao, em_correcao
+                } elseif ($user->hasRole('gestor')) {
+                    // Gestores avaliam apenas PPPs da sua hierarquia direta (excluindo próprios)
+                    $usuariosHierarquia = $this->hierarquiaService->obterArvoreHierarquica($user);
+                    
+                    Log::info('Usuário Gestor - PPPs da hierarquia para avaliar', [
+                        'total_usuarios_hierarquia' => count($usuariosHierarquia),
+                        'usuarios_ids' => $usuariosHierarquia
+                    ]);
+                    
+                    $query->where(function($q) use ($usuariosHierarquia, $user) {
+                        $q->whereIn('user_id', $usuariosHierarquia)
+                          ->where('user_id', '!=', $user->id) // Excluir PPPs criados pelo próprio gestor
+                          ->whereIn('status_id', [2, 3, 4, 5]); // aguardando_aprovacao, em_avaliacao, aguardando_correcao, em_correcao
+                    });
+                } else {
+                    // Usuários comuns não têm PPPs para avaliar (apenas gestores avaliam)
+                    Log::info('Usuário comum - sem PPPs para avaliar');
+                    $query->where('gestor_atual_id', Auth::id())
+                          ->where('user_id', '!=', Auth::id())
+                          ->whereIn('status_id', [2, 3, 4, 5]);
+                }
+            }
 
         $query->with([
             'user',
@@ -908,20 +933,51 @@ class PppController extends Controller
     }
 
     /**
-     * Lista apenas os PPPs criados pelo usuário logado
+     * Lista PPPs baseado nas regras de visualização por department e role
      */
     public function meusPpps(Request $request)
     {
         try {
             Log::info('DEBUG Meus PPPs - Usuário atual', [
                 'user_id' => Auth::id(),
-                'user_name' => Auth::user()->name ?? 'N/A'
+                'user_name' => Auth::user()->name ?? 'N/A',
+                'department' => Auth::user()->department ?? 'N/A',
+                'roles' => Auth::user()->getRoleNames()->toArray()
             ]);
             
+            $user = Auth::user();
             $query = PcaPpp::query();
             
-            // Filtrar apenas PPPs criados pelo usuário logado
-            $query->where('user_id', Auth::id());
+            // Aplicar regras de visualização baseadas em department e role
+            if (in_array($user->department, ['SUPEX', 'DAF']) || $user->hasRole('admin')) {
+            // Usuários SUPEX/DAF/Admin podem ver todos os PPPs da empresa
+            Log::info('Usuário SUPEX/DAF/Admin - acesso a todos os PPPs');
+                // Query sem filtros adicionais - vê todos os PPPs
+            } elseif ($user->hasRole('gestor')) {
+                // Gestores veem apenas PPPs da sua hierarquia direta + próprios
+                $usuariosHierarquia = $this->hierarquiaService->obterArvoreHierarquica($user);
+                
+                Log::info('Usuário Gestor - PPPs da hierarquia', [
+                    'total_usuarios_hierarquia' => count($usuariosHierarquia),
+                    'usuarios_ids' => $usuariosHierarquia
+                ]);
+                
+                $query->where(function($q) use ($usuariosHierarquia) {
+                    // PPPs criados por usuários da hierarquia
+                    $q->whereIn('user_id', $usuariosHierarquia)
+                      // OU PPPs que passaram por usuários da hierarquia como gestores
+                      ->orWhereExists(function ($subQuery) use ($usuariosHierarquia) {
+                          $subQuery->select(DB::raw(1))
+                              ->from('ppp_gestores_historico')
+                              ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
+                              ->whereIn('ppp_gestores_historico.gestor_id', $usuariosHierarquia);
+                      });
+                });
+            } else {
+                // Usuários comuns veem apenas seus próprios PPPs
+                Log::info('Usuário comum - apenas PPPs próprios');
+                $query->where('user_id', Auth::id());
+            }
 
             $query->with([
                 'user',
@@ -1790,7 +1846,7 @@ class PppController extends Controller
     }
     
     /**
-         * Visão Geral - Lista PPPs da árvore hierárquica do usuário
+         * Visão Geral - Lista PPPs baseado nas regras de visualização por department e role
      */
     public function visaoGeral(Request $request)
     {
@@ -1798,36 +1854,42 @@ class PppController extends Controller
             Log::info('DEBUG Visão Geral - Usuário atual', [
                 'user_id' => Auth::id(),
                 'user_name' => Auth::user()->name ?? 'N/A',
-                'department' => Auth::user()->department ?? 'N/A'
+                'department' => Auth::user()->department ?? 'N/A',
+                'roles' => Auth::user()->getRoleNames()->toArray()
             ]);
             
             $user = Auth::user();
+            $query = PcaPpp::query();
             
-            // Verificar se é SUPEX ou DAF - podem ver todos os PPPs
-            if (in_array($user->department, ['SUPEX', 'DAF'])) {
-                Log::info('Usuário SUPEX/DAF - acesso a todos os PPPs');
-                $query = PcaPpp::query();
-            } else {
-                // Buscar PPPs da árvore hierárquica
-                $usuariosArvore = $this->hierarquiaService->obterArvoreHierarquica($user);
+            // Aplicar regras de visualização baseadas em department e role
+            if (in_array($user->department, ['SUPEX', 'DAF']) || $user->hasRole('admin')) {
+                // Usuários SUPEX/DAF/Admin podem ver todos os PPPs da empresa
+                Log::info('Usuário SUPEX/DAF/Admin - acesso a todos os PPPs');
+                // Query sem filtros adicionais - vê todos os PPPs
+            } elseif ($user->hasRole('gestor')) {
+                // Gestores veem apenas PPPs da sua hierarquia direta + próprios
+                $usuariosHierarquia = $this->hierarquiaService->obterArvoreHierarquica($user);
                 
-                Log::info('Usuários da árvore hierárquica', [
-                    'total_usuarios' => count($usuariosArvore),
-                    'usuarios_ids' => $usuariosArvore
+                Log::info('Usuário Gestor - PPPs da hierarquia', [
+                    'total_usuarios_hierarquia' => count($usuariosHierarquia),
+                    'usuarios_ids' => $usuariosHierarquia
                 ]);
                 
-                $query = PcaPpp::query()
-                    ->where(function($q) use ($usuariosArvore) {
-                        // PPPs criados por usuários da árvore
-                        $q->whereIn('user_id', $usuariosArvore)
-                          // OU PPPs que passaram por usuários da árvore como gestores
-                          ->orWhereExists(function ($subQuery) use ($usuariosArvore) {
-                              $subQuery->select(DB::raw(1))
-                                  ->from('ppp_gestores_historico')
-                                  ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
-                                  ->whereIn('ppp_gestores_historico.gestor_id', $usuariosArvore);
-                          });
-                    });
+                $query->where(function($q) use ($usuariosHierarquia) {
+                    // PPPs criados por usuários da hierarquia
+                    $q->whereIn('user_id', $usuariosHierarquia)
+                      // OU PPPs que passaram por usuários da hierarquia como gestores
+                      ->orWhereExists(function ($subQuery) use ($usuariosHierarquia) {
+                          $subQuery->select(DB::raw(1))
+                              ->from('ppp_gestores_historico')
+                              ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
+                              ->whereIn('ppp_gestores_historico.gestor_id', $usuariosHierarquia);
+                      });
+                });
+            } else {
+                // Usuários comuns veem apenas seus próprios PPPs
+                Log::info('Usuário comum - apenas PPPs próprios');
+                $query->where('user_id', Auth::id());
             }
             
             $query->with([
@@ -1854,6 +1916,7 @@ class PppController extends Controller
             
             $ppps = $query->paginate(10)->withQueryString();
             
+            // Temporariamente comentado para debug
             $ppps = $this->getNextApprover($ppps);
             
             // Buscar todos os status para o filtro

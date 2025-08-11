@@ -2,7 +2,7 @@
     'pageTitle' => 'Visão Geral',
     'cardTitle' => 'Visão Geral',
     'cardIcon' => 'fas fa-eye',
-    'cardHeaderClass' => 'bg-info'
+    'cardHeaderClass' => 'bg-primary'
 ])
 
 @section('header-actions')
@@ -10,90 +10,94 @@
 @endsection
 
 @section('filtros')
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label for="status_filter" class="form-label">Filtrar por Status:</label>
-            <select class="form-select" id="status_filter" name="status_filter">
-                <option value="">Todos os Status</option>
-                @foreach($statuses as $status)
-                    <option value="{{ $status->id }}" {{ request('status_filter') == $status->id ? 'selected' : '' }}>
-                        {{ $status->nome }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-4">
-            <label for="search" class="form-label">Buscar:</label>
-            <input type="text" class="form-control" id="search" name="search" 
-                   value="{{ request('search') }}" placeholder="Nome do item, descrição...">
-        </div>
-        <div class="col-md-4 d-flex align-items-end">
-            <button type="button" class="btn btn-primary me-2" onclick="aplicarFiltros()">
-                <i class="fas fa-search"></i> Filtrar
-            </button>
-            <button type="button" class="btn btn-secondary" onclick="limparFiltros()">
-                <i class="fas fa-times"></i> Limpar
-            </button>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body bg-light">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="status_filter" class="form-label fw-semibold text-dark">Filtrar por Status:</label>
+                    <select class="form-select border-2" id="status_filter" name="status_filter">
+                        <option value="">Todos os Status</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status->id }}" {{ request('status_filter') == $status->id ? 'selected' : '' }}>
+                                {{ $status->nome }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label fw-semibold text-dark">Buscar:</label>
+                    <input type="text" class="form-control border-2" id="search" name="search" 
+                           value="{{ request('search') }}" placeholder="Nome do item, descrição...">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary me-2 px-4" onclick="aplicarFiltros()">
+                        <i class="fas fa-search me-1"></i> Filtrar
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary px-4" onclick="limparFiltros()">
+                        <i class="fas fa-times me-1"></i> Limpar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
 
 @section('tabela-content')
     @if($ppps->count() > 0)
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
+        <div class="table-responsive shadow-sm">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-primary">
                     <tr>
-                        <th>Item</th>
-                        <th>Criado por</th>
-                        <th>Gestor Atual</th>
-                        <th>Status</th>
-                        <th>Última Alteração</th>
-                        <th>Valor Estimado</th>
-                        <th>Ações</th>
+                        <th class="fw-bold text-white">Item</th>
+                        <th class="fw-bold text-white">Criado por</th>
+                        <th class="fw-bold text-white">Gestor Atual</th>
+                        <th class="fw-bold text-white">Status</th>
+                        <th class="fw-bold text-white">Última Alteração</th>
+                        <th class="fw-bold text-white">Valor Estimado</th>
+                        <th class="fw-bold text-white">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($ppps as $ppp)
-                        <tr class="ppp-row" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
-                            <td>
-                                <strong>{{ $ppp->nome_item }}</strong>
+                        <tr class="ppp-row align-middle" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
+                            <td class="py-3">
+                                <div class="fw-bold text-dark mb-1">{{ $ppp->nome_item }}</div>
                                 @if($ppp->descricao_item)
-                                    <br><small class="text-muted">{{ Str::limit($ppp->descricao_item, 50) }}</small>
+                                    <small class="text-secondary">{{ Str::limit($ppp->descricao_item, 50) }}</small>
                                 @endif
                             </td>
-                            <td>
-                                {{ $ppp->user->name ?? 'N/A' }}
-                                @if($ppp->user && $ppp->user->setor)
-                                    <br><small class="text-muted">{{ $ppp->user->setor }}</small>
+                            <td class="py-3">
+                                <div class="text-dark">{{ $ppp->user->name ?? 'N/A' }}</div>
+                                @if($ppp->user && $ppp->user->nomeSetor)
+                                    <small class="text-secondary">{{ $ppp->user->nomeSetor }}</small>
                                 @endif
                             </td>
-                            <td>
-                                {{ $ppp->currentManager->name ?? 'N/A' }}
-                                @if($ppp->currentManager && $ppp->currentManager->setor)
-                                    <br><small class="text-muted">{{ $ppp->currentManager->setor }}</small>
+                            <td class="py-3">
+                                <div class="text-dark">{{ $ppp->gestorAtual->name ?? 'N/A' }}</div>
+                                @if($ppp->gestorAtual && $ppp->gestorAtual->nomeSetor)
+                                    <small class="text-secondary">{{ $ppp->gestorAtual->nomeSetor }}</small>
                                 @endif
                             </td>
-                            <td>
-                                <span class="badge" style="background-color: {{ $ppp->status->cor ?? '#6c757d' }}">
+                            <td class="py-3">
+                                <span class="badge fs-6 px-3 py-2" style="background-color: {{ $ppp->status->cor ?? '#6c757d' }}; color: white;">
                                     {{ $ppp->status->nome ?? 'N/A' }}
                                 </span>
                             </td>
-                            <td>
+                            <td class="py-3 text-dark">
                                 {{ $ppp->updated_at ? $ppp->updated_at->format('d/m/Y H:i') : 'N/A' }}
                             </td>
-                            <td>
-                                R$ {{ number_format($ppp->valor_total_estimado ?? 0, 2, ',', '.') }}
+                            <td class="py-3 fw-semibold text-success">
+                                R$ {{ number_format($ppp->estimativa_valor ?? 0, 2, ',', '.') }}
                             </td>
-                            <td>
+                            <td class="py-3">
                                 <div class="btn-group" role="group">
                                     <a href="{{ route('ppp.show', $ppp->id) }}?origem=visao-geral" 
-                                       class="btn btn-sm btn-outline-info" 
+                                       class="btn btn-sm btn-primary" 
                                        onclick="event.stopPropagation()" 
                                        title="Visualizar PPP">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
                                             onclick="event.stopPropagation(); abrirHistorico({{ $ppp->id }})" 
                                             title="Ver Histórico">
                                         <i class="fas fa-history"></i>
@@ -106,10 +110,14 @@
             </table>
         </div>
     @else
-        <div class="text-center py-5">
-            <i class="fas fa-search fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">Nenhum PPP encontrado para acompanhamento</h5>
-            <p class="text-muted">Não há PPPs disponíveis para monitoramento no momento.</p>
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-search fa-4x text-primary opacity-50"></i>
+                </div>
+                <h5 class="text-dark mb-3">Nenhum PPP encontrado para acompanhamento</h5>
+                <p class="text-secondary mb-0">Não há PPPs disponíveis para monitoramento no momento.</p>
+            </div>
         </div>
     @endif
 @endsection
@@ -162,41 +170,151 @@
 
 @section('extra-css')
     <style>
-        .table th {
-            border-top: none;
+        /* Cores principais profissionais */
+        :root {
+            --primary-color: #2c5aa0;
+            --primary-dark: #1e3d6f;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --light-bg: #f8f9fa;
+            --border-color: #dee2e6;
+        }
+        
+        /* Cabeçalho da tabela */
+        .table-primary th {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: white !important;
             font-weight: 600;
+            padding: 1rem 0.75rem;
+            border-top: none;
         }
         
+        /* Linhas da tabela */
+        .table-striped > tbody > tr:nth-of-type(odd) > td {
+            background-color: rgba(44, 90, 160, 0.03);
+        }
+        
+        .table-hover > tbody > tr:hover > td {
+            background-color: rgba(44, 90, 160, 0.08);
+            transition: background-color 0.2s ease;
+        }
+        
+        /* Container da tabela */
+        .table-responsive {
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        /* Badges de status */
         .badge {
-            font-size: 0.75em;
-            padding: 0.375rem 0.75rem;
+            font-size: 0.8em;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            border-radius: 0.375rem;
         }
         
+        /* Botões de ação */
         .btn-group .btn {
-            border-radius: 0.25rem;
+            border-radius: 0.375rem;
             margin-right: 0.25rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
         
         .btn-group .btn:last-child {
             margin-right: 0;
         }
         
-        .table-responsive {
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline-secondary:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Cards e containers */
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Formulários */
+        .form-control, .form-select {
             border-radius: 0.375rem;
-            overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         
-        .table-dark th {
-            background-color: #495057;
-            border-color: #495057;
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
         }
         
-        .table-striped > tbody > tr:nth-of-type(odd) > td {
-            background-color: rgba(0, 0, 0, 0.02);
+        /* Labels */
+        .form-label {
+            color: #495057;
+            margin-bottom: 0.5rem;
         }
         
-        .table-hover > tbody > tr:hover > td {
-            background-color: rgba(0, 0, 0, 0.075);
+        /* Texto de valores */
+        .text-success {
+            color: var(--success-color) !important;
+        }
+        
+        /* Sombras */
+        .shadow-sm {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .btn-group .btn {
+                padding: 0.25rem 0.5rem;
+            }
+        }
+        
+        /* Estados de hover para linhas */
+        .ppp-row:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Melhorias de acessibilidade */
+        .btn:focus {
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+        
+        /* Espaçamento consistente */
+        .py-3 {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
         }
     </style>
 @stop

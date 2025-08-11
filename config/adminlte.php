@@ -336,6 +336,7 @@ return [
             'text' => 'Visão Geral',
             'url'  => 'ppp/visao-geral',
             'icon' => 'fas fa-fw fa-eye',
+            'can'  => 'tem-role',
         ],
         [
             'text' => 'Usuários',

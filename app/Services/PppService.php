@@ -312,50 +312,91 @@ class PppService
         }
         
         public function contarParaAvaliar(int $userId): int
-        {
-            $usuario = User::find($userId);
+    {
+        $usuario = User::find($userId);
+        
+        if (!$usuario) {
+            return 0;
+        }
+        
+        // Aplicar regras de visualização baseadas em department e role
+        if (in_array($usuario->department, ['SUPEX', 'DAF']) || $usuario->hasRole('admin')) {
+            // Usuários SUPEX/DAF/Admin podem avaliar todos os PPPs pendentes da empresa
+            return PcaPpp::whereIn('status_id', [2, 3, 4, 5])->count();
+        } elseif ($usuario->hasRole('gestor')) {
+            // Gestores avaliam apenas PPPs da sua hierarquia direta (excluindo próprios)
+            $usuariosHierarquia = $this->hierarquiaService->obterArvoreHierarquica($usuario);
             
-            // Se o usuário não tem permissão para avaliar, retorna 0
-            if (!$usuario || !$usuario->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
-                return 0;
-            }
-            
-            return PcaPpp::whereIn('status_id', [2, 3, 4, 5]) // aguardando_aprovacao, em_avaliacao, aguardando_correcao, em_correcao
+            return PcaPpp::whereIn('user_id', $usuariosHierarquia)
+                ->where('user_id', '!=', $usuario->id) // Excluir PPPs criados pelo próprio gestor
+                ->whereIn('status_id', [2, 3, 4, 5])
+                ->count();
+        } else {
+            // Usuários comuns não têm PPPs para avaliar (apenas gestores avaliam)
+            return PcaPpp::whereIn('status_id', [2, 3, 4, 5])
                 ->where('gestor_atual_id', $userId)
-                ->where('user_id', '!=', $userId) // Excluir PPPs criados pelo próprio usuário
+                ->where('user_id', '!=', $userId)
                 ->count();
         }
+    }
         
         public function contarMeus(int $userId): int
-        {
-            return PcaPpp::where('user_id', $userId)
-            ->count();
+    {
+        $usuario = User::find($userId);
+        
+        if (!$usuario) {
+            return 0;
         }
         
-        public function contarVisaoGeral(int $userId): int
-        {
-            $user = User::find($userId);
+        // Aplicar regras de visualização baseadas em department e role
+        if (in_array($usuario->department, ['SUPEX', 'DAF']) || $usuario->hasRole('admin')) {
+            // Usuários SUPEX/DAF/Admin podem ver todos os PPPs da empresa
+            return PcaPpp::count();
+        } elseif ($usuario->hasRole('gestor')) {
+            // Gestores veem PPPs da sua hierarquia direta e próprios
+            $usuariosHierarquia = $this->hierarquiaService->obterArvoreHierarquica($usuario);
             
-            if (!$user) {
-                return 0;
-            }
-            
-            // Verificar se é SUPEX ou DAF - podem ver todos os PPPs
-            if (in_array($user->department, ['SUPEX', 'DAF'])) {
-                return PcaPpp::count();
-            }
-            
-            // Buscar PPPs da árvore hierárquica
-            $hierarquiaService = app(\App\Services\HierarquiaService::class);
-            $usuariosArvore = $hierarquiaService->obterArvoreHierarquica($user);
-            
-            return PcaPpp::where(function($q) use ($usuariosArvore) {
-                // PPPs criados por usuários da árvore
-                $q->whereIn('user_id', $usuariosArvore)
-                  // OU PPPs que passaram por usuários da árvore como gestores
-                  ->orWhereHas('gestoresHistorico', function($subQuery) use ($usuariosArvore) {
-                      $subQuery->whereIn('gestor_id', $usuariosArvore);
+            return PcaPpp::where(function($q) use ($usuariosHierarquia, $usuario) {
+                // PPPs criados por usuários da hierarquia
+                $q->whereIn('user_id', $usuariosHierarquia)
+                  // OU PPPs que passaram por usuários da hierarquia como gestores
+                  ->orWhereHas('gestoresHistorico', function($subQuery) use ($usuariosHierarquia) {
+                      $subQuery->whereIn('gestor_id', $usuariosHierarquia);
                   });
             })->count();
+        } else {
+            // Usuários comuns veem apenas seus próprios PPPs
+            return PcaPpp::where('user_id', $userId)->count();
         }
+    }
+        
+        public function contarVisaoGeral(int $userId): int
+    {
+        $usuario = User::find($userId);
+        
+        if (!$usuario) {
+            return 0;
+        }
+        
+        // Aplicar regras de visualização baseadas em department e role
+        if (in_array($usuario->department, ['SUPEX', 'DAF']) || $usuario->hasRole('admin')) {
+            // Usuários SUPEX/DAF/Admin podem ver todos os PPPs da empresa
+            return PcaPpp::count();
+        } elseif ($usuario->hasRole('gestor')) {
+            // Gestores veem PPPs da sua hierarquia direta e próprios
+            $usuariosHierarquia = $this->hierarquiaService->obterArvoreHierarquica($usuario);
+            
+            return PcaPpp::where(function($q) use ($usuariosHierarquia) {
+                // PPPs criados por usuários da hierarquia
+                $q->whereIn('user_id', $usuariosHierarquia)
+                  // OU PPPs que passaram por usuários da hierarquia como gestores
+                  ->orWhereHas('gestoresHistorico', function($subQuery) use ($usuariosHierarquia) {
+                      $subQuery->whereIn('gestor_id', $usuariosHierarquia);
+                  });
+            })->count();
+        } else {
+            // Usuários comuns veem apenas seus próprios PPPs
+            return PcaPpp::where('user_id', $userId)->count();
+        }
+    }
     }
