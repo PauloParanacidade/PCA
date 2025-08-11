@@ -323,35 +323,40 @@ class HierarquiaService
     public function obterArvoreHierarquica(User $user): array
     {
         try {
-            Log::info('🌳 HierarquiaService.obterArvoreHierarquica() - INICIANDO', [
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'user_department' => $user->department ?? 'N/A'
-            ]);
+            // OTIMIZAÇÃO: Cache por 5 minutos para evitar recálculos desnecessários
+            $cacheKey = "arvore_hierarquica_user_{$user->id}";
+            
+            return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($user) {
+                Log::info('🌳 HierarquiaService.obterArvoreHierarquica() - INICIANDO', [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'user_department' => $user->department ?? 'N/A'
+                ]);
 
-            $usuariosArvore = [$user->id]; // Incluir o próprio usuário
-            
-            // Buscar todos os usuários que têm este usuário como gestor (direto ou indireto)
-            $subordinados = $this->buscarSubordinados($user);
-            
-            foreach ($subordinados as $subordinado) {
-                $usuariosArvore[] = $subordinado->id;
+                $usuariosArvore = [$user->id]; // Incluir o próprio usuário
                 
-                // Buscar subordinados dos subordinados (recursivo até 3 níveis)
-                $subSubordinados = $this->buscarSubordinados($subordinado, 2);
-                foreach ($subSubordinados as $subSubordinado) {
-                    if (!in_array($subSubordinado->id, $usuariosArvore)) {
-                        $usuariosArvore[] = $subSubordinado->id;
+                // Buscar todos os usuários que têm este usuário como gestor (direto ou indireto)
+                $subordinados = $this->buscarSubordinados($user);
+                
+                foreach ($subordinados as $subordinado) {
+                    $usuariosArvore[] = $subordinado->id;
+                    
+                    // Buscar subordinados dos subordinados (recursivo até 3 níveis)
+                    $subSubordinados = $this->buscarSubordinados($subordinado, 2);
+                    foreach ($subSubordinados as $subSubordinado) {
+                        if (!in_array($subSubordinado->id, $usuariosArvore)) {
+                            $usuariosArvore[] = $subSubordinado->id;
+                        }
                     }
                 }
-            }
-            
-            Log::info('✅ Árvore hierárquica obtida com sucesso', [
-                'total_usuarios' => count($usuariosArvore),
-                'usuarios_ids' => $usuariosArvore
-            ]);
-            
-            return array_unique($usuariosArvore);
+                
+                Log::info('✅ Árvore hierárquica obtida com sucesso', [
+                    'total_usuarios' => count($usuariosArvore),
+                    'usuarios_ids' => $usuariosArvore
+                ]);
+                
+                return array_unique($usuariosArvore);
+            });
             
         } catch (\Throwable $ex) {
             Log::error('❌ Erro ao obter árvore hierárquica: ' . $ex->getMessage());
@@ -360,20 +365,21 @@ class HierarquiaService
     }
 
     /**
-     * Busca subordinados diretos de um usuário
+     * Busca subordinados diretos de um usuário - VERSÃO OTIMIZADA
      */
     private function buscarSubordinados(User $gestor, int $maxNiveis = 1): array
     {
         $subordinados = [];
         
         try {
-            // Buscar usuários que têm este gestor no campo manager
+            // OTIMIZAÇÃO: Buscar usuários que têm este gestor no campo manager de uma vez só
             $usuarios = User::where('active', true)
                 ->whereNotNull('manager')
+                ->with('roles') // Carregar roles para evitar N+1
                 ->get();
                 
             foreach ($usuarios as $usuario) {
-                if ($this->ehGestorDe($gestor, $usuario)) {
+                if ($this->ehGestorDeOtimizado($gestor, $usuario)) {
                     $subordinados[] = $usuario;
                 }
             }
@@ -391,4 +397,83 @@ class HierarquiaService
         
         return $subordinados;
     }
-}
+
+    /**
+     * Versão otimizada do ehGestorDe que reduz logs desnecessários
+     */
+    private function ehGestorDeOtimizado(User $gestor, User $subordinado): bool
+    {
+        // PRIMEIRA VERIFICAÇÃO: Roles especiais (admin, daf, secretaria)
+        if ($gestor->hasRole(['admin', 'daf', 'secretaria'])) {
+            return true;
+        }
+
+        // SEGUNDA VERIFICAÇÃO: Exceções DOM, SUPEX, DOE, SECRETARIA
+        if ($gestor->hasRole(['dom', 'supex', 'doe', 'secretaria'])) {
+            return $this->verificarHierarquiaMultiNivel($gestor, $subordinado, 2);
+        }
+
+        // TERCEIRA VERIFICAÇÃO: Hierarquia normal (1 nível)
+        if (empty($subordinado->manager)) {
+            return false;
+        }
+
+        $nomeGestorEsperado = $this->extrairNomeDoManager($subordinado->manager);
+        
+        if (empty($nomeGestorEsperado)) {
+            return false;
+        }
+
+        return stripos($nomeGestorEsperado, $gestor->name) !== false;
+     }
+
+    /**
+     * Limpa o cache da árvore hierárquica de um usuário específico
+     */
+    public function limparCacheArvoreHierarquica(User $user): void
+    {
+        $cacheKey = "arvore_hierarquica_user_{$user->id}";
+        \Illuminate\Support\Facades\Cache::forget($cacheKey);
+        
+        Log::info('🗑️ Cache da árvore hierárquica limpo', [
+            'user_id' => $user->id,
+            'cache_key' => $cacheKey
+        ]);
+    }
+
+    /**
+     * Limpa todo o cache de árvores hierárquicas
+     */
+    public function limparTodoCacheArvoreHierarquica(): void
+    {
+        $usuarios = \App\Models\User::where('active', true)->pluck('id');
+        
+        foreach ($usuarios as $userId) {
+            $cacheKey = "arvore_hierarquica_user_{$userId}";
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+        }
+        
+        Log::info('🗑️ Todo cache de árvores hierárquicas limpo', [
+            'total_usuarios' => $usuarios->count()
+        ]);
+    }
+
+    /**
+     * Limpa o cache quando há mudanças na estrutura hierárquica
+     * Deve ser chamado quando usuários são criados, editados ou desativados
+     */
+    public function invalidarCacheHierarquia(?User $usuarioAfetado = null): void
+    {
+        if ($usuarioAfetado) {
+            // Limpar cache do usuário afetado
+            $this->limparCacheArvoreHierarquica($usuarioAfetado);
+            
+            // Limpar cache de todos os usuários que podem ter este usuário em sua árvore
+            // Para simplificar, vamos limpar todo o cache quando há mudanças
+            $this->limparTodoCacheArvoreHierarquica();
+        } else {
+            // Limpar todo o cache
+            $this->limparTodoCacheArvoreHierarquica();
+        }
+    }
+ }
