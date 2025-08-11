@@ -331,7 +331,7 @@ class PppService
             ->count();
         }
         
-        public function contarAcompanhar(int $userId): int
+        public function contarVisaoGeral(int $userId): int
         {
             $user = User::find($userId);
             

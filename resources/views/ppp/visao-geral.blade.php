@@ -210,12 +210,12 @@
             if (status) params.append('status_filter', status);
             if (search) params.append('search', search);
             
-            const url = '{{ route("ppp.acompanhar") }}' + (params.toString() ? '?' + params.toString() : '');
+            const url = '{{ route("ppp.visao-geral") }}' + (params.toString() ? '?' + params.toString() : '');
             window.location.href = url;
         }
         
         function limparFiltros() {
-            window.location.href = '{{ route("ppp.acompanhar") }}';
+            window.location.href = '{{ route("ppp.visao-geral") }}';
         }
         
         function visualizarPpp(pppId) {

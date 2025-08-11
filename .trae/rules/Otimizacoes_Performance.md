@@ -95,7 +95,7 @@ Todos os métodos geram logs informativos:
 
 ### Métricas Recomendadas
 
-1. **Tempo de resposta da rota `/ppp/acompanhar`**
+1. **Tempo de resposta da rota `/ppp/visao-geral`**
 2. **Taxa de hit do cache** (logs mostram quando cache é usado)
 3. **Número de queries executadas** (usar Laravel Debugbar em desenvolvimento)
 

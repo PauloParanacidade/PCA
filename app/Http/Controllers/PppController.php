@@ -1070,7 +1070,7 @@ class PppController extends Controller
 
     $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
     $pppsMeus = $this->pppService->contarMeus($userId);
-    $pppsAcompanhar = $this->pppService->contarAcompanhar($userId);
+    $pppsVisaoGeral = $this->pppService->contarVisaoGeral($userId);
 
     $usuario = Auth::user();
 
@@ -1082,7 +1082,7 @@ class PppController extends Controller
         return $response->json()[0]['commit']['committer']['date'] ?? null;
     });
 
-    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'pppsAcompanhar', 'usuario', 'ultimaAtualizacao'));
+    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'pppsVisaoGeral', 'usuario', 'ultimaAtualizacao'));
 
     }
 
@@ -1753,7 +1753,7 @@ class PppController extends Controller
     /**
          * Visão Geral - Lista PPPs da árvore hierárquica do usuário
      */
-    public function acompanhar(Request $request)
+    public function visaoGeral(Request $request)
     {
         try {
             Log::info('DEBUG Visão Geral - Usuário atual', [
@@ -1820,7 +1820,7 @@ class PppController extends Controller
             // Buscar todos os status para o filtro
             $statuses = \App\Models\PppStatus::orderBy('nome')->get();
             
-            return view('ppp.acompanhar', compact('ppps', 'statuses'));
+            return view('ppp.visao-geral', compact('ppps', 'statuses'));
             
         } catch (\Exception $e) {
             Log::error('Erro ao listar Visão Geral: ' . $e->getMessage());

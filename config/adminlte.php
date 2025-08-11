@@ -334,7 +334,7 @@ return [
         ],
         [
             'text' => 'Visão Geral',
-            'url'  => 'ppp/acompanhar',
+            'url'  => 'ppp/visao-geral',
             'icon' => 'fas fa-fw fa-eye',
         ],
         [
