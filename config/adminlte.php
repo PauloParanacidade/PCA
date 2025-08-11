@@ -333,7 +333,7 @@ return [
             'icon' => 'fas fa-fw fa-list',
         ],
         [
-            'text' => 'PPPs para Acompanhar',
+            'text' => 'Visão Geral',
             'url'  => 'ppp/acompanhar',
             'icon' => 'fas fa-fw fa-eye',
         ],

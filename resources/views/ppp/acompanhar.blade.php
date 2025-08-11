@@ -1,6 +1,6 @@
 @extends('ppp.layouts.lista-base', [
-    'pageTitle' => 'PPPs para Acompanhar',
-    'cardTitle' => 'PPPs para Acompanhar',
+    'pageTitle' => 'Visão Geral',
+    'cardTitle' => 'Visão Geral',
     'cardIcon' => 'fas fa-eye',
     'cardHeaderClass' => 'bg-info'
 ])
@@ -260,7 +260,7 @@
         
         // Inicialização da página
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Página PPPs para Acompanhar carregada');
+            console.log('Página Visão Geral carregada');
         });
     </script>
 @stop

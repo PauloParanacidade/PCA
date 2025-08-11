@@ -83,7 +83,7 @@
         <div class="col-12 col-md-6 mb-3 mb-md-0">
             <a href="{{ route('ppp.acompanhar') }}" class="info-box-link d-block" title="Clique para acompanhar PPPs da sua área">
                 <x-adminlte-info-box 
-                    title="PPPs para Acompanhar ({{ $pppsAcompanhar ?? 0 }})" 
+                    title="Visão Geral ({{ $pppsAcompanhar ?? 0 }})" 
                     text="Clique para acompanhar PPPs da sua área" 
                     icon="fas fa-eye" 
                     icon-theme="info" />

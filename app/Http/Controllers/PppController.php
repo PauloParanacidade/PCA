@@ -1732,12 +1732,12 @@ class PppController extends Controller
     }
     
     /**
-     * PPPs para Acompanhar - Lista PPPs da árvore hierárquica do usuário
+         * Visão Geral - Lista PPPs da árvore hierárquica do usuário
      */
     public function acompanhar(Request $request)
     {
         try {
-            Log::info('DEBUG PPPs para Acompanhar - Usuário atual', [
+            Log::info('DEBUG Visão Geral - Usuário atual', [
                 'user_id' => Auth::id(),
                 'user_name' => Auth::user()->name ?? 'N/A',
                 'department' => Auth::user()->department ?? 'N/A'
@@ -1804,8 +1804,8 @@ class PppController extends Controller
             return view('ppp.acompanhar', compact('ppps', 'statuses'));
             
         } catch (\Exception $e) {
-            Log::error('Erro ao listar PPPs para Acompanhar: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs para Acompanhar.');
+            Log::error('Erro ao listar Visão Geral: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao carregar a Visão Geral.');
         }
     }
 }

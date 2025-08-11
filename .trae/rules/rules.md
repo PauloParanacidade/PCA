@@ -1,93 +1,80 @@
 # PCA - Sistema de Planejamento de Contratações Anual
-## Regras Consolidadas do Projeto
+## Especificações e Diretrizes do Projeto
 
-> **IMPORTANTE**: Este arquivo consolida todas as regras do projeto. As informações mais recentes têm prioridade sobre as antigas.
-
----
-
-## 🎯 REGRA FUNDAMENTAL DE PADRONIZAÇÃO
-
-**ATENÇÃO**: É importante reforçar que toda funcionalidade que for utilizada nos arquivos filhos então deverá ser padronizado no layout. Sempre que detectar que 2 filhos utilizam uma mesma funcionalidade, então o layout deverá prever isso e os filhos precisarão ser ajustados, chamando essa funcionalidade do layout. Após o layout ser ajustado é importante verificar se o terceiro filho também não estaria utilizando aquela funcionalidade também. Caso afirmativo ele deverá sofrer o mesmo ajuste dos outros filhos. 
-
-**Rotina de Análise Obrigatória**: Sempre que o código do layout ou de um dos filhos sofrer alguma alteração deve-se fazer essa rotina de análise: mais do que 1 filho está utilizando a mesma funcionalidade? Se sim, implementar no layout e ajustar para que os filhos chamem a funcionalidade do layout. Sempre que um novo filho for criado, com suas particularidades implementadas, ele utilizará o layout como base.
+> **IMPORTANTE**: Este arquivo consolida todas as especificações funcionais e diretrizes técnicas do projeto PCA.
 
 ---
 
-## 📋 PLANO DE REFATORAÇÃO - VIEWS PPP
+## 🎯 PRINCÍPIO FUNDAMENTAL DE PADRONIZAÇÃO
 
-### Análise Atual das Duplicações
+**Regra de Ouro**: Toda funcionalidade utilizada por mais de um arquivo filho deve ser padronizada no layout base. 
 
-Após análise detalhada dos arquivos `ppp/index.blade.php` (999 linhas) e `ppp/meus.blade.php` (503 linhas), foram identificadas as seguintes duplicações:
+**Processo Obrigatório de Análise**:
+1. **Detecção**: Identificar quando 2 ou mais arquivos filhos utilizam a mesma funcionalidade
+2. **Centralização**: Implementar a funcionalidade no layout base
+3. **Refatoração**: Ajustar os arquivos filhos para utilizar a funcionalidade centralizada
+4. **Verificação**: Analisar se outros arquivos também podem se beneficiar da padronização
+5. **Manutenção**: Aplicar esta análise sempre que houver alterações no código
 
-#### 1. Estrutura HTML Comum
-- **Card principal** com header gradiente
-- **Tabela responsiva** com classes Bootstrap idênticas
-- **Sistema de paginação** Laravel
-- **Modais de histórico** e exclusão
-- **Alertas de feedback** do sistema
+**Benefícios**:
+- Redução de duplicação de código
+- Manutenção centralizada
+- Consistência visual e funcional
+- Facilidade de extensão para novos componentes
 
-#### 2. CSS Duplicado
-- **Estilos de card** (border-radius, overflow, padding)
-- **Gradientes** para headers (bg-gradient-primary, bg-gradient-info)
-- **Estilos de tabela** (hover effects, responsive)
-- **Timeline do histórico** (markers, content, cores)
-- **Animações** de hover e transições
+---
 
-#### 3. JavaScript Duplicado
-- **Funções de exclusão** (confirmarExclusao, validarComentarioEProsseguir)
-- **Inicialização jQuery** e event handlers
-- **Clique em linhas** da tabela para navegação
-- **Auto-hide de alertas**
-- **Controle de modais**
+## 📋 ARQUITETURA DE VIEWS - SISTEMA PPP
 
-### Diferenças Principais
+### Estrutura Organizacional
 
-#### `index.blade.php` (PPPs para Avaliar)
-- **Filtros avançados** (status, busca)
-- **Funcionalidades da secretária** (DIREX, Conselho, relatórios)
-- **Navegação especial** durante reuniões
-- **999 linhas** de código
+O sistema de views PPP segue uma arquitetura modular baseada em componentes reutilizáveis:
 
-#### `meus.blade.php` (Meus PPPs)
-- **Botão "Novo PPP"**
-- **Foco em PPPs próprios** do usuário
-- **Interface mais simples**
-- **503 linhas** de código
+#### Componentes Identificados para Padronização
 
-### Arquitetura da Solução
+**Elementos Comuns**:
+- Cards principais com headers gradientes
+- Tabelas responsivas com funcionalidades Bootstrap
+- Sistema de paginação Laravel
+- Modais de histórico e exclusão
+- Sistema de alertas e feedback
+- Controles de navegação e filtros
 
-#### Estrutura de Arquivos Proposta
+**Funcionalidades JavaScript Compartilhadas**:
+- Funções de confirmação e validação
+- Manipulação de modais
+- Navegação em tabelas
+- Auto-hide de alertas
+- Event handlers comuns
 
-```
-resources/views/ppp/
-├── layouts/
-│   └── lista-base.blade.php          # Layout base comum
-├── partials/
-│   ├── filtros.blade.php             # Filtros reutilizáveis
-│   ├── tabela-ppps.blade.php         # Estrutura da tabela
-│   ├── modals/
-│   │   ├── historico.blade.php       # Modal de histórico
-│   │   ├── exclusao.blade.php        # Modals de exclusão
-│   │   └── secretaria.blade.php      # Modals da secretária
-│   └── botoes/
-│       ├── acoes-secretaria.blade.php # Botões DIREX/Conselho
-│       └── novo-ppp.blade.php        # Botão Novo PPP
-├── index.blade.php                   # PPPs para Avaliar (refatorado)
-├── meus.blade.php                    # Meus PPPs (refatorado)
-└── acompanhar.blade.php              # PPPs para Acompanhar (novo)
-```
+#### Diferenciação por Contexto
 
-#### CSS e JavaScript
+**View "PPPs para Avaliar"**:
+- Filtros avançados por status e critérios
+- Funcionalidades específicas da secretária
+- Controles de reunião DIREX/Conselho
+- Interface complexa de avaliação
 
-```
-resources/
-├── css/
-│   └── ppp-lista.css                 # Estilos específicos das listas
-└── js/
-    ├── ppp-lista-base.js             # JavaScript comum
-    ├── ppp-secretaria.js             # Funcionalidades da secretária
-    └── ppp-acompanhar.js             # Lógica específica do acompanhamento
-```
+**View "Meus PPPs"**:
+- Foco em PPPs do usuário logado
+- Botão de criação de novo PPP
+- Interface simplificada
+- Controles de edição própria
+
+**View "Visão Geral"**:
+- Visualização hierárquica
+- Filtros por subordinados
+- Acompanhamento de status
+- Interface de monitoramento
+
+### Diretrizes de Implementação
+
+#### Estrutura de Arquivos Recomendada
+
+**Layouts Base**: Criar layout comum que centralize elementos compartilhados
+**Partials Modulares**: Componentes reutilizáveis para filtros, tabelas e modais
+**Assets Organizados**: CSS e JavaScript específicos por funcionalidade
+**Views Especializadas**: Cada view herda do layout base e implementa suas particularidades
 
 ---
 
@@ -362,7 +349,7 @@ Baseado no arquivo `PPPStatusSeeder.php`, o sistema possui os seguintes status:
 
 ---
 
-## 📝 NOVA FUNCIONALIDADE: "PPPs para Acompanhar"
+## 📝 NOVA FUNCIONALIDADE: "Visão Geral"
 
 ### Regras de Negócio
 
@@ -383,262 +370,90 @@ Baseado no arquivo `PPPStatusSeeder.php`, o sistema possui os seguintes status:
 
 ### Interface
 - **Menu**: Abaixo de "Meus PPPs"
-- **Nome**: "PPPs para Acompanhar"
+- **Nome**: "Visão Geral"
 - **Layout**: Herda do layout base
 - **Filtros**: Por subordinado, status, período
 - **Colunas adicionais**: Responsável atual, Último status
 
 ---
 
-## 🔧 IMPLEMENTAÇÃO DETALHADA
+## 🔍 CONSIDERAÇÕES TÉCNICAS
 
-### FASE 1: Criação do Layout Base
+### Segurança e Permissões
+- Validação rigorosa de acesso por hierarquia
+- Proteção de informações sensíveis
+- Auditoria de acessos e modificações
 
-#### 1.1 Layout Base (`layouts/lista-base.blade.php`)
+### Performance e Otimização
+- Queries otimizadas para consultas hierárquicas
+- Implementação de cache quando necessário
+- Paginação adequada de resultados
+- Monitoramento de performance
 
-```php
-@extends('adminlte::page')
-
-@section('title', $pageTitle ?? 'PPPs')
-
-@section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1>{{ $pageTitle ?? 'PPPs' }}</h1>
-        @yield('header-actions')
-    </div>
-@stop
-
-@section('content')
-    <div class="container-fluid">
-        @include('ppp.partials.alertas')
-        
-        @yield('filtros')
-        
-        <div class="card">
-            <div class="card-header {{ $cardHeaderClass ?? 'bg-gradient-primary' }}">
-                <h3 class="card-title text-white">
-                    <i class="{{ $cardIcon ?? 'fas fa-list' }} mr-2"></i>
-                    {{ $cardTitle ?? 'Lista de PPPs' }}
-                </h3>
-                @yield('card-actions')
-            </div>
-            
-            <div class="card-body p-0">
-                @yield('tabela-content')
-            </div>
-            
-            @if(isset($ppps) && $ppps->hasPages())
-                <div class="card-footer">
-                    {{ $ppps->links() }}
-                </div>
-            @endif
-        </div>
-    </div>
-    
-    @yield('modals')
-@stop
-
-@section('css')
-    @vite('resources/css/ppp-lista.css')
-    @yield('extra-css')
-@stop
-
-@section('js')
-    @vite('resources/js/ppp-lista-base.js')
-    @yield('extra-js')
-@stop
-```
-
-### FASE 2: Refatoração das Views Existentes
-
-#### 2.1 `index.blade.php` Refatorado
-
-```php
-@extends('ppp.layouts.lista-base', [
-    'pageTitle' => 'PPPs para Avaliar',
-    'cardTitle' => 'PPPs Pendentes de Avaliação',
-    'cardIcon' => 'fas fa-clipboard-check',
-    'cardHeaderClass' => 'bg-gradient-primary'
-])
-
-@section('header-actions')
-    @if(Auth::user()->hasRole('secretaria'))
-        @include('ppp.partials.botoes.acoes-secretaria')
-    @endif
-@endsection
-
-@section('filtros')
-    @include('ppp.partials.filtros', ['showAdvanced' => true])
-@endsection
-
-@section('table-headers')
-    <th>Nome do Item</th>
-    <th>Prioridade</th>
-    <th>Área Solicitante</th>
-    <th>Responsável Anterior</th>
-    <th>Status</th>
-    <th>Valor Estimado</th>
-    <th>Ações</th>
-@endsection
-
-@section('table-row')
-    @include('ppp.partials.linha-ppp-avaliacao', ['ppp' => $ppp])
-@endsection
-
-@section('modals')
-    @include('ppp.partials.modals.historico')
-    @include('ppp.partials.modals.exclusao')
-    @if(Auth::user()->hasRole('secretaria'))
-        @include('ppp.partials.modals.secretaria')
-    @endif
-@endsection
-
-@section('extra-js')
-    @if(Auth::user()->hasRole('secretaria'))
-        @vite('resources/js/ppp-secretaria.js')
-    @endif
-@endsection
-```
+### Manutenibilidade
+- Código modular e reutilizável
+- Documentação técnica atualizada
+- Testes automatizados
+- Estrutura extensível para futuras funcionalidades
 
 ---
 
-## 📅 CRONOGRAMA DE IMPLEMENTAÇÃO
+## 📊 ESTADO ATUAL DO SISTEMA
 
-### **Até 20 de Janeiro de 2025**
-- Completar FASE 1 (Adequação às Especificações Core)
-- Formulário funcionando conforme especificação
-- Sistema de status automático implementado
+### Funcionalidades Implementadas
 
-### **Até 5 de Fevereiro de 2025**
-- Finalizar FASE 2 (Funcionalidades Específicas)
-- Todos os modos de edição e visualização
-- Sistema de histórico completo
+**Infraestrutura Base**:
+- Framework Laravel com autenticação LDAP
+- Sistema de roles e permissões
+- Middleware de segurança
+- Integração com Active Directory
 
-### **Até 20 de Fevereiro de 2025**
-- Completar FASE 3 (Funcionalidades Avançadas)
-- Tabela PCA funcional
-- Sistema de hierarquia implementado
+**Módulo PPP**:
+- Formulário progressivo em 4 etapas (cards coloridos)
+- Sistema de validação de campos
+- Persistência de dados
+- Interface responsiva
 
-### **Até 28 de Fevereiro de 2025**
-- Finalizar FASE 4 (Preparação para Produção)
-- Testes extensivos
-- Deploy em ambiente de homologação
+**Sistema de Status**:
+- 13 status definidos (rascunho até conselho_reprovado)
+- Lógica de transição entre status
+- Controle de fluxo hierárquico
 
-### **Março de 2025**
-- Homologação com usuários reais
-- Ajustes finais baseados no feedback
-- Preparação para implementação das notificações
+**Fluxo de Aprovação**:
+- Visualização e edição de PPPs
+- Ações de aprovação, correção e reprovação
+- Sistema de histórico e comentários
+- Controles específicos por perfil de usuário
 
----
+### Funcionalidades Específicas por Interface
 
-## 🚨 IMPLEMENTAÇÃO PRIORITÁRIA
+**Interface "Meus PPPs"**:
+- Visualização de PPPs próprios
+- Edição com controle de permissões
+- Histórico completo de alterações
+- Sistema de soft delete
+- Notificações automáticas por e-mail
 
-1. ✅ Atualizar PPPStatusSeeder com novos status
-2. ✅ Corrigir método incluirNaPca() para aceitar status aguardando_direx
-3. 🔄 Implementar interface da secretária com botões DIREX/Conselho
-4. 🔄 Implementar lógica de reunião DIREX
-5. 🔄 Implementar navegação Próximo/Anterior durante reunião
-6. 🔄 Implementar geração de Excel/PDF
-7. 🔄 Implementar aprovação do Conselho
-8. 🔄 Implementar histórico específico da secretária
+**Interface "PPPs para Avaliar"**:
+- Filtros avançados por status e critérios
+- Funcionalidades específicas da secretária
+- Controles de reunião DIREX/Conselho
+- Geração de relatórios Excel/PDF
 
----
+**Interface "Visão Geral"**:
+- Visualização hierárquica de PPPs
+- Filtros por subordinados e status
+- Acompanhamento de fluxo de aprovação
+- Interface de monitoramento gerencial
 
-## 📋 CHECKLIST DE IMPLEMENTAÇÃO
+### Questões Técnicas Resolvidas
 
-### ✅ FASE 1: Layout Base
-- [ ] Criar `layouts/lista-base.blade.php`
-- [ ] Criar partials comuns
-- [ ] Extrair CSS comum para `ppp-lista.css`
-- [ ] Extrair JavaScript comum para `ppp-lista-base.js`
+**Validação de Interface**:
+- Correção de validação prematura em campos de texto
+- Ajuste na inicialização de contadores de caracteres
+- Melhoria na experiência do usuário durante preenchimento
 
-### ✅ FASE 2: Refatoração
-- [ ] Refatorar `index.blade.php`
-- [ ] Refatorar `meus.blade.php`
-- [ ] Testar funcionalidades existentes
-- [ ] Validar responsividade
-
-### ✅ FASE 3: Nova Funcionalidade
-- [ ] Implementar método `acompanhar()` no controller
-- [ ] Criar service methods para hierarquia
-- [ ] Criar view `acompanhar.blade.php`
-- [ ] Adicionar item no menu
-- [ ] Implementar filtros específicos
-
-### ✅ FASE 4: Testes e Ajustes
-- [ ] Testes de funcionalidade
-- [ ] Testes de permissões
-- [ ] Validação de performance
-- [ ] Ajustes de UX
-
----
-
-## 🎯 BENEFÍCIOS ESPERADOS
-
-### 1. Redução de Código
-- **~60% menos linhas** duplicadas
-- **Manutenção centralizada**
-- **Consistência visual**
-
-### 2. Melhor UX
-- **Interface padronizada**
-- **Navegação intuitiva**
-- **Performance otimizada**
-
-### 3. Facilidade de Desenvolvimento
-- **Componentes reutilizáveis**
-- **Estrutura extensível**
-- **Código mais limpo**
-
----
-
-## 📊 ESTIMATIVA DE TEMPO
-
-- **FASE 1**: 2-3 dias
-- **FASE 2**: 2-3 dias  
-- **FASE 3**: 3-4 dias
-- **FASE 4**: 1-2 dias
-
-**Total**: 8-12 dias úteis
-
----
-
-## 🔍 CONSIDERAÇÕES DE SEGURANÇA
-
-### 1. Permissões
-- **Validar acesso** à nova funcionalidade
-- **Filtrar dados** por hierarquia
-- **Proteger informações** sensíveis
-
-### 2. Performance
-- **Otimizar queries** hierárquicas
-- **Implementar cache** quando necessário
-- **Paginar resultados** adequadamente
-
-### 3. Auditoria
-- **Registrar acessos** à nova funcionalidade
-- **Manter logs** de consultas hierárquicas
-- **Monitorar performance**
-
----
-
-## 📝 OBSERVAÇÕES IMPORTANTES
-
-1. **Aderência Total**: Este plano segue rigorosamente a especificação consolidada
-2. **Priorização**: Funcionalidades core da especificação têm prioridade sobre melhorias gerais
-3. **Validação Contínua**: Cada funcionalidade deve ser validada contra a especificação
-4. **Documentação**: Manter este arquivo atualizado com implementações
-5. **Flexibilidade**: Notificações ficam para segunda fase conforme especificado
-
----
-
-**Data de Consolidação**: Janeiro de 2025  
-**Versão**: 1.0 (Consolidada)  
-**Responsável**: Equipe de Desenvolvimento PCA  
-**Próxima Revisão**: 20 de Janeiro de 2025  
-**Arquivos Originais**: 
-- plano-refatoracao-views.md.old (mais recente - prioridade)
-- project_rules.md.old
-- plano-desenvolvimento-refatorado.md.old
-
-Este documento garante uma refatoração segura e eficiente, eliminando duplicação de código e preparando o sistema para futuras expansões, seguindo rigorosamente a regra de padronização de funcionalidades no layout base.
+**Fluxo de Dados**:
+- Otimização de queries hierárquicas
+- Implementação de cache para consultas frequentes
+- Melhoria na performance de listagens
