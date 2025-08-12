@@ -332,7 +332,7 @@ class PppService
             ->count();
         }
         
-        public function contarAcompanhar(int $userId): int
+        public function contarVisaoGeral(int $userId): int
         {
             $user = User::find($userId);
             
@@ -346,7 +346,7 @@ class PppService
             }
             
             // OTIMIZAÇÃO: Usar cache para contagem
-            $cacheKey = "contar_acompanhar_user_{$userId}";
+            $cacheKey = "contar_visao_geral_user_{$userId}";
             return Cache::remember($cacheKey, 300, function () use ($user) {
                 // Buscar PPPs da árvore hierárquica
                 $hierarquiaService = app(\App\Services\HierarquiaService::class);

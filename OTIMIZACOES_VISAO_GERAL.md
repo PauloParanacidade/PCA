@@ -1,4 +1,4 @@
-# 🚀 Otimizações Implementadas - PPPs para Acompanhar
+# 🚀 Otimizações Implementadas - Visão Geral
 
 ## 📊 Problemas Identificados
 
@@ -24,7 +24,7 @@ $usuariosArvore = Cache::remember($cacheKey, 300, function () use ($user) {
 });
 
 // Cache da contagem (5 minutos)
-$cacheKey = "contar_acompanhar_user_{$userId}";
+    $cacheKey = "contar_visao_geral_user_{$userId}";
 return Cache::remember($cacheKey, 300, function () use ($user) {
     // lógica de contagem
 });
@@ -115,7 +115,7 @@ private function limparCacheHierarquia(User $user)
     $cacheKey = "arvore_hierarquica_user_{$user->id}";
     Cache::forget($cacheKey);
     
-    $cacheKeyContar = "contar_acompanhar_user_{$user->id}";
+                $cacheKeyContar = "contar_visao_geral_user_{$user->id}";
     Cache::forget($cacheKeyContar);
 }
 ```
@@ -158,7 +158,7 @@ CREATE INDEX idx_users_active_manager ON users(active, manager);
 ### 3. **Monitoramento**
 ```php
 // Log de performance (opcional)
-Log::info('Performance PPPs para Acompanhar', [
+        Log::info('Performance Visão Geral', [
     'tempo_execucao' => $tempoExecucao,
     'consultas_realizadas' => $consultasRealizadas,
     'cache_hits' => $cacheHits

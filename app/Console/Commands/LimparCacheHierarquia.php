@@ -57,7 +57,7 @@ class LimparCacheHierarquia extends Command
         }
 
         $cacheKey = "arvore_hierarquica_user_{$userId}";
-        $cacheKeyContar = "contar_acompanhar_user_{$userId}";
+        $cacheKeyContar = "contar_visao_geral_user_{$userId}";
         
         Cache::forget($cacheKey);
         Cache::forget($cacheKeyContar);
@@ -81,7 +81,7 @@ class LimparCacheHierarquia extends Command
 
         foreach ($users as $user) {
             $cacheKey = "arvore_hierarquica_user_{$user->id}";
-            $cacheKeyContar = "contar_acompanhar_user_{$user->id}";
+            $cacheKeyContar = "contar_visao_geral_user_{$user->id}";
             
             Cache::forget($cacheKey);
             Cache::forget($cacheKeyContar);

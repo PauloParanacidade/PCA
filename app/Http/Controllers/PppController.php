@@ -1051,7 +1051,7 @@ class PppController extends Controller
 
     $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
     $pppsMeus = $this->pppService->contarMeus($userId);
-    $pppsAcompanhar = $this->pppService->contarAcompanhar($userId);
+    $pppsVisaoGeral = $this->pppService->contarVisaoGeral($userId);
 
     $usuario = Auth::user();
 
@@ -1063,7 +1063,7 @@ class PppController extends Controller
         return $response->json()[0]['commit']['committer']['date'] ?? null;
     });
 
-    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'pppsAcompanhar', 'usuario', 'ultimaAtualizacao'));
+    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'pppsVisaoGeral', 'usuario', 'ultimaAtualizacao'));
 
     }
 
@@ -1732,12 +1732,12 @@ class PppController extends Controller
     }
     
     /**
-     * PPPs para Acompanhar - Lista PPPs da árvore hierárquica do usuário
+     * Visão Geral - Lista PPPs da árvore hierárquica do usuário
      */
-    public function acompanhar(Request $request)
+    public function visaoGeral(Request $request)
     {
         try {
-            Log::info('🚀 DEBUG PPPs para Acompanhar - INICIANDO', [
+            Log::info('🚀 DEBUG Visão Geral - INICIANDO', [
                 'user_id' => Auth::id(),
                 'user_name' => Auth::user()->name ?? 'N/A',
                 'department' => Auth::user()->department ?? 'N/A',
@@ -1831,37 +1831,37 @@ class PppController extends Controller
             
             // OTIMIZAÇÃO: Processar dados adicionais de forma mais eficiente
             Log::info('🔍 Processando dados adicionais');
-            $ppps = $this->processarDadosAcompanhar($ppps);
+            $ppps = $this->processarDadosVisaoGeral($ppps);
             
             // Buscar todos os status para o filtro
             Log::info('🔍 Buscando status para filtro');
             $statuses = \App\Models\PppStatus::orderBy('nome')->get();
             
-            Log::info('✅ PPPs para Acompanhar - PROCESSAMENTO CONCLUÍDO', [
+            Log::info('✅ Visão Geral - PROCESSAMENTO CONCLUÍDO', [
                 'total_ppps' => $ppps->total(),
                 'total_statuses' => $statuses->count()
             ]);
             
-            return view('ppp.acompanhar', compact('ppps', 'statuses'));
+            return view('ppp.visao-geral', compact('ppps', 'statuses'));
             
         } catch (\Exception $e) {
-            Log::error('❌ Erro ao listar PPPs para Acompanhar: ' . $e->getMessage(), [
+            Log::error('❌ Erro ao listar Visão Geral: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs para Acompanhar: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao carregar a lista de Visão Geral: ' . $e->getMessage());
         }
     }
 
     /**
-     * Processa dados adicionais para a view de acompanhar de forma otimizada
+     * Processa dados adicionais para a view de visão geral de forma otimizada
      */
-    private function processarDadosAcompanhar($ppps)
+    private function processarDadosVisaoGeral($ppps)
     {
         try {
-            Log::info('🔍 processarDadosAcompanhar - INICIANDO', [
+            Log::info('🔍 processarDadosVisaoGeral - INICIANDO', [
                 'total_ppps' => $ppps->count()
             ]);
             
@@ -1925,14 +1925,14 @@ class PppController extends Controller
                 }
             }
             
-            Log::info('✅ processarDadosAcompanhar - CONCLUÍDO', [
+            Log::info('✅ processarDadosVisaoGeral - CONCLUÍDO', [
                 'total_processados' => $processados
             ]);
             
             return $ppps;
             
         } catch (\Exception $e) {
-            Log::error('❌ Erro em processarDadosAcompanhar: ' . $e->getMessage(), [
+            Log::error('❌ Erro em processarDadosVisaoGeral: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             throw $e;
@@ -1947,7 +1947,7 @@ class PppController extends Controller
         $cacheKey = "arvore_hierarquica_user_{$user->id}";
         Cache::forget($cacheKey);
         
-        $cacheKeyContar = "contar_acompanhar_user_{$user->id}";
+        $cacheKeyContar = "contar_visao_geral_user_{$user->id}";
         Cache::forget($cacheKeyContar);
         
         Log::info('🧹 Cache de hierarquia limpo', [

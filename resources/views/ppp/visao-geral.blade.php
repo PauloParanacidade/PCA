@@ -1,6 +1,6 @@
 @extends('ppp.layouts.lista-base', [
-    'pageTitle' => 'PPPs para Acompanhar',
-    'cardTitle' => 'PPPs para Acompanhar',
+    'pageTitle' => 'Visão Geral',
+'cardTitle' => 'Visão Geral',
     'cardIcon' => 'fas fa-eye',
     'cardHeaderClass' => 'bg-info'
 ])
@@ -210,12 +210,12 @@
             if (status) params.append('status_filter', status);
             if (search) params.append('search', search);
             
-            const url = '{{ route("ppp.acompanhar") }}' + (params.toString() ? '?' + params.toString() : '');
+            const url = '{{ route("ppp.visao-geral") }}' + (params.toString() ? '?' + params.toString() : '');
             window.location.href = url;
         }
         
         function limparFiltros() {
-            window.location.href = '{{ route("ppp.acompanhar") }}';
+            window.location.href = '{{ route("ppp.visao-geral") }}';
         }
         
         function visualizarPpp(pppId) {
@@ -260,7 +260,7 @@
         
         // Inicialização da página
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Página PPPs para Acompanhar carregada');
+            console.log('Página Visão Geral carregada');
         });
     </script>
 @stop

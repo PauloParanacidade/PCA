@@ -81,10 +81,10 @@
     {{-- Segunda linha de cards --}}
     <div class="row mb-4">
         <div class="col-12 col-md-6 mb-3 mb-md-0">
-            <a href="{{ route('ppp.acompanhar') }}" class="info-box-link d-block" title="Clique para acompanhar PPPs da sua área">
+            <a href="{{ route('ppp.visao-geral') }}" class="info-box-link d-block" title="Clique para visualizar visão geral da sua área">
                 <x-adminlte-info-box 
-                    title="PPPs para Acompanhar ({{ $pppsAcompanhar ?? 0 }})" 
-                    text="Clique para acompanhar PPPs da sua área" 
+                                          title="Visão Geral ({{ $pppsVisaoGeral ?? 0 }})" 
+                      text="Clique para visualizar visão geral da sua área" 
                     icon="fas fa-eye" 
                     icon-theme="info" />
             </a>
