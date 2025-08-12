@@ -727,7 +727,22 @@ class PppController extends Controller
                 'comentario' => $request->comentario
             ]);
             
-            return redirect()->route('ppp.index')
+            // Determinar para onde redirecionar baseado na origem
+            $origem = $request->input('origem', 'index'); // padrão é 'index' se não especificado
+            
+            switch ($origem) {
+                case 'meus':
+                    $redirectRoute = 'ppp.meus';
+                    break;
+                case 'visao-geral':
+                    $redirectRoute = 'ppp.visao-geral';
+                    break;
+                default:
+                    $redirectRoute = 'ppp.index';
+                    break;
+            }
+            
+            return redirect()->route($redirectRoute)
             ->with('success', 'PPP excluído com sucesso. O comentário foi registrado no histórico.');
             
         } catch (\Illuminate\Validation\ValidationException $e) {

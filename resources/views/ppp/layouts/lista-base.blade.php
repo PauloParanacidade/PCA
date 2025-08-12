@@ -4,7 +4,10 @@
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1>{{ $pageTitle ?? 'PPPs' }}</h1>
+        <h1>
+            <i class="{{ $cardIcon ?? 'fas fa-list' }} mr-2"></i>
+            {{ $pageTitle ?? 'PPPs' }}
+        </h1>
         @yield('header-actions')
     </div>
 @stop
@@ -56,12 +59,11 @@
         
         {{-- Card principal --}}
         <div class="card">
-            <div class="card-header {{ $cardHeaderClass ?? 'bg-gradient-primary' }}">
-                <h3 class="card-title text-white">
-                    <i class="{{ $cardIcon ?? 'fas fa-list' }} mr-2"></i>
-                    {{ $cardTitle ?? 'Lista de PPPs' }}
-                </h3>
-                @yield('card-actions')
+            <div class="card-header bg-gradient-primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    @yield('table-headers')
+                    @yield('card-actions')
+                </div>
             </div>
             
             <div class="card-body p-0">
@@ -115,6 +117,28 @@
         
         .bg-gradient-success {
             background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        
+        /* Estilos para cabeçalhos de tabela na barra colorida */
+        .table-header-row {
+            display: flex;
+            width: 100%;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .table-header-col {
+            padding: 0 10px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Remove o thead das tabelas filhas */
+        .table thead {
+            display: none;
         }
         
         .table th {
