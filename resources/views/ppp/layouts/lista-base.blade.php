@@ -10,6 +10,9 @@
 @stop
 
 @section('content')
+    <!-- Banner de Impersonate -->
+    <x-impersonate-banner />
+    
     <div class="container-fluid">
         {{-- Alertas do sistema --}}
         @if(session('success'))
@@ -80,6 +83,17 @@
 
 @section('css')
     <style>
+        /* Estilos para o banner de impersonamento */
+        .impersonate-banner {
+            margin: -15px -15px 20px -15px;
+            border-radius: 0;
+        }
+        
+        /* Ajuste para o content quando banner estiver ativo */
+        .content {
+            padding-top: 0;
+        }
+        
         .card {
             border: none;
             border-radius: 15px;
