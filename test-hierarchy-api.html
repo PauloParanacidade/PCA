@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste da API de Hierarquia</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get { background-color: #28a745; }
+        .post { background-color: #007bff; }
+        .delete { background-color: #dc3545; }
+        .url {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .description {
+            margin-top: 10px;
+            color: #6c757d;
+        }
+        .test-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .test-btn:hover {
+            background: #138496;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-color: #28a745; background-color: #d4edda; }
+        .error { border-color: #dc3545; background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 Sistema de Hierarquia Organizacional - Teste de API</h1>
+        <p>Esta página permite testar as rotas da API de hierarquia implementadas no sistema PCA.</p>
+    </div>
+
+    <div class="container">
+        <h2>📊 Rotas Públicas (Sem Autenticação)</h2>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/public/hierarchy/structure</span>
+            <div class="description">Obtém a estrutura organizacional básica (dados públicos)</div>
+            <button class="test-btn" onclick="testEndpoint('/api/public/hierarchy/structure', 'GET', 'structure-result')">Testar</button>
+            <div id="structure-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/public/hierarchy/stats</span>
+            <div class="description">Obtém estatísticas gerais da organização</div>
+            <button class="test-btn" onclick="testEndpoint('/api/public/hierarchy/stats', 'GET', 'stats-result')">Testar</button>
+            <div id="stats-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🔐 Rotas Autenticadas (Requer Token)</h2>
+        <p><strong>Nota:</strong> Estas rotas requerem autenticação via Sanctum. Para testá-las, você precisará de um token de acesso válido.</p>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/hierarchy/tree</span>
+            <div class="description">Obtém a árvore hierárquica completa</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/hierarchy/users/{userId}/subordinates</span>
+            <div class="description">Obtém subordinados de um usuário específico</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/hierarchy/users/{userId}/managers</span>
+            <div class="description">Obtém gerentes de um usuário específico</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/hierarchy/users/{userId}/is-manager</span>
+            <div class="description">Verifica se um usuário é gerente</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/hierarchy/departments/{department}/users</span>
+            <div class="description">Obtém usuários de um departamento específico</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/hierarchy/validate</span>
+            <div class="description">Valida a integridade da hierarquia</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/hierarchy/metrics</span>
+            <div class="description">Obtém métricas do cache da hierarquia</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="url">/api/hierarchy/cache/warm</span>
+            <div class="description">Aquece o cache da hierarquia</div>
+        </div>
+
+        <div class="endpoint">
+            <span class="method delete">DELETE</span>
+            <span class="url">/api/hierarchy/users/{userId}/cache</span>
+            <div class="description">Limpa o cache de um usuário específico</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>⚙️ Comandos Artisan Disponíveis</h2>
+        <div class="endpoint">
+            <code>php artisan hierarchy:clear-cache</code>
+            <div class="description">Limpa o cache da hierarquia</div>
+        </div>
+        <div class="endpoint">
+            <code>php artisan hierarchy:warm-cache</code>
+            <div class="description">Aquece o cache da hierarquia</div>
+        </div>
+        <div class="endpoint">
+            <code>php artisan hierarchy:cache-metrics</code>
+            <div class="description">Exibe métricas do cache da hierarquia</div>
+        </div>
+    </div>
+
+    <script>
+        async function testEndpoint(url, method, resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Carregando...';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Erro ${response.status}: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Erro de rede: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
