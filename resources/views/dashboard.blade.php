@@ -4,22 +4,76 @@
 
 @section('content_header_content')
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center flex-wrap">
-        <h1 class="mb-2 mb-md-0">Bem-vindo(a), <strong>{{ Auth::user()->name }}</strong></h1>
-        <small class="text-muted font-italic">{{ Auth::user()->department ?? 'Setor não informado' }}</small>
+        <h1 class="mb-2 mb-md-0">
+            Bem-vindo(a), <strong>{{ Auth::user()->name }}</strong>
+            <span class="text-muted font-italic" style="font-size: 0.85em;"> - {{ Auth::user()->department ?? 'Setor não informado' }}</span>
+        </h1>
     </div>
 @stop
 
 @section('content')
 <div class="container-fluid">
 
-    {{-- Mensagem PCA com destaque --}}
-    <div class="card shadow-sm mb-4 border-primary">
-        <div class="card-body">
-            <h3 class="card-title font-weight-bold text-primary">Sistema PCA - Planejamento de Contratações Anual</h3>
-            <p class="card-text text-secondary">
-                Este sistema auxilia na gestão de pedidos de planejamento de compras e contratações públicas.
-                Utilize o menu lateral para acassar a página inicial (home), iniciar um novo PPP (Projeção para PCA), consultar status dos seus PPPs e aprovar solicitações, se você for um gestor.
-            </p>
+    {{-- Informações do Sistema --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="modern-info-card">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="icon-wrapper mr-4">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                    <div>
+                        <h2 class="mb-1 font-weight-bold text-white">Sistema PCA - Planejamento de Contratações Anual</h2>
+                        <p class="mb-0 text-white font-weight-medium" style="opacity: 0.9;">Gestão Inteligente de Pedidos de Planejamento de Compras e Contratações Públicas</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-section-compact mb-3">
+                            <h3 class="section-title">
+                                <i class="fas fa-lightbulb mr-2"></i>O que é PPP?
+                            </h3>
+                            <p class="section-content mb-2">
+                                <strong class="text-primary">PPP (Projeção para PCA)</strong> é um documento que formaliza a solicitação de itens para o 
+                                Plano de Contratações Anual. Através deste sistema, você pode criar, acompanhar e gerenciar 
+                                suas solicitações de compras e contratações de forma eficiente e organizada.
+                            </p>
+                        </div>
+                        
+                        <div class="development-card-compact mt-3">
+                            <div class="dev-header">
+                                <i class="fas fa-code mr-2"></i>
+                                <span class="dev-title">Em Desenvolvimento</span>
+                            </div>
+                            <div class="dev-content">
+                                <h6 class="mb-1 font-weight-bold">DFD - Documento de Formalização da Demanda</h6>
+                                <p class="mb-1 small text-muted">
+                                    Esta funcionalidade está sendo desenvolvida com as mais modernas tecnologias e estará disponível em breve.
+                                </p>
+                            </div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-gradient-warning" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-section-compact mb-3">
+                            <h6 class="section-title">
+                                <i class="fas fa-rocket mr-2"></i>Como utilizar:
+                            </h6>
+                            <ul class="modern-list mb-2">
+                                <li><i class="fas fa-chevron-right text-success mr-2"></i>Use o menu lateral para navegar entre as seções</li>
+                                <li><i class="fas fa-chevron-right text-success mr-2"></i>Inicie um novo PPP clicando em "Novo PPP"</li>
+                                <li><i class="fas fa-chevron-right text-success mr-2"></i>Consulte o status dos seus PPPs em "Meus PPPs"</li>
+                                <li><i class="fas fa-chevron-right text-success mr-2"></i>Gestores podem aprovar solicitações em "Para Avaliar"</li>
+                                <li><i class="fas fa-chevron-right text-success mr-2"></i>Gestores também podem ter uma visão geral do andamento dos PPPs de sua área</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -98,6 +152,8 @@
     a.info-box-link:hover {
         filter: brightness(0.93);
         text-decoration: none;
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
     }
     
     /* Estilo para elementos desabilitados */
@@ -110,6 +166,237 @@
     .info-box-disabled .info-box {
         background-color: #f8f9fa !important;
         border: 1px dashed #dee2e6;
+    }
+
+    /* Estilos modernos para o card principal */
+    .modern-info-card {
+        background: linear-gradient(135deg, #6c7ae0 0%, #7b68a6 50%, #8e7cc3 100%);
+        background-size: 300% 300%;
+        animation: gradientShift 12s ease infinite;
+        border-radius: 20px;
+        padding: 2rem;
+        color: white;
+        box-shadow: 0 8px 25px rgba(108, 122, 224, 0.2);
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modern-info-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        pointer-events: none;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        25% { background-position: 50% 25%; }
+        50% { background-position: 100% 50%; }
+        75% { background-position: 50% 75%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .icon-wrapper {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .icon-wrapper i {
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .modern-info-card h4 {
+        color: white !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .info-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .info-section-compact {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 1rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        height: fit-content;
+    }
+
+    .section-title {
+        color: #fff !important;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        color: #ffd700;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .section-content {
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.6;
+    }
+
+    .section-content strong {
+        color: #ffd700 !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .modern-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .modern-list li {
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .modern-list li:hover {
+        transform: translateX(5px);
+        color: white;
+    }
+
+    .modern-list li i {
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    }
+
+    .development-card {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 25px rgba(255, 154, 158, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .development-card-compact {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        border-radius: 15px;
+        padding: 1rem;
+        box-shadow: 0 8px 25px rgba(255, 154, 158, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: fit-content;
+    }
+
+    .development-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: rotate(45deg);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .dev-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .dev-title {
+        font-weight: 600;
+        color: #6c5ce7;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .dev-header i {
+        color: #6c5ce7;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .dev-content h6 {
+        color: #2d3436;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Melhorias nos cards de acesso rápido */
+    .info-box {
+        border-radius: 15px !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .info-box:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+
+    /* Gradientes para os ícones dos cards */
+    .info-box .info-box-icon {
+        border-radius: 15px 0 0 15px !important;
+    }
+
+    .bg-green {
+        background: linear-gradient(135deg, #00b894, #00cec9) !important;
+    }
+
+    .bg-warning {
+        background: linear-gradient(135deg, #fdcb6e, #e17055) !important;
+    }
+
+    .bg-primary {
+        background: linear-gradient(135deg, #74b9ff, #0984e3) !important;
+    }
+
+    /* Animação suave para o título */
+    h4.border-left {
+        position: relative;
+        overflow: hidden;
+    }
+
+    h4.border-left::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.3s ease;
+    }
+
+    h4.border-left:hover::after {
+        width: 100%;
     }
 </style>
 @stop
