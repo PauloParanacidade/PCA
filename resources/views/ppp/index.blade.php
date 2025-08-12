@@ -95,7 +95,7 @@
                         </td>
                         <td class="align-middle text-center"> {{-- Coluna Ações --}}
                             <div class="btn-group" role="group">
-                                <a href="{{ route('ppp.show', $ppp->id) }}" class="btn btn-sm btn-outline-info" title="Visualizar" onclick="event.stopPropagation();">
+                                <a href="{{ route('ppp.show', $ppp->id) }}?origem=index" class="btn btn-sm btn-outline-info" title="Visualizar" onclick="event.stopPropagation();">
                                     <i class="fas fa-eye"></i>  {{-- Ver o PPP --}}
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -845,7 +845,7 @@
                 
                 var pppId = $(this).data('ppp-id');
                 console.log('🔗 Redirecionando para PPP:', pppId);
-                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
+                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId) + '?origem=index';
             });
             
             // Inicializar estado da secretária se aplicável

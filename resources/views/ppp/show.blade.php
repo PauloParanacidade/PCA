@@ -651,9 +651,52 @@
 </div>
 @endif
 
-<a href="{{ route('ppp.meus') }}" class="btn btn-outline-secondary btn-lg">
+@php
+    // Detectar a origem da navegação
+    $origem = request('origem');
+    if (!$origem) {
+        // Fallback: analisar o HTTP_REFERER
+        $referer = request()->headers->get('referer');
+        if ($referer) {
+            if (str_contains($referer, '/ppp/visao-geral')) {
+                $origem = 'visao-geral';
+            } elseif (str_contains($referer, '/ppp?') || str_ends_with($referer, '/ppp')) {
+                $origem = 'index';
+            } else {
+                $origem = 'meus';
+            }
+        } else {
+            $origem = 'meus'; // padrão
+        }
+    }
+    
+    // Determinar a rota e texto de retorno
+    if ($modoReuniaoDirectx) {
+        // Durante reunião DIREX, sempre retorna para PPPs para Avaliação
+        $returnRoute = 'ppp.index';
+        $returnText = 'PPPs para Avaliação';
+    } else {
+        switch ($origem) {
+            case 'visao-geral':
+                $returnRoute = 'ppp.visao-geral';
+                $returnText = 'Visão Geral';
+                break;
+            case 'index':
+                $returnRoute = 'ppp.index';
+                $returnText = 'PPPs para Avaliação';
+                break;
+            case 'meus':
+            default:
+                $returnRoute = 'ppp.meus';
+                $returnText = 'Meus PPPs';
+                break;
+        }
+    }
+@endphp
+
+<a href="{{ route($returnRoute) }}" class="btn btn-outline-secondary btn-lg">
     <i class="fas fa-arrow-left mr-2"></i>
-    Retornar
+    Retornar para {{ $returnText }}
 </a>
 </div>
 </div>

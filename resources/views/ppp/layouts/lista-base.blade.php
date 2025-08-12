@@ -311,7 +311,16 @@
                 
                 var pppId = $(this).data('ppp-id');
                 console.log('🔗 Redirecionando para PPP:', pppId);
-                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
+                
+                // Detectar a origem baseada na URL atual
+                var origem = 'meus'; // padrão
+                if (window.location.pathname.includes('/ppp/visao-geral')) {
+                    origem = 'visao-geral';
+                } else if (window.location.pathname === '/ppp' || window.location.pathname.includes('/ppp?')) {
+                    origem = 'index';
+                }
+                
+                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId) + '?origem=' + origem;
             });
             
             // Log de inicialização completa
