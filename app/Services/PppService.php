@@ -340,8 +340,8 @@ class PppService
                 return 0;
             }
             
-            // Verificar se é SUPEX ou DAF - podem ver todos os PPPs
-            if (in_array($user->department, ['SUPEX', 'DAF'])) {
+            // Verificar se é SUPEX, DAF ou CLC - podem ver todos os PPPs
+            if (in_array($user->department, ['SUPEX', 'DAF']) || $user->hasRole('clc')) {
                 return PcaPpp::count();
             }
             

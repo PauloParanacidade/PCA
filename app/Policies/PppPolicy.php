@@ -21,7 +21,7 @@ class PppPolicy
         }
 
         // Usuários com roles especiais podem visualizar
-        if ($user->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria', 'supex'])) {
+        if ($user->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria', 'supex', 'clc'])) {
             return true;
         }
 
@@ -50,7 +50,7 @@ class PppPolicy
         }
 
         // Gestores podem editar PPPs de outros em determinados status
-        if ($user->hasAnyRole(['daf', 'gestor', 'secretaria', 'supex'])) {
+        if ($user->hasAnyRole(['daf', 'gestor', 'secretaria', 'supex', 'clc'])) {
             // Podem editar nos status: aguardando_aprovacao, em_avaliacao, cancelado, aguardando_direx, direx_avaliando
             return in_array($ppp->status_id, [2, 3, 7, 8, 9]);
         }
@@ -82,7 +82,7 @@ class PppPolicy
     public function approve(User $user, PcaPpp $ppp): bool
     {
         // Verificar se tem permissão para aprovar
-        if (!$user->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
+        if (!$user->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria', 'clc'])) {
             return false;
         }
 
@@ -109,7 +109,7 @@ class PppPolicy
     public function requestCorrection(User $user, PcaPpp $ppp): bool
     {
         // Verificar se tem permissão para solicitar correção
-        if (!$user->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
+        if (!$user->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria', 'clc'])) {
             return false;
         }
 

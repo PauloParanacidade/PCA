@@ -26,11 +26,30 @@ class ResetSistema extends Command
         if ($env !== 'production') {
             $executarMigrateFresh = true;
         } else {
-            $this->warn('⚠️ Atenção: você está em produção. Executar "migrate:fresh" irá APAGAR todos os dados.');
-            if ($this->confirm('❗ Deseja mesmo continuar com migrate:fresh em produção? [y/N]', false)) {
-                $executarMigrateFresh = true;
+            $this->error('🚨 AMBIENTE DE PRODUÇÃO DETECTADO!');
+            $this->warn('⚠️ Atenção: você está em produção. Executar "migrate:fresh" irá APAGAR TODOS OS DADOS PERMANENTEMENTE.');
+            $this->warn('⚠️ Esta ação é IRREVERSÍVEL e pode causar PERDA TOTAL DE DADOS.');
+            
+            if ($this->confirm('❗❗❗ Tem ABSOLUTA CERTEZA que deseja APAGAR TODOS OS DADOS em produção? [y/N]', false)) {
+                if ($this->confirm('❗❗❗ ÚLTIMA CONFIRMAÇÃO: Isso irá DESTRUIR todos os dados. Continuar? [y/N]', false)) {
+                    $executarMigrateFresh = true;
+                } else {
+                    $this->info('⏩ migrate:fresh cancelado por segurança.');
+                }
             } else {
                 $this->info('⏩ migrate:fresh ignorado por segurança.');
+            }
+        }
+        
+        // Verificar se há migrations pendentes
+        if (!$executarMigrateFresh) {
+            $this->info('🔍 Verificando migrations pendentes...');
+            $exitCode = $this->call('migrate:status');
+            
+            if ($this->confirm('🔄 Deseja executar migrations pendentes? [y/N]', true)) {
+                $this->info('🔄 Executando migrations...');
+                $this->call('migrate');
+                $this->info('✅ Migrations executadas');
             }
         }
         
@@ -47,6 +66,10 @@ class ResetSistema extends Command
         $this->info('🔄 Iniciando db:seed');
         $this->call('db:seed');
         $this->info('✅ db:seed finalizado');
+        
+        $this->info('🔄 Identificando coordenador CLC...');
+        $this->call('clc:identificar-coordenador', ['--force' => true]);
+        $this->info('✅ Coordenador CLC identificado e configurado');
         
         $this->info('🔄 Executando composer dump-autoload...');
         $output = shell_exec('composer dump-autoload 2>&1');

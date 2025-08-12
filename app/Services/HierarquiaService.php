@@ -120,8 +120,8 @@ class HierarquiaService
             'subordinado_manager' => $subordinado->manager
         ]);
 
-        // PRIMEIRA VERIFICAÇÃO: Roles especiais (admin, daf, secretaria)
-        if ($gestor->hasRole(['admin', 'daf', 'secretaria'])) {
+        // PRIMEIRA VERIFICAÇÃO: Roles especiais (admin, daf, secretaria, clc)
+        if ($gestor->hasRole(['admin', 'daf', 'secretaria', 'clc'])) {
             Log::info('✅ DEBUG ehGestorDe - ROLE ESPECIAL APROVADA', [
                 'gestor_role' => $gestor->roles->pluck('name')->toArray(),
                 'resultado' => true

@@ -604,7 +604,7 @@ class PppController extends Controller
             $ehProximoGestor = $proximoGestor && $proximoGestor->id === $usuarioLogado->id;
             
             // CORRIGIDO: Definir se o usuário pode gerenciar este PPP
-            $ehGestor = $usuarioLogado->hasRole(['admin', 'daf', 'secretaria']) || 
+            $ehGestor = $usuarioLogado->hasRole(['admin', 'daf', 'secretaria', 'clc']) || 
                        ($usuarioLogado->hasRole('gestor') && $this->hierarquiaService->ehGestorDe($usuarioLogado, $ppp->user));
             
             // Buscar histórico
@@ -1698,9 +1698,9 @@ class PppController extends Controller
             
             $user = Auth::user();
             
-            // Verificar se é SUPEX ou DAF - podem ver todos os PPPs
-            if (in_array($user->department, ['SUPEX', 'DAF'])) {
-                Log::info('✅ Usuário SUPEX/DAF - acesso a todos os PPPs');
+            // Verificar se é SUPEX, DAF ou CLC - podem ver todos os PPPs
+            if (in_array($user->department, ['SUPEX', 'DAF']) || $user->hasRole('clc')) {
+                Log::info('✅ Usuário SUPEX/DAF/CLC - acesso a todos os PPPs');
                 $query = PcaPpp::query();
             } else {
                 Log::info('🔍 Usuário normal - buscando árvore hierárquica');

@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             PPPStatusSeeder::class,     // 2º - Criar status
             GestorRoleSeeder::class,    // 3º - Atribuir roles de gestor
             UserRoleSeeder::class,      // 4º - Atribuir roles específicas
+            ClcRoleSeeder::class,       // 5º - Identificar e atribuir role CLC
         ]);
     }
 }
