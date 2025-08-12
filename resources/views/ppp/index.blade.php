@@ -3,29 +3,17 @@
     'cardIcon' => 'fas fa-clipboard-check'
 ])
 
-@section('header-actions')
-    @if(auth()->user()->hasAnyRole(['secretaria']))
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-primary" id="btnIniciarReuniaoSecretaria" style="display: none;">
-                <i class="fas fa-play mr-1"></i> Iniciar Reunião DIREX
-            </button>
-            <button type="button" class="btn btn-outline-warning" id="btnRetomarReuniaoSecretaria" style="display: none;">
-                <i class="fas fa-play-circle mr-1"></i> Retomar Reunião DIREX
-            </button>
-
-        </div>
-    @endif
-@stop
+{{-- Header actions são herdadas do layout base --}}
 
 @section('table-headers')
 <div class="table-header-row">
     <div class="table-header-col" style="width: 5%;">#</div>
-    <div class="table-header-col" style="width: 25%;">Nome do Item</div>
-    <div class="table-header-col" style="width: 10%;">Prioridade</div>
-    <div class="table-header-col" style="width: 12%;">Área Solicitante</div>
-    <div class="table-header-col" style="width: 15%;">Responsável Anterior</div>
-    <div class="table-header-col" style="width: 13%;">Status</div>
-    <div class="table-header-col" style="width: 10%;">Valor Estimado</div>
+    <div class="table-header-col sortable" data-column="nome_item" style="width: 25%;">Nome do Item</div>
+    <div class="table-header-col sortable" data-column="prioridade" style="width: 10%;">Prioridade</div>
+    <div class="table-header-col sortable" data-column="area_solicitante" style="width: 12%;">Área Solicitante</div>
+    <div class="table-header-col sortable" data-column="responsavel_anterior" style="width: 15%;">Responsável Anterior</div>
+    <div class="table-header-col sortable" data-column="status" style="width: 13%;">Status</div>
+    <div class="table-header-col sortable" data-column="valor_estimado" style="width: 10%;">Valor Estimado</div>
     <div class="table-header-col" style="width: 10%;">Ações</div>
 </div>
 @stop
@@ -775,79 +763,13 @@
         // FUNÇÕES ORIGINAIS DO SISTEMA
         // ===================================
         
-        function confirmarExclusao(id, nomeItem) {
-            // Armazenar dados do PPP
-            pppParaExcluir.id = id;
-            pppParaExcluir.nome = nomeItem;
-            
-            // Limpar campos da modal anterior
-            document.getElementById('comentarioExclusao').value = '';
-            document.getElementById('comentarioExclusao').classList.remove('is-invalid');
-            document.getElementById('nomeItemExclusaoComentario').textContent = nomeItem;
-            
-            // Abrir primeira modal
-            $('#comentarioExclusaoModal').modal('show');
-        }
-
-        function validarComentarioEProsseguir() {
-            const comentario = document.getElementById('comentarioExclusao').value.trim();
-            
-            if (!comentario) {
-                document.getElementById('comentarioExclusao').classList.add('is-invalid');
-                return;
-            }
-            
-            // Fechar primeira modal
-            $('#comentarioExclusaoModal').modal('hide');
-            
-            // Aguardar fechamento e abrir segunda modal
-            $('#comentarioExclusaoModal').on('hidden.bs.modal', function() {
-                document.getElementById('nomeItemConfirmacaoFinal').textContent = pppParaExcluir.nome;
-                document.getElementById('comentarioRegistrado').textContent = comentario;
-                document.getElementById('comentarioExclusaoHidden').value = comentario;
-                document.getElementById('formExclusaoFinal').action = `/ppp/${pppParaExcluir.id}`;
-                $('#confirmacaoFinalExclusaoModal').modal('show');
-                
-                // Remover listener para evitar múltiplas execuções
-                $(this).off('hidden.bs.modal');
-            });
-        }
+        // Funcionalidades de exclusão são herdadas do layout base
 
         // ===================================
-        // INICIALIZAÇÃO
+        // INICIALIZAÇÃO ESPECÍFICA DA PÁGINA
         // ===================================
         
         $(document).ready(function() {
-            console.log('🚀 === INICIALIZAÇÃO DA PÁGINA INDEX ===');
-            
-            // Debug: Verificar se elementos existem
-            console.log('🔍 Verificações iniciais:');
-            console.log('- Modal histórico existe:', $('#historicoModal').length > 0);
-            console.log('- FormButtons existe:', typeof FormButtons !== 'undefined');
-            console.log('- jQuery existe:', typeof $ !== 'undefined');
-            console.log('- Bootstrap modal existe:', typeof $.fn.modal !== 'undefined');
-            
-            // Verificar se há PPPs na tabela
-            const totalPpps = $('.ppp-row').length;
-            console.log('- Total de PPPs na tabela:', totalPpps);
-            
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').fadeOut('slow');
-            }, 5000);
-            
-            // Clique em qualquer parte da linha do PPP para visualizar
-            $('.ppp-row').click(function() {
-                // Verificar se tabela está desabilitada
-                if ($('#tabelaPpps').hasClass('tabela-desabilitada')) {
-                    return false;
-                }
-                
-                var pppId = $(this).data('ppp-id');
-                console.log('🔗 Redirecionando para PPP:', pppId);
-                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId) + '?origem=index';
-            });
-            
             // Inicializar estado da secretária se aplicável
             @if(Auth::user()->hasRole('secretaria'))
                 console.log('👩‍💼 Usuário é secretária - inicializando controles especiais');
@@ -860,8 +782,6 @@
                         if (response.reuniao_ativa) {
                             atualizarEstadoReuniao(true, response.ppp_atual);
                         }
-                        
-
                         atualizarBotoesSecretaria();
                     },
                     error: function(xhr) {
@@ -869,9 +789,6 @@
                     }
                 });
             @endif
-            
-            // Log de inicialização completa
-            console.log('✅ Inicialização da página concluída');
         });
  </script>
 @stop

@@ -124,12 +124,12 @@
 @section('table-headers')
 <div class="table-header-row">
     <div class="table-header-col text-center" style="width: 5%;">#</div>
-    <div class="table-header-col" style="width: 25%;">Nome do Item</div>
-    <div class="table-header-col text-center" style="width: 10%;">Prioridade</div>
-    <div class="table-header-col text-center" style="width: 10%;">Área Solicitante</div>
-    <div class="table-header-col text-center" style="width: 14%;">Gestor Atual</div>
-    <div class="table-header-col text-center" style="width: 12%;">Status</div>
-    <div class="table-header-col text-right" style="width: 12%; padding-right: 15px;">Valor Estimado</div>
+    <div class="table-header-col sortable" data-column="nome_item" style="width: 25%;">Nome do Item</div>
+    <div class="table-header-col sortable text-center" data-column="prioridade" style="width: 10%;">Prioridade</div>
+    <div class="table-header-col sortable text-center" data-column="area_solicitante" style="width: 10%;">Área Solicitante</div>
+    <div class="table-header-col sortable text-center" data-column="gestor_atual" style="width: 14%;">Gestor Atual</div>
+    <div class="table-header-col sortable text-center" data-column="status" style="width: 12%;">Status</div>
+    <div class="table-header-col sortable text-right" data-column="valor_estimado" style="width: 12%; padding-right: 15px;">Valor Estimado</div>
     <div class="table-header-col text-center" style="width: 12%;">Ações</div>
 </div>
 @stop
@@ -308,22 +308,6 @@
 
 @section('extra-js')
     <script>
-        function aplicarFiltros() {
-            const status = document.getElementById('status_filter').value;
-            const search = document.getElementById('search').value;
-            
-            const params = new URLSearchParams();
-            if (status) params.append('status_filter', status);
-            if (search) params.append('search', search);
-            
-            const url = '{{ route("ppp.visao-geral") }}' + (params.toString() ? '?' + params.toString() : '');
-            window.location.href = url;
-        }
-        
-        function limparFiltros() {
-            window.location.href = '{{ route("ppp.visao-geral") }}';
-        }
-        
         function visualizarPpp(pppId) {
             // Carregar conteúdo do PPP via AJAX
             fetch(`/ppp/${pppId}`)
@@ -352,77 +336,6 @@
                 });
         }
         
-        // Aplicar filtros ao pressionar Enter nos campos de busca
-        document.getElementById('search').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                aplicarFiltros();
-            }
-        });
-        
-        // Aplicar filtros ao alterar o select de status
-        document.getElementById('status_filter').addEventListener('change', function() {
-            aplicarFiltros();
-        });
-        
-        // Clique em qualquer parte da linha do PPP para visualizar
-        document.addEventListener('click', function(e) {
-            const pppRow = e.target.closest('.ppp-row');
-            if (pppRow && !e.target.closest('button')) {
-                const pppId = pppRow.dataset.pppId;
-                console.log('🔗 Redirecionando para PPP:', pppId);
-                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
-            }
-        });
-        
-        // Inicialização da página
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Página Visão Geral carregada');
-        });
-
-        // Variável global para armazenar dados do PPP a ser excluído
-        let pppParaExcluir = {};
-
-        // Função para confirmar exclusão
-        function confirmarExclusao(id, nome) {
-            pppParaExcluir = { id: id, nome: nome };
-            
-            // Limpar campos anteriores
-            document.getElementById('comentarioExclusao').value = '';
-            document.getElementById('comentarioExclusao').classList.remove('is-invalid');
-            
-            // Definir nome do item no modal
-            document.getElementById('nomeItemExclusaoComentario').textContent = nome;
-            
-            // Abrir modal de comentário
-            $('#comentarioExclusaoModal').modal('show');
-        }
-
-        // Função para validar comentário e prosseguir
-        function validarComentarioEProsseguir() {
-            const comentario = document.getElementById('comentarioExclusao').value.trim();
-            const comentarioField = document.getElementById('comentarioExclusao');
-            
-            if (comentario.length < 10) {
-                comentarioField.classList.add('is-invalid');
-                comentarioField.focus();
-                return;
-            }
-            
-            comentarioField.classList.remove('is-invalid');
-            
-            // Fechar modal de comentário
-            $('#comentarioExclusaoModal').modal('hide');
-            
-            // Configurar modal de confirmação final
-            document.getElementById('nomeItemConfirmacaoFinal').textContent = pppParaExcluir.nome;
-            document.getElementById('comentarioRegistrado').textContent = comentario;
-            document.getElementById('comentarioExclusaoHidden').value = comentario;
-            
-            // Configurar ação do formulário
-            document.getElementById('formExclusaoFinal').action = `/ppp/${pppParaExcluir.id}`;
-            
-            // Abrir modal de confirmação final
-            $('#confirmacaoFinalExclusaoModal').modal('show');
-        }
+        // Funcionalidades de filtros, ordenação e exclusão são herdadas do layout base
     </script>
 @stop
