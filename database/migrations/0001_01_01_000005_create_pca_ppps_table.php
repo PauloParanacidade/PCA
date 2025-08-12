@@ -77,7 +77,7 @@ return new class extends Migration
                   
             $table->unsignedSmallInteger('num_contrato')
                   ->nullable()
-                  ->comment('Número do contrato atual (1-9999) - obrigatório se tem_contrato_vigente = Sim');
+                  ->comment('Número do contrato atual (0-9999) - obrigatório se tem_contrato_vigente = Sim');
                   
             $table->year('ano_contrato')
                   ->nullable()

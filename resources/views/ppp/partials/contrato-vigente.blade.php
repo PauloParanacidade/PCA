@@ -33,7 +33,7 @@
                         <div class="col-md-5">
                             <input type="number" name="num_contrato" id="num_contrato" class="form-control contract-number"
                             value="{{ old('num_contrato', $ppp->num_contrato ?? '') }}" 
-                            placeholder="1" min="1" max="9999">
+                            placeholder="Ex: 0015" min="0" max="9999">
                             <small class="form-text text-muted">Número do contrato</small>
                         </div>
                         

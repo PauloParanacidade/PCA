@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; // ✅ ADICIONAR
  * @property string|null $mes_inicio_prestacao Mês de início da prestação do serviço quando não tiver contrato vigente
  * @property int|null $ano_pca Ano do PCA (preenchido automaticamente como ano atual + 1) para objeto novo
  * @property string|null $contrato_mais_um_exercicio O contrato é mais de um exercício
- * @property int|null $num_contrato Número do contrato atual (1-9999) - obrigatório se tem_contrato_vigente = Sim
+ * @property int|null $num_contrato Número do contrato atual (0-9999) - obrigatório se tem_contrato_vigente = Sim
  * @property int|null $ano_contrato Ano do contrato atual (obrigatório se tem_contrato_vigente = Sim)
  * @property string|null $mes_vigencia_final Mês de vigência final do contrato
  * @property int|null $ano_vigencia_final Ano de vigência final do contrato para comparação com PCA
