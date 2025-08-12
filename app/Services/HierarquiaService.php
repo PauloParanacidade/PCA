@@ -323,78 +323,94 @@ class HierarquiaService
     public function obterArvoreHierarquica(User $user): array
     {
         try {
-            // OTIMIZAÇÃO: Cache por 5 minutos para evitar recálculos desnecessários
-            $cacheKey = "arvore_hierarquica_user_{$user->id}";
-            
-            return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($user) {
-                Log::info('🌳 HierarquiaService.obterArvoreHierarquica() - INICIANDO', [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'user_department' => $user->department ?? 'N/A'
-                ]);
 
-                $usuariosArvore = [$user->id]; // Incluir o próprio usuário
-                
-                // Buscar todos os usuários que têm este usuário como gestor (direto ou indireto)
-                $subordinados = $this->buscarSubordinados($user);
-                
-                foreach ($subordinados as $subordinado) {
-                    $usuariosArvore[] = $subordinado->id;
-                    
-                    // Buscar subordinados dos subordinados (recursivo até 3 níveis)
-                    $subSubordinados = $this->buscarSubordinados($subordinado, 2);
-                    foreach ($subSubordinados as $subSubordinado) {
-                        if (!in_array($subSubordinado->id, $usuariosArvore)) {
-                            $usuariosArvore[] = $subSubordinado->id;
-                        }
+            Log::info('🌳 HierarquiaService.obterArvoreHierarquica() - INICIANDO', [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_department' => $user->department ?? 'N/A'
+            ]);
+
+            $usuariosArvore = [$user->id]; // Incluir o próprio usuário
+
+            // Buscar todos os usuários que têm este usuário como gestor (direto ou indireto)
+            $subordinados = $this->buscarSubordinados($user);
+
+            foreach ($subordinados as $subordinado) {
+                $usuariosArvore[] = $subordinado->id;
+
+                // Buscar subordinados dos subordinados (recursivo até 3 níveis)
+                $subSubordinados = $this->buscarSubordinados($subordinado, 2);
+                foreach ($subSubordinados as $subSubordinado) {
+                    if (!in_array($subSubordinado->id, $usuariosArvore)) {
+                        $usuariosArvore[] = $subSubordinado->id;
                     }
                 }
-                
-                Log::info('✅ Árvore hierárquica obtida com sucesso', [
-                    'total_usuarios' => count($usuariosArvore),
-                    'usuarios_ids' => $usuariosArvore
-                ]);
-                
-                return array_unique($usuariosArvore);
-            });
-            
+            }
+
+            Log::info('✅ Árvore hierárquica obtida com sucesso', [
+                'total_usuarios' => count($usuariosArvore),
+                'usuarios_ids' => $usuariosArvore
+            ]);
+
+            return array_unique($usuariosArvore);
+
         } catch (\Throwable $ex) {
             Log::error('❌ Erro ao obter árvore hierárquica: ' . $ex->getMessage());
             return [$user->id]; // Retorna pelo menos o próprio usuário
         }
     }
-
-    /**
-     * Busca subordinados diretos de um usuário - VERSÃO OTIMIZADA
-     */
-    private function buscarSubordinados(User $gestor, int $maxNiveis = 1): array
+    private function buscarSubordinados(User $gestor): array
     {
         $subordinados = [];
-        
-        try {
-            // OTIMIZAÇÃO: Buscar usuários que têm este gestor no campo manager de uma vez só
-            $usuarios = User::where('active', true)
+        $usuarios = User::where('active', true)
                 ->whereNotNull('manager')
-                ->with('roles') // Carregar roles para evitar N+1
+                ->with('roles')
                 ->get();
-                
-            foreach ($usuarios as $usuario) {
-                if ($this->ehGestorDeOtimizado($gestor, $usuario)) {
-                    $subordinados[] = $usuario;
+        foreach ($usuarios as $usuario) {
+            if ($this->ehGestorDeOtimizado($gestor, $usuario)) {
+                $subordinados[] = $usuario;
+            }
+        }
+        return $subordinados;
+    }
+
+    public function obterArvoreHierarquica2(User $user): array
+    {
+        try {
+            $usuariosArvore = [$user->id];
+            $managers = User::where('active', true)
+                ->whereNotNull('manager')
+                ->with('roles')
+                ->get();
+            $subordinados = $this->buscarSubordinados2($user, $managers);
+
+            foreach ($subordinados as $subordinado) {
+                $usuariosArvore[] = $subordinado->id;
+
+                $subSubordinados = $this->buscarSubordinados2($subordinado, $managers);
+                foreach ($subSubordinados as $subSubordinado) {
+                    if (!in_array($subSubordinado->id, $usuariosArvore)) {
+                        $usuariosArvore[] = $subSubordinado->id;
+                    }
                 }
             }
-            
-            Log::info('🔍 Subordinados encontrados', [
-                'gestor_id' => $gestor->id,
-                'gestor_name' => $gestor->name,
-                'total_subordinados' => count($subordinados),
-                'subordinados_ids' => array_map(fn($u) => $u->id, $subordinados)
-            ]);
-            
+
+            return array_unique($usuariosArvore);
+
         } catch (\Throwable $ex) {
-            Log::error('❌ Erro ao buscar subordinados: ' . $ex->getMessage());
+            return [$user->id];
         }
-        
+    }
+
+    private function buscarSubordinados2(User $gestor, $managers): array
+    {
+        $subordinados = [];
+
+        foreach ($managers as $usuario) {
+            if ($this->ehGestorDeOtimizado($gestor, $usuario)) {
+                $subordinados[] = $usuario;
+            }
+        }
         return $subordinados;
     }
 
