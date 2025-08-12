@@ -98,6 +98,22 @@ class PppHistoricoService
     }
 
     /**
+     * Registra aprovação final (último gestor aprovou, PPP vai para DIREX)
+     * Perspectiva do usuário: Gestor aprovou
+     * Perspectiva do sistema: Status muda para "aguardando_direx"
+     */
+    public function registrarAprovacaoFinal(PcaPpp $ppp, ?string $comentario = null): PppHistorico
+    {
+        return $this->registrarAcao(
+            $ppp,
+            'aprovacao_final',
+            $comentario, // Apenas se gestor digitou comentário opcional
+            $ppp->status_id, // Status anterior: aguardando_aprovacao
+            7  // Status atual: aguardando_direx
+        );
+    }
+
+    /**
      * Registra quando PPP entra em avaliação durante reunião DIREX
      * Ação automática quando secretária visualiza PPP na reunião
      */
@@ -146,13 +162,35 @@ class PppHistoricoService
     }
 
     /**
+     * Registra mudança de status durante reunião DIREX
+     */
+    public function registrarMudancaStatus(
+        PcaPpp $ppp,
+        string $comentario,
+        int $statusAnterior,
+        int $statusAtual,
+        ?int $userId = null
+    ): PppHistorico {
+        return $this->registrarAcao(
+            $ppp,
+            'mudanca_status_direx',
+            $comentario,
+            $statusAnterior,
+            $statusAtual,
+            $userId
+        );
+    }
+
+    /**
      * Registra início da reunião DIREX pela secretária
      * Ação global que afeta o sistema, não um PPP específico
      */
-    public function registrarReuniaoDirectxIniciada(?int $userId = null): void
+    public function registrarReuniaoDirectxIniciada(PcaPpp $ppp, string $comentario = null): void
     {
         Log::info('Reunião DIREX iniciada', [
-            'user_id' => $userId ?? Auth::id(),
+            'ppp_id' => $ppp->id,
+            'user_id' => Auth::id(),
+            'comentario' => $comentario,
             'timestamp' => now()
         ]);
     }
@@ -161,10 +199,12 @@ class PppHistoricoService
      * Registra encerramento da reunião DIREX
      * Ação global realizada pela secretária
      */
-    public function registrarReuniaoDirectxEncerrada(?int $userId = null): void
+    public function registrarReuniaoDirectxEncerrada(PcaPpp $ppp, string $comentario = null): void
     {
         Log::info('Reunião DIREX encerrada', [
-            'user_id' => $userId ?? Auth::id(),
+            'ppp_id' => $ppp->id,
+            'user_id' => Auth::id(),
+            'comentario' => $comentario,
             'timestamp' => now()
         ]);
     }

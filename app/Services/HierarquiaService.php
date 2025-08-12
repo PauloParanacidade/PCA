@@ -319,6 +319,7 @@ class HierarquiaService
     /**
      * Obtém a árvore hierárquica de usuários subordinados ao usuário fornecido
      * Retorna array de IDs dos usuários que estão na hierarquia
+     * OTIMIZADO: Reduz consultas e melhora performance
      */
     public function obterArvoreHierarquica(User $user): array
     {
@@ -331,22 +332,34 @@ class HierarquiaService
 
             $usuariosArvore = [$user->id]; // Incluir o próprio usuário
             
-            // Buscar todos os usuários que têm este usuário como gestor (direto ou indireto)
-            $subordinados = $this->buscarSubordinados($user);
+            // OTIMIZAÇÃO: Buscar todos os usuários ativos de uma vez
+            $todosUsuarios = User::where('active', true)
+                ->whereNotNull('manager')
+                ->select('id', 'name', 'manager', 'department')
+                ->get();
             
-            foreach ($subordinados as $subordinado) {
-                $usuariosArvore[] = $subordinado->id;
-                
-                // Buscar subordinados dos subordinados (recursivo até 3 níveis)
-                $subSubordinados = $this->buscarSubordinados($subordinado, 2);
-                foreach ($subSubordinados as $subSubordinado) {
-                    if (!in_array($subSubordinado->id, $usuariosArvore)) {
-                        $usuariosArvore[] = $subSubordinado->id;
+            // OTIMIZAÇÃO: Criar mapa de usuários por manager para busca mais rápida
+            $usuariosPorManager = [];
+            foreach ($todosUsuarios as $usuario) {
+                $managerNome = $this->extrairNomeDoManager($usuario->manager);
+                if ($managerNome) {
+                    if (!isset($usuariosPorManager[$managerNome])) {
+                        $usuariosPorManager[$managerNome] = [];
                     }
+                    $usuariosPorManager[$managerNome][] = $usuario;
                 }
             }
             
-            Log::info('✅ Árvore hierárquica obtida com sucesso', [
+            // Buscar subordinados diretos e indiretos (até 3 níveis)
+            $subordinadosEncontrados = $this->buscarSubordinadosOtimizado($user, $todosUsuarios, $usuariosPorManager, 3);
+            
+            foreach ($subordinadosEncontrados as $subordinado) {
+                if (!in_array($subordinado->id, $usuariosArvore)) {
+                    $usuariosArvore[] = $subordinado->id;
+                }
+            }
+            
+            Log::info('✅ Árvore hierárquica obtida com sucesso (OTIMIZADA)', [
                 'total_usuarios' => count($usuariosArvore),
                 'usuarios_ids' => $usuariosArvore
             ]);
@@ -360,35 +373,80 @@ class HierarquiaService
     }
 
     /**
-     * Busca subordinados diretos de um usuário
+     * Busca subordinados de forma otimizada (versão melhorada)
      */
-    private function buscarSubordinados(User $gestor, int $maxNiveis = 1): array
+    private function buscarSubordinadosOtimizado(User $gestor, $todosUsuarios, $usuariosPorManager, int $maxNiveis = 3): array
     {
         $subordinados = [];
+        $processados = [];
+        $fila = [$gestor];
+        $nivel = 0;
         
-        try {
-            // Buscar usuários que têm este gestor no campo manager
-            $usuarios = User::where('active', true)
-                ->whereNotNull('manager')
-                ->get();
+        while (!empty($fila) && $nivel < $maxNiveis) {
+            $nivel++;
+            $filaNivel = $fila;
+            $fila = [];
+            
+            foreach ($filaNivel as $usuarioAtual) {
+                if (in_array($usuarioAtual->id, $processados)) {
+                    continue;
+                }
                 
-            foreach ($usuarios as $usuario) {
-                if ($this->ehGestorDe($gestor, $usuario)) {
-                    $subordinados[] = $usuario;
+                $processados[] = $usuarioAtual->id;
+                
+                // Buscar subordinados diretos deste usuário
+                $subordinadosDiretos = $this->encontrarSubordinadosDiretos($usuarioAtual, $todosUsuarios, $usuariosPorManager);
+                
+                foreach ($subordinadosDiretos as $subordinado) {
+                    if (!in_array($subordinado->id, $processados)) {
+                        $subordinados[] = $subordinado;
+                        $fila[] = $subordinado; // Adicionar à fila para próximo nível
+                    }
                 }
             }
-            
-            Log::info('🔍 Subordinados encontrados', [
-                'gestor_id' => $gestor->id,
-                'gestor_name' => $gestor->name,
-                'total_subordinados' => count($subordinados),
-                'subordinados_ids' => array_map(fn($u) => $u->id, $subordinados)
-            ]);
-            
-        } catch (\Throwable $ex) {
-            Log::error('❌ Erro ao buscar subordinados: ' . $ex->getMessage());
         }
         
         return $subordinados;
+    }
+    
+    /**
+     * Encontra subordinados diretos de um usuário
+     */
+    private function encontrarSubordinadosDiretos(User $gestor, $todosUsuarios, $usuariosPorManager): array
+    {
+        $subordinados = [];
+        $nomeGestor = $gestor->name;
+        
+        // Buscar por nome exato ou similar no manager
+        foreach ($todosUsuarios as $usuario) {
+            if ($usuario->id === $gestor->id) {
+                continue; // Pular o próprio gestor
+            }
+            
+            $managerNome = $this->extrairNomeDoManager($usuario->manager);
+            if ($managerNome && $this->nomesSaoSimilares($nomeGestor, $managerNome)) {
+                $subordinados[] = $usuario;
+            }
+        }
+        
+        return $subordinados;
+    }
+    
+    /**
+     * Verifica se dois nomes são similares (para lidar com variações)
+     */
+    private function nomesSaoSimilares(string $nome1, string $nome2): bool
+    {
+        $nome1 = strtolower(trim($nome1));
+        $nome2 = strtolower(trim($nome2));
+        
+        // Verificação exata
+        if ($nome1 === $nome2) {
+            return true;
+        }
+        
+        // Verificação de similaridade (pelo menos 80% similar)
+        similar_text($nome1, $nome2, $percent);
+        return $percent >= 80;
     }
 }

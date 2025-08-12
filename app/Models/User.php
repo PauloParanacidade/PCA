@@ -10,6 +10,53 @@ use Illuminate\Notifications\Notifiable;
 use LdapRecord\Laravel\Auth\AuthenticatesWithLdap;
 use LdapRecord\Laravel\Auth\LdapAuthenticatable;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property string|null $guid
+ * @property string|null $username
+ * @property string|null $domain
+ * @property string|null $manager
+ * @property string|null $department
+ * @property string|null $employeeNumber
+ * @property bool $isExterno
+ * @property bool $active
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $area_responsavel_formatada
+ * @property-read string $area_solicitante_formatada
+ * @property-read mixed $nome_gestor
+ * @property-read mixed $sigla_area_gestor
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
+ * @property-read int|null $roles_count
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDepartment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDomain($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmployeeNumber($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereGuid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsExterno($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereManager($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUsername($value)
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable implements LdapAuthenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -120,11 +167,20 @@ class User extends Authenticatable implements LdapAuthenticatable
         return $this->guid ?? '';
     }
 
+    /**
+     * Relacionamento many-to-many com roles
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
     }
 
+    /**
+     * Verifica se o usuário tem um role específico
+     * 
+     * @param string|array $role Nome do role ou array de roles
+     * @return bool
+     */
     public function hasRole($role): bool
     {
         if (is_string($role)) {
@@ -139,6 +195,12 @@ class User extends Authenticatable implements LdapAuthenticatable
         return $this->roles->pluck('name')->intersect($roleNames)->isNotEmpty();
     }
 
+    /**
+     * Verifica se o usuário tem pelo menos um dos roles especificados
+     * 
+     * @param string|array $roles Nome do role ou array de roles
+     * @return bool
+     */
     public function hasAnyRole($roles): bool
     {
         if (is_string($roles)) {

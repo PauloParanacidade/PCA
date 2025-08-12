@@ -58,8 +58,8 @@
                         <tr>
                             <td>
                                 <strong>{{ $ppp->nome_item }}</strong>
-                                @if($ppp->descricao_item)
-                                    <br><small class="text-muted">{{ Str::limit($ppp->descricao_item, 50) }}</small>
+                                @if($ppp->descricao)
+                                    <br><small class="text-muted">{{ Str::limit($ppp->descricao, 50) }}</small>
                                 @endif
                             </td>
                             <td>
@@ -69,9 +69,9 @@
                                 @endif
                             </td>
                             <td>
-                                {{ $ppp->currentManager->name ?? 'N/A' }}
-                                @if($ppp->currentManager && $ppp->currentManager->setor)
-                                    <br><small class="text-muted">{{ $ppp->currentManager->setor }}</small>
+                                {{ $ppp->gestorAtual->name ?? 'N/A' }}
+                                @if($ppp->gestorAtual && $ppp->gestorAtual->department)
+                                    <br><small class="text-muted">{{ $ppp->gestorAtual->department }}</small>
                                 @endif
                             </td>
                             <td>

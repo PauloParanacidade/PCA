@@ -7,6 +7,7 @@ use App\Models\User; // Adicionar este import
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\HierarquiaService;
+use Illuminate\Support\Facades\Cache; // Adicionar este import
 
 class PppService
 {
@@ -344,17 +345,21 @@ class PppService
                 return PcaPpp::count();
             }
             
-            // Buscar PPPs da árvore hierárquica
-            $hierarquiaService = app(\App\Services\HierarquiaService::class);
-            $usuariosArvore = $hierarquiaService->obterArvoreHierarquica($user);
-            
-            return PcaPpp::where(function($q) use ($usuariosArvore) {
-                // PPPs criados por usuários da árvore
-                $q->whereIn('user_id', $usuariosArvore)
-                  // OU PPPs que passaram por usuários da árvore como gestores
-                  ->orWhereHas('gestoresHistorico', function($subQuery) use ($usuariosArvore) {
-                      $subQuery->whereIn('gestor_id', $usuariosArvore);
-                  });
-            })->count();
+            // OTIMIZAÇÃO: Usar cache para contagem
+            $cacheKey = "contar_acompanhar_user_{$userId}";
+            return Cache::remember($cacheKey, 300, function () use ($user) {
+                // Buscar PPPs da árvore hierárquica
+                $hierarquiaService = app(\App\Services\HierarquiaService::class);
+                $usuariosArvore = $hierarquiaService->obterArvoreHierarquica($user);
+                
+                return PcaPpp::where(function($q) use ($usuariosArvore) {
+                    // PPPs criados por usuários da árvore
+                    $q->whereIn('user_id', $usuariosArvore)
+                      // OU PPPs que passaram por usuários da árvore como gestores
+                      ->orWhereHas('gestoresHistorico', function($subQuery) use ($usuariosArvore) {
+                          $subQuery->whereIn('gestor_id', $usuariosArvore);
+                      });
+                })->count();
+            });
         }
     }

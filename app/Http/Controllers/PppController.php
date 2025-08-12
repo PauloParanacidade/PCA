@@ -57,14 +57,14 @@ class PppController extends Controller
         
         try {
             // Verificar se já existe um PPP com os mesmos dados básicos criado recentemente
-            $existingPpp = PcaPpp::where('user_id', auth()->id())
+            $existingPpp = PcaPpp::where('user_id', Auth::id())
                 ->where('nome_item', $request->nome_item)
                 ->where('created_at', '>=', now()->subMinutes(5)) // Últimos 5 minutos
                 ->first();
                 
             if ($existingPpp) {
                 Log::warning('Tentativa de criação de PPP duplicado detectada', [
-                    'user_id' => auth()->id(),
+                    'user_id' => Auth::id(),
                     'nome_item' => $request->nome_item,
                     'existing_ppp_id' => $existingPpp->id
                 ]);
@@ -254,7 +254,7 @@ class PppController extends Controller
             'all_data' => $request->all()
         ]);
         
-        $usuario = auth()->user();
+        $usuario = Auth::user();
         $acao    = $request->input('acao'); // 'salvar' ou 'enviar_aprovacao'
         $modo    = $request->input('modo'); // 'edicao', 'criacao' ou 'correcao'
 
@@ -331,7 +331,7 @@ class PppController extends Controller
             try {
                 Log::info('🚀 Iniciando envio para aprovação', [
                     'ppp_id' => $id,
-                    'user_id' => auth()->id(),
+                    'user_id' => Auth::id(),
                     'dados' => $request->validated()
                 ]);
                 
@@ -705,7 +705,7 @@ class PppController extends Controller
             // Registrar no histórico antes da exclusão
             \App\Models\PppHistorico::create([
                 'ppp_id' => $ppp->id,
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'acao' => 'exclusao',
                 'justificativa' => $request->comentario,  // CORRIGIDO: comentario → justificativa
                 'status_anterior' => $ppp->status_id,     // CORRIGIDO: status_anterior_id → status_anterior
@@ -717,7 +717,7 @@ class PppController extends Controller
             
             Log::info('PPP excluído com sucesso.', [
                 'ppp_id' => $id,
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'comentario' => $request->comentario
             ]);
             
@@ -773,7 +773,7 @@ class PppController extends Controller
             'comentario' => 'nullable|string|max:1000'
         ]);
         
-        if(!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
+        if(!Auth::user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
             return redirect()->back()->with('error', 'Você não tem permissão para aprovar PPPs.');
         }
         
@@ -781,7 +781,7 @@ class PppController extends Controller
             return redirect()->back()->with('error', 'Este PPP não está disponível para aprovação.');
         }
         
-        if ($ppp->gestor_atual_id !== auth()->id()) {
+        if ($ppp->gestor_atual_id !== Auth::id()) {
             return redirect()->back()->with('error', 'Você não é o gestor responsável por este PPP.');
         }
         
@@ -803,7 +803,7 @@ class PppController extends Controller
     public function reprovar(Request $request, PcaPpp $ppp, \App\Services\PppService $pppService)
     {
         // Verificar se o usuário tem permissão
-        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
             return redirect()->back()->with('error', 'Você não tem permissão para reprovar PPPs.');
         }
         
@@ -813,7 +813,7 @@ class PppController extends Controller
         }
         
         // Verificar se o usuário é o gestor responsável
-        if ($ppp->gestor_atual_id !== auth()->id()) {
+        if ($ppp->gestor_atual_id !== Auth::id()) {
             return redirect()->back()->with('error', 'Você não é o gestor responsável por este PPP.');
         }
         
@@ -1707,7 +1707,7 @@ class PppController extends Controller
         $ppp = PcaPpp::findOrFail($id);
         
         // Verificar se o usuário tem permissão para solicitar correção
-        if (!auth()->user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria'])) {
             return redirect()->back()->with('error', 'Você não tem permissão para solicitar correção.');
         }
         
@@ -1737,76 +1737,223 @@ class PppController extends Controller
     public function acompanhar(Request $request)
     {
         try {
-            Log::info('DEBUG PPPs para Acompanhar - Usuário atual', [
+            Log::info('🚀 DEBUG PPPs para Acompanhar - INICIANDO', [
                 'user_id' => Auth::id(),
                 'user_name' => Auth::user()->name ?? 'N/A',
-                'department' => Auth::user()->department ?? 'N/A'
+                'department' => Auth::user()->department ?? 'N/A',
+                'timestamp' => now()->format('Y-m-d H:i:s')
             ]);
             
             $user = Auth::user();
             
             // Verificar se é SUPEX ou DAF - podem ver todos os PPPs
             if (in_array($user->department, ['SUPEX', 'DAF'])) {
-                Log::info('Usuário SUPEX/DAF - acesso a todos os PPPs');
+                Log::info('✅ Usuário SUPEX/DAF - acesso a todos os PPPs');
                 $query = PcaPpp::query();
             } else {
-                // Buscar PPPs da árvore hierárquica
-                $usuariosArvore = $this->hierarquiaService->obterArvoreHierarquica($user);
+                Log::info('🔍 Usuário normal - buscando árvore hierárquica');
                 
-                Log::info('Usuários da árvore hierárquica', [
-                    'total_usuarios' => count($usuariosArvore),
-                    'usuarios_ids' => $usuariosArvore
-                ]);
+                // OTIMIZAÇÃO: Usar cache para árvore hierárquica
+                $cacheKey = "arvore_hierarquica_user_{$user->id}";
                 
-                $query = PcaPpp::query()
-                    ->where(function($q) use ($usuariosArvore) {
-                        // PPPs criados por usuários da árvore
-                        $q->whereIn('user_id', $usuariosArvore)
-                          // OU PPPs que passaram por usuários da árvore como gestores
-                          ->orWhereExists(function ($subQuery) use ($usuariosArvore) {
-                              $subQuery->select(DB::raw(1))
-                                  ->from('ppp_gestores_historico')
-                                  ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
-                                  ->whereIn('ppp_gestores_historico.gestor_id', $usuariosArvore);
-                          });
+                try {
+                    $usuariosArvore = Cache::remember($cacheKey, 300, function () use ($user) {
+                        Log::info('🔄 Cache miss - gerando árvore hierárquica');
+                        return $this->hierarquiaService->obterArvoreHierarquica($user);
                     });
+                    
+                    Log::info('✅ Usuários da árvore hierárquica (cache)', [
+                        'total_usuarios' => count($usuariosArvore),
+                        'usuarios_ids' => $usuariosArvore
+                    ]);
+                    
+                    $query = PcaPpp::query()
+                        ->where(function($q) use ($usuariosArvore) {
+                            // PPPs criados por usuários da árvore
+                            $q->whereIn('user_id', $usuariosArvore)
+                              // OU PPPs que passaram por usuários da árvore como gestores
+                              ->orWhereExists(function ($subQuery) use ($usuariosArvore) {
+                                  $subQuery->select(DB::raw(1))
+                                      ->from('ppp_gestores_historico')
+                                      ->whereColumn('ppp_gestores_historico.ppp_id', 'pca_ppps.id')
+                                      ->whereIn('ppp_gestores_historico.gestor_id', $usuariosArvore);
+                              });
+                        });
+                        
+                } catch (\Exception $e) {
+                    Log::error('❌ Erro ao obter árvore hierárquica: ' . $e->getMessage(), [
+                        'user_id' => $user->id,
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    throw $e;
+                }
             }
             
+            Log::info('🔍 Construindo query com relacionamentos');
+            
+            // OTIMIZAÇÃO: Carregar relacionamentos necessários de uma vez
             $query->with([
-                'user',
-                'status',
-                'gestorAtual',
-                'historicos.usuario'
+                'user:id,name,department',
+                'status:id,nome,cor',
+                'gestorAtual:id,name,department',
+                'historicos' => function($q) {
+                    $q->select('id', 'ppp_id', 'user_id', 'acao', 'created_at')
+                      ->with(['usuario:id,name'])
+                      ->orderBy('created_at', 'desc')
+                      ->limit(1); // Apenas o último histórico
+                }
             ])->orderBy('id', 'desc');
             
             // Filtro por status
             if ($request->filled('status_filter')) {
+                Log::info('🔍 Aplicando filtro por status', ['status_id' => $request->status_filter]);
                 $query->where('status_id', $request->status_filter);
             }
             
             // Filtro por busca
             if ($request->filled('search')) {
                 $busca = $request->search;
+                Log::info('🔍 Aplicando filtro de busca', ['busca' => $busca]);
                 $query->where(function($q) use ($busca) {
                     $q->where('nome_item', 'like', "%{$busca}%")
-                      ->orWhere('descricao_item', 'like', "%{$busca}%")
                       ->orWhere('descricao', 'like', "%{$busca}%");
                 });
             }
             
+            Log::info('🔍 Executando paginação');
             $ppps = $query->paginate(10)->withQueryString();
             
-            $ppps = $this->getNextApprover($ppps);
+            Log::info('✅ Paginação executada', [
+                'total_ppps' => $ppps->total(),
+                'per_page' => $ppps->perPage(),
+                'current_page' => $ppps->currentPage()
+            ]);
+            
+            // OTIMIZAÇÃO: Processar dados adicionais de forma mais eficiente
+            Log::info('🔍 Processando dados adicionais');
+            $ppps = $this->processarDadosAcompanhar($ppps);
             
             // Buscar todos os status para o filtro
+            Log::info('🔍 Buscando status para filtro');
             $statuses = \App\Models\PppStatus::orderBy('nome')->get();
+            
+            Log::info('✅ PPPs para Acompanhar - PROCESSAMENTO CONCLUÍDO', [
+                'total_ppps' => $ppps->total(),
+                'total_statuses' => $statuses->count()
+            ]);
             
             return view('ppp.acompanhar', compact('ppps', 'statuses'));
             
         } catch (\Exception $e) {
-            Log::error('Erro ao listar PPPs para Acompanhar: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs para Acompanhar.');
+            Log::error('❌ Erro ao listar PPPs para Acompanhar: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return redirect()->back()->with('error', 'Erro ao carregar a lista de PPPs para Acompanhar: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Processa dados adicionais para a view de acompanhar de forma otimizada
+     */
+    private function processarDadosAcompanhar($ppps)
+    {
+        try {
+            Log::info('🔍 processarDadosAcompanhar - INICIANDO', [
+                'total_ppps' => $ppps->count()
+            ]);
+            
+            // OTIMIZAÇÃO: Buscar todos os gestores de uma vez
+            $gestorIds = $ppps->pluck('gestor_atual_id')->filter()->unique();
+            Log::info('🔍 Gestores encontrados', [
+                'total_gestores' => $gestorIds->count(),
+                'gestor_ids' => $gestorIds->toArray()
+            ]);
+            
+            $gestores = User::whereIn('id', $gestorIds)
+                ->select('id', 'name', 'department')
+                ->get()
+                ->keyBy('id');
+            
+            Log::info('✅ Gestores carregados', [
+                'gestores_carregados' => $gestores->count()
+            ]);
+            
+            // OTIMIZAÇÃO: Buscar últimos históricos de uma vez
+            $pppIds = $ppps->pluck('id');
+            Log::info('🔍 PPPs para buscar histórico', [
+                'total_ppps' => $pppIds->count(),
+                'ppp_ids' => $pppIds->toArray()
+            ]);
+            
+            $ultimosHistoricos = PppHistorico::whereIn('ppp_id', $pppIds)
+                ->select('ppp_id', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->groupBy('ppp_id');
+            
+            Log::info('✅ Históricos carregados', [
+                'historicos_carregados' => $ultimosHistoricos->count()
+            ]);
+            
+            $processados = 0;
+            foreach($ppps as $ppp) {
+                try {
+                    // Definir gestor atual usando o relacionamento carregado
+                    $ppp->currentManager = $ppp->gestorAtual;
+                    
+                    // Definir última mudança de status
+                    $ultimoHistorico = $ultimosHistoricos->get($ppp->id)->first();
+                    $ppp->ultima_mudanca_status = $ultimoHistorico ? $ultimoHistorico->created_at : $ppp->created_at;
+                    
+                    // Definir informações do gestor atual
+                    if ($ppp->gestor_atual_id && isset($gestores[$ppp->gestor_atual_id])) {
+                        $gestor = $gestores[$ppp->gestor_atual_id];
+                        $ppp->current_approver = $gestor->name . ' - ' . ($gestor->department ?? 'N/A');
+                    } else {
+                        $ppp->current_approver = 'Nenhum gestor atribuído';
+                    }
+                    
+                    $processados++;
+                } catch (\Exception $e) {
+                    Log::error('❌ Erro ao processar PPP individual', [
+                        'ppp_id' => $ppp->id ?? 'N/A',
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            Log::info('✅ processarDadosAcompanhar - CONCLUÍDO', [
+                'total_processados' => $processados
+            ]);
+            
+            return $ppps;
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Erro em processarDadosAcompanhar: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Limpa o cache relacionado à hierarquia quando necessário
+     */
+    private function limparCacheHierarquia(User $user)
+    {
+        $cacheKey = "arvore_hierarquica_user_{$user->id}";
+        Cache::forget($cacheKey);
+        
+        $cacheKeyContar = "contar_acompanhar_user_{$user->id}";
+        Cache::forget($cacheKeyContar);
+        
+        Log::info('🧹 Cache de hierarquia limpo', [
+            'user_id' => $user->id,
+            'cache_keys' => [$cacheKey, $cacheKeyContar]
+        ]);
     }
 }
 
