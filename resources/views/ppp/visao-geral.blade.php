@@ -55,7 +55,7 @@
                 </thead>
                 <tbody>
                     @foreach($ppps as $ppp)
-                        <tr>
+                        <tr class="ppp-row" data-ppp-id="{{ $ppp->id }}" style="cursor: pointer;">
                             <td>
                                 <strong>{{ $ppp->nome_item }}</strong>
                                 @if($ppp->descricao)
@@ -256,6 +256,16 @@
         // Aplicar filtros ao alterar o select de status
         document.getElementById('status_filter').addEventListener('change', function() {
             aplicarFiltros();
+        });
+        
+        // Clique em qualquer parte da linha do PPP para visualizar
+        document.addEventListener('click', function(e) {
+            const pppRow = e.target.closest('.ppp-row');
+            if (pppRow && !e.target.closest('button')) {
+                const pppId = pppRow.dataset.pppId;
+                console.log('🔗 Redirecionando para PPP:', pppId);
+                window.location.href = '{{ route("ppp.show", ":id") }}'.replace(':id', pppId);
+            }
         });
         
         // Inicialização da página

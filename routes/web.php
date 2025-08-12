@@ -15,9 +15,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [PppController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
 // Rota de Stop Impersonate - FORA do middleware admin
 Route::post('/admin/stop-impersonate', [ImpersonateController::class, 'stopImpersonate'])
@@ -102,15 +100,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ppp/direx/aguardando', [PppController::class, 'obterPppsAguardandoDirectx'])->name('ppp.direx.aguardando');
     Route::get('/ppp/conselho/aguardando', [PppController::class, 'obterPppsAguardandoConselho'])->name('ppp.conselho.aguardando');
 
-    // Dashboard
-    Route::get('/dashboard', [PppController::class, 'dashboard'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-    // REMOVER A ROTA DASHBOARD DUPLICADA DAQUI
-    // Route::get('/dashboard', [PppController::class, 'dashboard'])
-    // ->middleware(['auth', 'verified'])
-    // ->name('dashboard');
+    // Dashboard removido daqui - já definido acima
 });
 
 
