@@ -399,17 +399,27 @@
                     if ($ppp->user_id == $usuarioLogado->id) {
                         // Gestor criador do PPP: acesso de usuário comum
                         $podeVerBotoes = false; // Nunca mostra botões de validação para seus próprios PPPs
-                        $podeEditar = in_array($ppp->status_id, [1, 4, 5]); // rascunho, aguardando_correcao, em_correcao
+                        // NOVA REGRA: Apenas SUPEX e DAF podem editar PPPs após envio (status 4 e 5)
+                        if ($usuarioLogado->hasAnyRole(['supex', 'daf'])) {
+                            $podeEditar = in_array($ppp->status_id, [1, 4, 5]); // rascunho, aguardando_correcao, em_correcao
+                        } else {
+                            $podeEditar = $ppp->status_id == 1; // Apenas rascunho
+                        }
                     } else {
                         // Gestor avaliando PPP de outros: acesso de gestor
                         $podeVerBotoes = in_array($ppp->status_id, [2, 3, 7, 8, 9]);
-                        $podeEditar = $podeVerBotoes || in_array($ppp->status_id, [4, 5]); // Inclui aguardando_correcao e em_correcao
+                        // NOVA REGRA: Apenas SUPEX e DAF podem editar PPPs de outros após envio (status 4 e 5)
+                        if ($usuarioLogado->hasAnyRole(['supex', 'daf'])) {
+                            $podeEditar = $podeVerBotoes || in_array($ppp->status_id, [4, 5]); // Inclui aguardando_correcao e em_correcao
+                        } else {
+                            $podeEditar = $podeVerBotoes; // Não pode editar status 4 e 5
+                        }
                     }
                 } else {
                     // Usuário padrão NÃO pode ver botões de validação
-                    // Apenas pode editar seus próprios PPPs em rascunho ou aguardando correção
+                    // NOVA REGRA: Usuários comuns não podem mais editar PPPs após envio (status 4 e 5)
                     $podeVerBotoes = false; // Nunca mostra botões de validação
-                    $podeEditar = $ppp->user_id == $usuarioLogado->id && in_array($ppp->status_id, [1, 4, 5]); // rascunho, aguardando_correcao, em_correcao
+                    $podeEditar = $ppp->user_id == $usuarioLogado->id && $ppp->status_id == 1; // Apenas rascunho
                 }
                 @endphp
                 

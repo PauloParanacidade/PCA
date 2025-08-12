@@ -268,6 +268,11 @@ class PppController extends Controller
         if ($modo === 'correcao') {
             $ppp = PcaPpp::findOrFail($id);
             
+            // NOVA REGRA: Verificar se apenas SUPEX e DAF podem fazer correções
+            if (!$usuario->hasAnyRole(['admin', 'supex', 'daf'])) {
+                return redirect()->back()->with('error', 'Você não tem permissão para fazer correções. Apenas SUPEX e DAF podem editar PPPs após o envio.');
+            }
+            
             // Verificar se o usuário é o responsável pela correção
             if ($ppp->gestor_atual_id !== Auth::id()) {
                 return redirect()->back()->with('error', 'Você não tem permissão para responder a correção deste PPP.');
@@ -658,17 +663,20 @@ class PppController extends Controller
     {
         try {
             $ppp = PcaPpp::findOrFail($id); //Carrega o PPP do banco de dados
+            $usuarioLogado = Auth::user();
             
-            // DEBUG temporário
-            // dd([
-            //     'Estou no método edit',
-            //     'ppp_id' => $ppp->id,
-            //     'status_id' => $ppp->status_id,
-            //     'gestor_atual_id' => $ppp->gestor_atual_id,
-            //     'auth_user_id' => Auth::id(),
-            //     'status_correto' => in_array($ppp->status_id, [4, 5]),
-            //     'eh_gestor' => $ppp->gestor_atual_id === Auth::id()
-            // ]);
+            // NOVA REGRA: Verificar permissões de edição após envio
+            if (in_array($ppp->status_id, [4, 5])) { // aguardando_correcao, em_correcao
+                // Apenas SUPEX e DAF podem editar PPPs após envio
+                if (!$usuarioLogado->hasAnyRole(['admin', 'supex', 'daf'])) {
+                    return redirect()->back()->with('error', 'Você não tem permissão para editar este PPP após o envio. Apenas SUPEX e DAF podem fazer correções.');
+                }
+            }
+            
+            // Verificar se é o criador ou tem permissão para editar
+            if ($ppp->user_id !== $usuarioLogado->id && !$usuarioLogado->hasAnyRole(['admin', 'daf', 'gestor', 'secretaria', 'supex'])) {
+                return redirect()->back()->with('error', 'Você não tem permissão para editar este PPP.');
+            }
             
         // No modo de edição, sempre definir isCreating como false
         // O botão "Avançar" só deve aparecer na criação inicial
@@ -965,6 +973,11 @@ class PppController extends Controller
             'ppp_status' => $ppp->status_id,
             'gestor_atual_id' => $ppp->gestor_atual_id
         ]);
+        
+        // NOVA REGRA: Verificar se apenas SUPEX e DAF podem responder correções
+        if (!Auth::user()->hasAnyRole(['admin', 'supex', 'daf'])) {
+            return redirect()->back()->with('error', 'Você não tem permissão para responder correções. Apenas SUPEX e DAF podem editar PPPs após o envio.');
+        }
         
         // Verificar se o usuário é o responsável pela correção
         if ($ppp->gestor_atual_id !== Auth::id()) {
@@ -1290,6 +1303,12 @@ class PppController extends Controller
             
             if (!$usuarioLogado->hasRole('secretaria')) {
                 return redirect()->back()->with('error', 'Acesso negado.');
+            }
+            
+            // NOVA REGRA: Verificar se apenas SUPEX e DAF podem editar PPPs após envio
+            // Mesmo durante reunião DIREX, manter as restrições para status 4 e 5
+            if (in_array($ppp->status_id, [4, 5]) && !$usuarioLogado->hasAnyRole(['admin', 'supex', 'daf'])) {
+                return redirect()->back()->with('error', 'Você não tem permissão para editar este PPP. Apenas SUPEX e DAF podem editar PPPs após o envio.');
             }
             
             // Alterar status para direx_editado
