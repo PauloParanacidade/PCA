@@ -14,12 +14,7 @@
             <button type="button" class="btn btn-outline-warning" id="btnRetomarReuniaoSecretaria" style="display: none;">
                 <i class="fas fa-play-circle mr-1"></i> Retomar Reunião DIREX
             </button>
-            <button type="button" class="btn btn-outline-success" id="btnGerarExcelSecretaria">
-                <i class="fas fa-file-excel mr-1"></i> Gerar Excel
-            </button>
-            <button type="button" class="btn btn-outline-danger" id="btnGerarPdfSecretaria">
-                <i class="fas fa-file-pdf mr-1"></i> Gerar PDF
-            </button>
+
         </div>
     @endif
 @stop
@@ -568,9 +563,7 @@
         
         let estadoReuniao = {
             ativa: false,
-            pppAtual: null,
-            excelGerado: false,
-            pdfGerado: false
+            pppAtual: null
         };
 
         // ===================================
@@ -649,71 +642,7 @@
             }
         }
         
-        /**
-         * Gerar relatório Excel
-         */
-        function gerarRelatorioExcel() {
-            console.log('📊 Gerando relatório Excel');
-            
-            $.ajax({
-                url: '{{ route("ppp.relatorios.gerar-excel") }}',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        mostrarAlerta(response.message, 'success');
-                        estadoReuniao.excelGerado = true;
-                        atualizarBotoesSecretaria();
-                        
-                        // Download do arquivo se fornecido
-                        if (response.download_url) {
-                            window.open(response.download_url, '_blank');
-                        }
-                    } else {
-                        mostrarAlerta(response.message, 'warning');
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Erro ao gerar Excel:', xhr);
-                    mostrarAlerta('Erro ao gerar relatório Excel.', 'danger');
-                }
-            });
-        }
-        
-        /**
-         * Gerar relatório PDF
-         */
-        function gerarRelatorioPdf() {
-            console.log('📄 Gerando relatório PDF');
-            
-            $.ajax({
-                url: '{{ route("ppp.relatorios.gerar-pdf") }}',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        mostrarAlerta(response.message, 'success');
-                        estadoReuniao.pdfGerado = true;
-                        atualizarBotoesSecretaria();
-                        
-                        // Download do arquivo se fornecido
-                        if (response.download_url) {
-                            window.open(response.download_url, '_blank');
-                        }
-                    } else {
-                        mostrarAlerta(response.message, 'warning');
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Erro ao gerar PDF:', xhr);
-                    mostrarAlerta('Erro ao gerar relatório PDF.', 'danger');
-                }
-            });
-        }
+
         
         /**
          * Abrir modal de aprovação do Conselho
@@ -785,25 +714,14 @@
          */
         function atualizarBotoesSecretaria() {
             const btnDirectx = $('#btnDirectx');
-            const btnExcel = $('#btnGerarExcel');
-            const btnPdf = $('#btnGerarPdf');
             const btnConselho = $('#btnConselho');
             
             if (estadoReuniao.ativa) {
                 btnDirectx.html('<i class="fas fa-pause mr-2"></i><strong>DIREX</strong><br><small>Reunião em Andamento</small>');
-                btnExcel.prop('disabled', true);
-                btnPdf.prop('disabled', true);
                 btnConselho.prop('disabled', true);
             } else {
                 btnDirectx.html('<i class="fas fa-users mr-2"></i><strong>DIREX</strong><br><small>Iniciar/Retomar Reunião</small>');
-                
-                // Habilitar botões de relatório se reunião foi encerrada
-                const reuniaoEncerrada = !estadoReuniao.ativa && (estadoReuniao.excelGerado || estadoReuniao.pdfGerado);
-                btnExcel.prop('disabled', estadoReuniao.excelGerado);
-                btnPdf.prop('disabled', estadoReuniao.pdfGerado);
-                
-                // Habilitar Conselho se ambos relatórios foram gerados
-                btnConselho.prop('disabled', !(estadoReuniao.excelGerado && estadoReuniao.pdfGerado));
+                btnConselho.prop('disabled', false);
             }
         }
         
@@ -817,9 +735,6 @@
             if (estadoReuniao.ativa) {
                 textoStatus.text('Reunião DIREX em andamento. Tabela desabilitada para navegação individual.');
                 alertStatus.removeClass('alert-info alert-success').addClass('alert-warning').show();
-            } else if (estadoReuniao.excelGerado || estadoReuniao.pdfGerado) {
-                textoStatus.text('Reunião DIREX encerrada. Relatórios disponíveis para geração.');
-                alertStatus.removeClass('alert-warning alert-info').addClass('alert-success').show();
             } else {
                 alertStatus.hide();
             }
@@ -946,9 +861,7 @@
                             atualizarEstadoReuniao(true, response.ppp_atual);
                         }
                         
-                        // Verificar se relatórios já foram gerados
-                        estadoReuniao.excelGerado = response.excel_gerado || false;
-                        estadoReuniao.pdfGerado = response.pdf_gerado || false;
+
                         atualizarBotoesSecretaria();
                     },
                     error: function(xhr) {

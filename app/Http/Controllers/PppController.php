@@ -14,9 +14,7 @@ use App\Services\HierarquiaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\PcaExport;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
+
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
@@ -939,25 +937,25 @@ class PppController extends Controller
     public function responderCorrecao(ResponderCorrecaoRequest $request, PcaPpp $ppp)
     {
         // 🔍 DEBUG: dd() para verificar se o método está sendo chamado
-        dd([
-        'metodo_chamado' => 'responderCorrecao',
-        'timestamp' => now()->format('Y-m-d H:i:s'),
-        'request_method' => request()->method(),
-        'request_url' => request()->fullUrl(),
-        'request_all' => $request->all(),
-        'ppp_data' => [
-            'id' => $ppp->id,
-            'status_id' => $ppp->status_id,
-            'gestor_atual_id' => $ppp->gestor_atual_id,
-            'user_id' => $ppp->user_id
-        ],
-        'auth_user' => [
-            'id' => Auth::id(),
-            'name' => Auth::user()->name,
-            'department' => Auth::user()->department
-        ],
-        'route_params' => request()->route()->parameters()
-    ]);
+    //     dd([
+    //     'metodo_chamado' => 'responderCorrecao',
+    //     'timestamp' => now()->format('Y-m-d H:i:s'),
+    //     'request_method' => request()->method(),
+    //     'request_url' => request()->fullUrl(),
+    //     'request_all' => $request->all(),
+    //     'ppp_data' => [
+    //         'id' => $ppp->id,
+    //         'status_id' => $ppp->status_id,
+    //         'gestor_atual_id' => $ppp->gestor_atual_id,
+    //         'user_id' => $ppp->user_id
+    //     ],
+    //     'auth_user' => [
+    //         'id' => Auth::id(),
+    //         'name' => Auth::user()->name,
+    //         'department' => Auth::user()->department
+    //     ],
+    //     'route_params' => request()->route()->parameters()
+    // ]);
         
         // DEBUG: Log de entrada
         Log::info('🔍 DEBUG - Método responderCorrecao chamado', [
@@ -1051,7 +1049,6 @@ class PppController extends Controller
 
     $pppsParaAvaliar = $this->pppService->contarParaAvaliar($userId);
     $pppsMeus = $this->pppService->contarMeus($userId);
-    $pppsVisaoGeral = $this->pppService->contarVisaoGeral($userId);
 
     $usuario = Auth::user();
 
@@ -1063,7 +1060,7 @@ class PppController extends Controller
         return $response->json()[0]['commit']['committer']['date'] ?? null;
     });
 
-    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'pppsVisaoGeral', 'usuario', 'ultimaAtualizacao'));
+    return view('dashboard', compact('pppsParaAvaliar', 'pppsMeus', 'usuario', 'ultimaAtualizacao'));
 
     }
 
@@ -1360,84 +1357,7 @@ class PppController extends Controller
         }
     }
     
-    /**
-     * Gera relatório Excel dos PPPs aprovados
-     */
-    public function gerarExcel()
-    {
-        try {
-            $usuarioLogado = Auth::user();
-            
-            if (!$usuarioLogado->hasRole('secretaria')) {
-                return redirect()->back()->with('error', 'Acesso negado.');
-            }
-            
-            // Buscar PPPs aguardando conselho
-            $ppps = PcaPpp::where('status_id', 11) // aguardando_conselho
-                ->with(['user', 'status'])
-                ->orderBy('id')
-                ->get();
-            
-            if ($ppps->isEmpty()) {
-                return redirect()->back()->with('error', 'Não há PPPs para gerar relatório Excel.');
-            }
-            
-            // Registrar geração no histórico
-            $this->historicoService->registrarExcelGerado(
-                $usuarioLogado->id,
-                'Relatório Excel gerado pela secretária'
-            );
-            
-            // Gerar Excel usando Maatwebsite\Excel
-            $fileName = 'PCA_' . date('Y-m-d_H-i-s') . '.xlsx';
-            
-            // return Excel::download(new PcaExport($ppps), $fileName);
-                
-        } catch (\Exception $e) {
-            Log::error('Erro ao gerar Excel: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao gerar relatório Excel.');
-        }
-    }
-    
-    /**
-     * Gera relatório PDF dos PPPs aprovados
-     */
-    public function gerarPdf()
-    {
-        try {
-            $usuarioLogado = Auth::user();
-            
-            if (!$usuarioLogado->hasRole('secretaria')) {
-                return redirect()->back()->with('error', 'Acesso negado.');
-            }
-            
-            // Buscar PPPs aguardando conselho
-            $ppps = PcaPpp::where('status_id', 11) // aguardando_conselho
-                ->with(['user', 'status'])
-                ->orderBy('id')
-                ->get();
-            
-            if ($ppps->isEmpty()) {
-                return redirect()->back()->with('error', 'Não há PPPs para gerar relatório PDF.');
-            }
-            
-            // Registrar geração no histórico
-            $this->historicoService->registrarPdfGerado(
-                $usuarioLogado->id,
-                'Relatório PDF gerado pela secretária'
-            );
-            
-            // Gerar PDF usando DomPDF
-            $pdf = PDF::loadView('ppp.relatorios.pca-pdf', compact('ppps'));
-            $fileName = 'PCA_' . date('Y-m-d_H-i-s') . '.pdf';
-            
-            return $pdf->download($fileName);
-                
-        } catch (\Exception $e) {
-            Log::error('Erro ao gerar PDF: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao gerar relatório PDF.');
-        }
-    }
+
     
     /**
      * Processa aprovação ou reprovação do Conselho
@@ -1528,8 +1448,6 @@ class PppController extends Controller
             $historicos = PppHistorico::whereIn('acao', [
                 'reuniao_direx_iniciada',
                 'reuniao_direx_encerrada',
-                'excel_gerado',
-                'pdf_gerado',
                 'conselho_aprovado',
                 'conselho_reprovado'
             ])

@@ -89,9 +89,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ppp/direx/pausar', [PppController::class, 'pausarReuniaoDirectx'])->name('ppp.direx.pausar');
     Route::post('/ppp/direx/atualizar-status', [PppController::class, 'atualizarStatusDirectx'])->name('ppp.direx.atualizar-status');
     
-    // Geração de relatórios
-    Route::post('/ppp/relatorios/gerar-excel', [PppController::class, 'gerarExcel'])->name('ppp.relatorios.gerar-excel');
-    Route::post('/ppp/relatorios/gerar-pdf', [PppController::class, 'gerarPdf'])->name('ppp.relatorios.gerar-pdf');
+
     
     // Aprovação do Conselho
     Route::post('/ppp/conselho/processar', [PppController::class, 'processarConselho'])->name('ppp.conselho.processar');

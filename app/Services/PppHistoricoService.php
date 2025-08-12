@@ -327,53 +327,7 @@ class PppHistoricoService
         );
     }
 
-    /**
-     * Registra geração de Excel
-     */
-    public function registrarExcelGerado($userId, $comentario = null)
-    {
-        Log::info('Excel gerado', [
-            'user_id' => $userId,
-            'timestamp' => now()
-        ]);
 
-        return PppHistorico::create([
-            'ppp_id' => null,
-            'status_anterior' => null,
-            'status_atual' => null,
-            'justificativa' => $comentario ?? 'Relatório Excel gerado pela secretária',
-            'user_id' => $userId,
-            'acao' => 'excel_gerado',
-            'dados_adicionais' => json_encode([
-                'timestamp' => now()->toISOString(),
-                'tipo' => 'relatorio_excel'
-            ])
-        ]);
-    }
-
-    /**
-     * Registra geração de PDF
-     */
-    public function registrarPdfGerado($userId, $comentario = null)
-    {
-        Log::info('PDF gerado', [
-            'user_id' => $userId,
-            'timestamp' => now()
-        ]);
-
-        return PppHistorico::create([
-            'ppp_id' => null,
-            'status_anterior' => null,
-            'status_atual' => null,
-            'justificativa' => $comentario ?? 'Relatório PDF gerado pela secretária',
-            'user_id' => $userId,
-            'acao' => 'pdf_gerado',
-            'dados_adicionais' => json_encode([
-                'timestamp' => now()->toISOString(),
-                'tipo' => 'relatorio_pdf'
-            ])
-        ]);
-    }
 
     /**
      * Registra aprovação do Conselho

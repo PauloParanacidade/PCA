@@ -139,8 +139,7 @@ return [
     //     // App\Providers\BroadcastServiceProvider::class,
     //     App\Providers\EventServiceProvider::class,
     //     App\Providers\RouteServiceProvider::class,
-    //     //Maatwebsite\Excel\ExcelServiceProvider::class,
-    //     Barryvdh\DomPDF\ServiceProvider::class,
+   
     // ],
     
     'aliases' => [
@@ -186,6 +185,6 @@ return [
     'Vite' => Illuminate\Support\Facades\Vite::class,
     
     // Aliases personalizados
-    'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,
+    
 ],
 ];

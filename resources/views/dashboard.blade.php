@@ -78,29 +78,7 @@
         </div>
     </div>
 
-    {{-- Segunda linha de cards --}}
-    <div class="row mb-4">
-        <div class="col-12 col-md-6 mb-3 mb-md-0">
-            <a href="{{ route('ppp.visao-geral') }}" class="info-box-link d-block" title="Clique para visualizar visão geral da sua área">
-                <x-adminlte-info-box 
-                                          title="Visão Geral ({{ $pppsVisaoGeral ?? 0 }})" 
-                      text="Clique para visualizar visão geral da sua área" 
-                    icon="fas fa-eye" 
-                    icon-theme="info" />
-            </a>
-        </div>
-        
-        <div class="col-12 col-md-6">
-            {{-- Espaço reservado para futuras funcionalidades --}}
-            <div class="info-box-disabled">
-                <x-adminlte-info-box 
-                    title="Relatórios" 
-                    text="Em desenvolvimento" 
-                    icon="fas fa-chart-bar" 
-                    icon-theme="secondary" />
-            </div>
-        </div>
-    </div>
+
 
     {{-- Status do Sistema --}}
     {{-- <div class="card shadow-sm">
