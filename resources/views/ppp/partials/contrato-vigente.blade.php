@@ -46,7 +46,7 @@
                             name="ano_contrato"
                             id="ano_contrato" 
                             class="form-control" 
-                            placeholder="Ano (ex: 2024)" 
+                            placeholder="Ex: 2024 (4 dígitos)" 
                             value="{{ old('ano_contrato', ($isCardAmarelo ?? false) ? '' : ($ppp->ano_contrato ?? '')) }}"
                             data-default-value="{{ date('Y') - 1 }}">
                             <small class="form-text text-muted">Ano da criação do contrato</small>
@@ -92,7 +92,7 @@
                             name="ano_vigencia_final"
                             id="ano_vigencia_final"
                             class="form-control"
-                            placeholder="Ano (ex: 2026)"
+                            placeholder="Ex: 2026 (4 dígitos)"
                             value="{{ old('ano_vigencia_final', $isCardAmarelo ? '' : ($ppp->ano_vigencia_final ?? date('Y') + 1)) }}">
                             <small class="form-text text-muted">Ano de vigência final</small>
                         </div>
@@ -142,6 +142,7 @@
                                 <option value="" disabled {{ old('mes_inicio_prestacao', $ppp->mes_inicio_prestacao ?? '') == '' ? 'selected' : '' }}>Selecione o mês</option>
                                 @php
                                 $meses = [
+                                '00' => 'Sob demanda',
                                 '01' => 'Janeiro',
                                 '02' => 'Fevereiro', 
                                 '03' => 'Março',
