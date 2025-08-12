@@ -57,10 +57,8 @@ class ResetSistema extends Command
         }
         
         if ($env === 'production') {
-            $this->call('config:clear');
-            $this->call('cache:clear');
-            $this->call('route:clear');
-            $this->call('view:clear');
+            
+            $this->call('optimize:clear'); // limpa todos os caches (config, route, view, cache geral, event)
             
             $this->call('config:cache');
             $this->call('route:cache');

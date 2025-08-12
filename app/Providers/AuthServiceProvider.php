@@ -57,7 +57,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // Gate para usuários especiais (todos juntos)
         Gate::define('usuario_especial', function ($user) {
-            return $user->hasRole(['admin', 'daf', 'dom', 'doe', 'supex', 'secretaria']);
+            return $user->hasRole(['admin', 'daf', 'dom', 'doe', 'supex', 'secretaria', 'gestor']);
         });
     }
 }

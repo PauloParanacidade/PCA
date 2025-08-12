@@ -333,9 +333,10 @@ return [
             'icon' => 'fas fa-fw fa-list',
         ],
         [
-                            'text' => 'Visão Geral',
-                'url'  => 'ppp/visao-geral',
+            'text' => 'Visão Geral',
+            'url'  => 'ppp/visao-geral',
             'icon' => 'fas fa-fw fa-eye',
+            'can'  => 'usuario_especial', // Restrição de permissão
         ],
         [
             'text' => 'Usuários',
