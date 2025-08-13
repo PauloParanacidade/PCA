@@ -66,7 +66,7 @@
                     </form>
 
                 </div>
-                <div class="col-md-6 text-right">
+                {{-- <div class="col-md-6 text-right">
                     <div class="btn-group">
                         <button type="button" onclick="openCreateUserModal()" class="btn btn-purple">
                             <i class="fas fa-user-plus"></i> Criar Usuário Externo
@@ -81,7 +81,7 @@
                             </button>
                         </form>
                     </div>
-                </div>
+                </div> --}}
             </div>
         </div>
         <div class="card-body">
@@ -136,12 +136,12 @@
                                                 class="d-inline">
                                                 @csrf
                                                 @method('PUT')
-                                                <button type="submit"
+                                                {{-- <button type="submit"
                                                     class="btn btn-sm {{ $user->active ? 'btn-danger' : 'btn-success' }}"
                                                     title="{{ $user->active ? 'Desativar Usuário' : 'Ativar Usuário' }}">
                                                     <i
                                                         class="fas {{ $user->active ? 'fa-user-times' : 'fa-user-check' }}"></i>
-                                                </button>
+                                                </button> --}}
                                             </form>
                                             @if ($user->isExterno)
                                                 <button type="button"
