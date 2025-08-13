@@ -2,14 +2,14 @@
 
 @section('title', 'Bem-vindo')
 
-@section('content_header_content')
+{{-- @section('content_header_content')
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center flex-wrap">
         <h1 class="mb-2 mb-md-0">
             Bem-vindo(a), <strong>{{ Auth::user()->name }}</strong>
             <span class="text-muted font-italic" style="font-size: 0.85em;"> - {{ Auth::user()->department ?? 'Setor não informado' }}</span>
         </h1>
     </div>
-@stop
+@stop --}}
 
 @section('content')
 <div class="container-fluid">
@@ -28,7 +28,7 @@
                     </div>
                 </div>
                 
-                <div class="row">
+                <div class="row" style="position: relative;">
                     <div class="col-md-7">
                         <div class="info-section-compact mb-3">
                             <h2 class="section-title" style="font-size: 2.25rem;">
@@ -40,9 +40,7 @@
                                 suas solicitações de compras e contratações de forma eficiente e organizada.
                             </p>
                         </div>
-                    </div>
-                    
-                    <div class="col-md-5">
+                        
                         <div class="info-section-compact mb-3">
                             <h6 class="section-title" style="font-size: 1.25rem;">
                                 <i class="fas fa-rocket mr-2"></i>Como utilizar:
@@ -54,6 +52,19 @@
                                 <li><i class="fas fa-chevron-right text-white mr-2"></i>Gestores podem aprovar solicitações em "Para Avaliar"</li>
                                 <li><i class="fas fa-chevron-right text-white mr-2"></i>Gestores também podem ter uma visão geral do andamento dos PPPs de sua área</li>
                             </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <!-- Card oculto com logo Paraná Cidade -->
+                        <div class="col-12 mb-4">
+                            <div class="card shadow-sm border-0" style="background: transparent; border: none !important; box-shadow: none !important;">
+                                <div class="card-body d-flex justify-content-center align-items-center" style="min-height: 315px; padding: 2rem;">
+                                    <div class="logo-circle-large">
+                                        <img src="{{ asset('images/paranacidade-logo.png') }}" alt="Paraná Cidade Logo" class="logo-image-large">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="development-card-compact mt-3">
@@ -169,18 +180,18 @@
     }
 
     /* Estilos modernos para o card principal */
-    .modern-info-card {
-        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 30%, #4338ca 70%, #3b82f6 100%);
-        background-size: 300% 300%;
-        animation: gradientShift 12s ease infinite;
-        border-radius: 20px;
-        padding: 2rem;
-        color: white;
-        box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
-        border: none;
-        position: relative;
-        overflow: hidden;
-    }
+.modern-info-card {
+    background: linear-gradient(135deg, #002c77 0%, #002c77 5%, #002c77 10%, #1e3a8a 25%, #2563eb 40%);
+    background-size: 300% 300%;
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
+    border: none;
+    position: relative;
+    overflow: hidden;
+    animation: gradientShift 12s ease infinite;
+}
 
     .modern-info-card::before {
         content: '';
@@ -337,6 +348,26 @@
 
     .dev-content p {
         color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Estilos para o logo centralizado */
+    .logo-circle-large {
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border: 3px solid rgba(255, 255, 255, 0.4);
+        margin: 0 auto;
+    }
+
+    .logo-image-large {
+        max-width: 140px;
+        max-height: 140px;
+        object-fit: contain;
     }
 
     /* Melhorias nos cards de acesso rápido */
