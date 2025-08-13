@@ -14,6 +14,12 @@ class ResetSistema extends Command
         $env = app()->environment();
         $this->info("🌍 Ambiente detectado: $env");
         
+        // Verificação do vendor
+        if (!is_dir(base_path('vendor'))) {
+            $this->error('🚨 A pasta "vendor" não existe. Execute "composer install" antes de resetar o sistema.');
+            return;
+        }
+        
         if (! $this->confirm('⚠️ Tem certeza que deseja resetar o sistema? Isso apagará e recriará todas as tabelas. [y/N]', false)) {
             $this->warn('❌ Operação cancelada.');
             return;
@@ -72,12 +78,19 @@ class ResetSistema extends Command
         $this->info('✅ Coordenador CLC identificado e configurado');
         
         $this->info('🔄 Executando composer dump-autoload...');
-        $output = shell_exec('composer dump-autoload 2>&1');
-        if ($output === null) {
-            $this->warn('⚠️ Falha ao executar composer dump-autoload. Verifique o PATH do composer e permissões.');
-        } else {
-            $this->info('✅ Autoload do Composer regenerado.');
+        $this->info('🔄 Executando composer dump-autoload...');
+        exec('composer dump-autoload -o 2>&1', $outputLines, $exitCode);
+        
+        $this->line(implode("\n", $outputLines)); // Mostra toda a saída no console
+        
+        if ($exitCode !== 0) {
+            $this->error("❌ Erro ao executar composer dump-autoload (código $exitCode).");
+            $this->warn('Saída completa exibida acima.');
+            return Command::FAILURE; // Interrompe o sistema:reset se for crítico
         }
+        
+        $this->info('✅ Autoload do Composer regenerado com sucesso.');
+        
         
         if ($env === 'production') {
             
