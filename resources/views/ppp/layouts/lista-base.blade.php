@@ -54,8 +54,8 @@
             </div>
         @endif
         
-        {{-- Seção de filtros centralizados --}}
-        @if(isset($showFilters) && $showFilters)
+        {{-- Seção de filtros centralizados - TEMPORARIAMENTE OCULTA --}}
+        {{-- @if(isset($showFilters) && $showFilters)
         <div class="card mb-3">
             <div class="card-body">
                 <form id="filtrosForm" method="GET">
@@ -105,7 +105,7 @@
                 </form>
             </div>
         </div>
-        @endif
+        @endif --}}
         
         {{-- Seção de filtros customizados --}}
         @yield('filtros')
@@ -430,9 +430,10 @@
         };
         
         // ===================================
-        // FUNÇÕES DE FILTROS CENTRALIZADAS
+        // FUNÇÕES DE FILTROS CENTRALIZADAS - TEMPORARIAMENTE DESABILITADAS
         // ===================================
         
+        /*
         function aplicarFiltros() {
             const form = document.getElementById('filtrosForm');
             if (!form) return;
@@ -469,6 +470,7 @@
             const url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
             window.location.href = url;
         }
+        */
         
         // ===================================
         // FUNÇÕES DE ORDENAÇÃO DAS COLUNAS
@@ -618,8 +620,8 @@
             // Inicializar ordenação das colunas
             initSortableColumns();
             
-            // Inicializar eventos de filtros
-            initFilterEvents();
+            // Inicializar eventos de filtros - TEMPORARIAMENTE DESABILITADO
+            // initFilterEvents();
             
             // Auto-hide alerts after 5 seconds
             setTimeout(function() {
@@ -657,9 +659,10 @@
         });
         
         // ===================================
-        // EVENTOS DE FILTROS
+        // EVENTOS DE FILTROS - TEMPORARIAMENTE DESABILITADOS
         // ===================================
         
+        /*
         function initFilterEvents() {
             // Aplicar filtros ao pressionar Enter nos campos de busca
             const searchField = document.getElementById('search');
@@ -687,6 +690,7 @@
                 });
             }
         }
+        */
     </script>
     @yield('extra-js')
 @stop

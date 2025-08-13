@@ -7,7 +7,7 @@
     <!-- Ações específicas para acompanhamento podem ser adicionadas aqui no futuro -->
 @endsection
 
-@section('filtros')
+{{-- @section('filtros')
     <div class="row mb-3">
         <div class="col-md-4">
             <label for="status_filter" class="form-label">Filtrar por Status:</label>
@@ -34,7 +34,8 @@
             </button>
         </div>
     </div>
-
+@endsection --}}
+@section('filtros')
     <!-- Modal de Comentário para Exclusão -->
     <div class="modal fade" id="comentarioExclusaoModal" tabindex="-1" role="dialog" aria-labelledby="comentarioExclusaoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
